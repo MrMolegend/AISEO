@@ -8,19 +8,19 @@ import { request } from 'undici';
  *
  * We honour Disallow rules for our own agent. That is a deliberate product
  * decision rather than a legal requirement: this is a tool in a field where
- * reputation matters, we make a single request per audit, and being the kind of
- * bot that ignores robots.txt is not a position worth defending.
+ * reputation matters, our crawl is small and bounded, and being the kind of bot
+ * that ignores robots.txt is not a position worth defending.
  *
  * The parse is intentionally small — group selection, Allow/Disallow, longest
  * match wins, `$` and `*` wildcards — which is the subset that decides whether
- * one homepage may be fetched. It is not a general-purpose robots parser.
+ * a page may be fetched. It is not a general-purpose robots parser.
  */
 
-export const OUR_AGENT_TOKEN = 'aiseoauditbot';
+export const OUR_AGENT_TOKEN = 'researchsuitebot';
 
 export interface RobotsResult {
   found: boolean;
-  /** Whether our agent may fetch the path we intend to audit. */
+  /** Whether our agent may fetch the path we intend to read. */
   allowsOurAgent: boolean;
   sitemapUrls: string[];
 }
