@@ -1,0 +1,12 @@
+.next
+node_modules
+playwright-report
+test-results
+coverage
+package-lock.json
+.shots
+
+# HTML fixtures are deliberately malformed test data: unclosed tags, forged
+# closing delimiters, broken JSON-LD. Prettier cannot parse them, and
+# reformatting them would destroy exactly what they exist to test.
+fixtures/html

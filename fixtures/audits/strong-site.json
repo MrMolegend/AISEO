@@ -1,0 +1,612 @@
+{
+  "schemaVersion": 1,
+  "publicId": "fx-strong-01",
+  "url": "https://northwind-analytics.com/",
+  "domain": "northwind-analytics.com",
+  "createdAt": "2026-03-14T09:22:41.000Z",
+  "overallScore": 80,
+  "overallRating": "good",
+  "facts": {
+    "fetchedAt": "2026-03-14T09:22:38.000Z",
+    "requestedUrl": "https://northwind-analytics.com",
+    "finalUrl": "https://northwind-analytics.com/",
+    "redirectChain": ["https://northwind-analytics.com"],
+    "httpStatus": 200,
+    "responseTimeMs": 412,
+    "htmlBytes": 78214,
+    "isHttps": true,
+    "faviconUrl": "https://northwind-analytics.com/favicon.ico",
+    "meta": {
+      "title": "Northwind Analytics — Warehouse Inventory Forecasting for Mid-Market Distributors",
+      "titleLength": 82,
+      "description": "Cut stockouts by 40% with demand forecasting built for distributors running 5–50 warehouses. Connects to NetSuite, SAP and Dynamics in under a day.",
+      "descriptionLength": 148,
+      "canonical": "https://northwind-analytics.com/",
+      "robotsMeta": "index, follow",
+      "viewport": "width=device-width, initial-scale=1",
+      "lang": "en-US",
+      "charset": "utf-8"
+    },
+    "openGraph": {
+      "og:title": "Northwind Analytics — Inventory Forecasting for Distributors",
+      "og:description": "Cut stockouts by 40% with demand forecasting built for mid-market distributors.",
+      "og:image": "https://northwind-analytics.com/og/home-v3.png",
+      "og:url": "https://northwind-analytics.com/",
+      "og:type": "website",
+      "og:site_name": "Northwind Analytics"
+    },
+    "twitterCard": {
+      "twitter:card": "summary_large_image",
+      "twitter:title": "Northwind Analytics — Inventory Forecasting for Distributors",
+      "twitter:image": "https://northwind-analytics.com/og/home-v3.png"
+    },
+    "headings": {
+      "h1": ["Stop guessing what to reorder"],
+      "h2": [
+        "Forecasting that understands seasonal distribution",
+        "Connects to the ERP you already run",
+        "What our customers see in the first quarter",
+        "Pricing that scales with your warehouses",
+        "Frequently asked questions"
+      ],
+      "h3": [
+        "NetSuite",
+        "SAP Business One",
+        "Microsoft Dynamics 365",
+        "How long does implementation take?",
+        "Do you support multi-currency purchasing?",
+        "Can we export forecasts to our own BI tool?"
+      ]
+    },
+    "headingCounts": {
+      "h1": 1,
+      "h2": 5,
+      "h3": 6,
+      "h4": 3,
+      "h5": 0,
+      "h6": 0
+    },
+    "content": {
+      "text": "Stop guessing what to reorder. Northwind Analytics forecasts demand across every warehouse you run, so purchasing decisions stop depending on whoever happens to know the account. Built for mid-market distributors managing between five and fifty locations. Forecasting that understands seasonal distribution. Most forecasting tools were built for retail and assume a single point of sale. Distribution is different: lead times vary by supplier, demand shifts between regions, and a stockout in one warehouse can often be covered by another. Northwind models all three. Connects to the ERP you already run. NetSuite, SAP Business One and Microsoft Dynamics 365 connectors ship out of the box and sync nightly. Implementation typically completes within one business day. What our customers see in the first quarter. Across 140 deployments, distributors report an average 38% reduction in stockout events and a 22% reduction in carrying cost within the first ninety days. Pricing that scales with your warehouses. Plans start at $890 per month for up to five warehouses, with volume pricing above twenty locations. Every plan includes unlimited users, the full connector library and implementation support. Frequently asked questions. How long does implementation take? Most customers are live within one business day. Do you support multi-currency purchasing? Yes, across 34 currencies with daily rate updates. Can we export forecasts to our own BI tool? Yes, via scheduled CSV export or the REST API.",
+      "wordCount": 231,
+      "truncated": false
+    },
+    "links": {
+      "internal": [
+        {
+          "href": "https://northwind-analytics.com/product",
+          "text": "Product",
+          "rel": null
+        },
+        {
+          "href": "https://northwind-analytics.com/pricing",
+          "text": "Pricing",
+          "rel": null
+        },
+        {
+          "href": "https://northwind-analytics.com/integrations",
+          "text": "Integrations",
+          "rel": null
+        },
+        {
+          "href": "https://northwind-analytics.com/customers",
+          "text": "Customers",
+          "rel": null
+        },
+        {
+          "href": "https://northwind-analytics.com/docs",
+          "text": "Documentation",
+          "rel": null
+        },
+        {
+          "href": "https://northwind-analytics.com/demo",
+          "text": "Book a demo",
+          "rel": null
+        },
+        {
+          "href": "https://northwind-analytics.com/blog",
+          "text": "Blog",
+          "rel": null
+        },
+        {
+          "href": "https://northwind-analytics.com/security",
+          "text": "Security",
+          "rel": null
+        }
+      ],
+      "external": [
+        {
+          "href": "https://www.linkedin.com/company/northwind-analytics",
+          "text": "LinkedIn",
+          "rel": "noopener"
+        },
+        {
+          "href": "https://status.northwind-analytics.com",
+          "text": "System status",
+          "rel": "noopener"
+        }
+      ],
+      "counts": {
+        "internal": 34,
+        "external": 4,
+        "nofollow": 1,
+        "empty": 0
+      }
+    },
+    "images": {
+      "sample": [
+        {
+          "src": "/img/hero-dashboard.webp",
+          "alt": "Northwind forecasting dashboard showing reorder recommendations across six warehouses",
+          "loading": "eager",
+          "width": "1200",
+          "height": "740"
+        },
+        {
+          "src": "/img/logo-netsuite.svg",
+          "alt": "NetSuite",
+          "loading": "lazy",
+          "width": "140",
+          "height": "40"
+        },
+        {
+          "src": "/img/logo-sap.svg",
+          "alt": "SAP Business One",
+          "loading": "lazy",
+          "width": "140",
+          "height": "40"
+        },
+        {
+          "src": "/img/chart-stockout.webp",
+          "alt": "Chart showing 38 percent average reduction in stockout events over ninety days",
+          "loading": "lazy",
+          "width": "800",
+          "height": "420"
+        }
+      ],
+      "counts": {
+        "total": 14,
+        "missingAlt": 1,
+        "emptyAlt": 2,
+        "lazyLoaded": 12
+      }
+    },
+    "structuredData": {
+      "types": ["Organization", "SoftwareApplication", "FAQPage"],
+      "blocks": [
+        {
+          "@type": "Organization",
+          "name": "Northwind Analytics",
+          "url": "https://northwind-analytics.com/"
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": 3
+        }
+      ],
+      "parseErrors": 0
+    },
+    "robotsTxt": {
+      "found": true,
+      "allowsOurAgent": true,
+      "sitemapUrls": ["https://northwind-analytics.com/sitemap.xml"]
+    },
+    "sitemapXml": {
+      "found": true,
+      "url": "https://northwind-analytics.com/sitemap.xml"
+    },
+    "technical": {
+      "hasHreflang": false,
+      "hasAmp": false,
+      "inlineStyleCount": 2,
+      "scriptCount": 6,
+      "externalScriptCount": 3,
+      "iframeCount": 0,
+      "formCount": 1,
+      "hasHttpResourcesOnHttps": false,
+      "likelyClientRendered": false
+    },
+    "checks": [
+      {
+        "id": "title-present",
+        "label": "Title tag present",
+        "status": "warn",
+        "observed": "82 characters — above the ~60 character display limit"
+      },
+      {
+        "id": "meta-description-present",
+        "label": "Meta description present",
+        "status": "pass",
+        "observed": "148 characters"
+      },
+      {
+        "id": "h1-count",
+        "label": "Exactly one H1",
+        "status": "pass",
+        "observed": "1 H1 found"
+      },
+      {
+        "id": "canonical-present",
+        "label": "Canonical URL present",
+        "status": "pass",
+        "observed": "https://northwind-analytics.com/"
+      },
+      {
+        "id": "viewport-present",
+        "label": "Mobile viewport declared",
+        "status": "pass",
+        "observed": "width=device-width, initial-scale=1"
+      },
+      {
+        "id": "https",
+        "label": "Served over HTTPS",
+        "status": "pass",
+        "observed": "https"
+      },
+      {
+        "id": "image-alt-coverage",
+        "label": "Image alt coverage",
+        "status": "warn",
+        "observed": "1 of 14 images missing alt text"
+      },
+      {
+        "id": "structured-data",
+        "label": "Structured data present",
+        "status": "pass",
+        "observed": "Organization, SoftwareApplication, FAQPage"
+      },
+      {
+        "id": "robots-txt",
+        "label": "robots.txt reachable",
+        "status": "pass",
+        "observed": "Found, references 1 sitemap"
+      },
+      {
+        "id": "content-volume",
+        "label": "Sufficient indexable text",
+        "status": "pass",
+        "observed": "231 words"
+      }
+    ]
+  },
+  "analysis": {
+    "website": {
+      "name": "Northwind Analytics",
+      "industry": "B2B SaaS — supply chain and inventory software",
+      "description": "Demand forecasting software for mid-market distributors running between five and fifty warehouses, with prebuilt connectors to NetSuite, SAP Business One and Microsoft Dynamics 365.",
+      "targetAudience": "Operations and purchasing leaders at distribution companies with multiple warehouse locations"
+    },
+    "executiveSummary": {
+      "headline": "A well-built site with clear positioning — the remaining gains are in reach, not repair",
+      "summary": "This homepage does most things right. The positioning is specific, the page states who it is for and what it costs, and the technical foundations are sound: HTTPS, a valid canonical, a mobile viewport, structured data and a working sitemap are all in place. The main constraint now is depth rather than defects. At 231 words the homepage is thin for a considered B2B purchase, and the title tag is long enough that Google will truncate it in results. Neither problem is urgent, but both cap how much traffic this page can earn. Fix the title, expand the page toward the questions buyers actually ask, and this becomes a genuinely strong performer.",
+      "biggestStrength": "The positioning is unusually specific. Naming the segment — distributors with five to fifty warehouses — and stating pricing openly does more for qualification and for search relevance than most B2B homepages manage.",
+      "biggestWeakness": "The homepage carries only 231 words of indexable text. For a purchase that involves ERP integration and a multi-thousand-dollar annual commitment, that is far too little to satisfy either a researching buyer or a search engine assessing topical depth.",
+      "firstThingToDo": "Shorten the title tag to under 60 characters so it stops being truncated in search results. It is a five-minute change that affects every impression the page earns."
+    },
+    "categoryScores": {
+      "technicalSEO": {
+        "score": 92,
+        "confidence": "high",
+        "basis": "measured",
+        "summary": "Canonical, robots.txt, sitemap, HTTPS and structured data are all correctly configured. There is very little left to fix here."
+      },
+      "onPageSEO": {
+        "score": 78,
+        "confidence": "high",
+        "basis": "measured",
+        "summary": "Heading structure and meta description are strong; the over-length title tag is the one clear defect."
+      },
+      "content": {
+        "score": 68,
+        "confidence": "high",
+        "basis": "measured",
+        "summary": "What is written is clear and specific, but 231 words is thin for a considered B2B purchase."
+      },
+      "performance": {
+        "score": 82,
+        "confidence": "low",
+        "basis": "heuristic",
+        "summary": "Inferred from a 412ms response, modest page weight, WebP images and widespread lazy loading. No field or lab timing data was collected."
+      },
+      "mobile": {
+        "score": 85,
+        "confidence": "low",
+        "basis": "heuristic",
+        "summary": "A correct viewport declaration and responsive image markup are present. Actual rendering on a mobile device was not observed."
+      },
+      "userExperience": {
+        "score": 80,
+        "confidence": "medium",
+        "basis": "inferred",
+        "summary": "Clear navigation, visible pricing and an FAQ section suggest a well-considered journey, judged from page structure alone."
+      }
+    },
+    "issues": [
+      {
+        "id": "title-tag-too-long",
+        "severity": "high",
+        "category": "onPageSEO",
+        "title": "Title tag will be truncated in search results",
+        "finding": "The title tag is 82 characters: \"Northwind Analytics — Warehouse Inventory Forecasting for Mid-Market Distributors\". Google typically displays around 55–60 characters before cutting the rest.",
+        "whyItMatters": "The title is the largest, most-clicked element of a search result. When it is cut off mid-phrase the reader loses the end of your value proposition at the exact moment they are deciding whether to click.",
+        "recommendation": "Rewrite to under 60 characters, leading with the differentiating term rather than the brand. \"Inventory Forecasting for Multi-Warehouse Distributors\" is 54 characters and keeps the qualifying detail that matters.",
+        "expectedImpact": "Better click-through from existing impressions. This does not change how the page ranks, only how many people choose it.",
+        "impact": "medium",
+        "effort": "low",
+        "owner": "marketer",
+        "confidence": "high",
+        "evidence": {
+          "label": "Title tag",
+          "value": "Northwind Analytics — Warehouse Inventory Forecasting for Mid-Market Distributors (82 characters)",
+          "factPath": "meta.title"
+        }
+      },
+      {
+        "id": "thin-homepage-content",
+        "severity": "high",
+        "category": "content",
+        "title": "Homepage is too thin for a considered purchase",
+        "finding": "The homepage contains 231 words of indexable text across five sections. Competing pages for this kind of software typically carry 800–1,500 words.",
+        "whyItMatters": "Two audiences are underserved at once. A buyer evaluating an ERP-integrated forecasting tool has questions this page does not answer, and a search engine has little text from which to judge what the page is actually about.",
+        "recommendation": "Expand toward the questions buyers already ask on sales calls: what the implementation day actually involves, how forecasts handle new products with no sales history, what happens when a supplier's lead time changes. Aim for 800–1,200 words without diluting the current clarity.",
+        "expectedImpact": "More entry points for long-tail search and better qualification before the demo call. Expect movement over months, not days.",
+        "impact": "high",
+        "effort": "high",
+        "owner": "marketer",
+        "confidence": "high",
+        "evidence": {
+          "label": "Indexable word count",
+          "value": "231 words",
+          "factPath": "content.wordCount"
+        }
+      },
+      {
+        "id": "missing-image-alt",
+        "severity": "medium",
+        "category": "userExperience",
+        "title": "One image is missing alt text",
+        "finding": "Of 14 images on the page, one has no alt attribute and two have deliberately empty alt attributes.",
+        "whyItMatters": "Screen reader users hear nothing meaningful in place of that image, and search engines lose a small signal about page content. The two empty alt attributes are correct if those images are decorative.",
+        "recommendation": "Add a descriptive alt attribute to the remaining image. Describe what it communicates rather than what it depicts — \"Reorder recommendation screen\" beats \"screenshot\".",
+        "expectedImpact": "Improved accessibility for screen reader users; a marginal SEO benefit.",
+        "impact": "low",
+        "effort": "low",
+        "owner": "developer",
+        "confidence": "high",
+        "evidence": {
+          "label": "Images missing alt text",
+          "value": "1 of 14 images",
+          "factPath": "images.counts.missingAlt"
+        }
+      },
+      {
+        "id": "no-hreflang-multicurrency",
+        "severity": "low",
+        "category": "technicalSEO",
+        "title": "Multi-currency support is advertised without international targeting",
+        "finding": "The page states support for 34 currencies, but declares no hreflang annotations and sets lang to en-US only.",
+        "whyItMatters": "If you sell internationally, search engines have no signal to show this page to buyers outside the United States. If you do not sell internationally, the currency claim may be attracting unqualified traffic.",
+        "recommendation": "Decide which it is. If international is a real market, plan localised pages with hreflang. If it is not, the currency line is a feature detail rather than a positioning claim and belongs further down the page.",
+        "expectedImpact": "Either opens international search visibility or improves lead qualification. Which one depends on your commercial strategy.",
+        "impact": "low",
+        "effort": "medium",
+        "owner": "owner",
+        "confidence": "medium",
+        "evidence": {
+          "label": "hreflang annotations",
+          "value": "(absent) — lang is \"en-US\"",
+          "factPath": "technical.hasHreflang"
+        }
+      },
+      {
+        "id": "customer-claims-unattributed",
+        "severity": "medium",
+        "category": "content",
+        "title": "Outcome claims carry no attribution",
+        "finding": "The page cites a 38% reduction in stockouts and 22% reduction in carrying cost across 140 deployments, but attributes neither figure to a named customer, study or methodology.",
+        "whyItMatters": "Specific unattributed numbers read as weaker than vaguer attributed ones to an experienced B2B buyer, and they cannot earn the citations and links that a documented study attracts.",
+        "recommendation": "Publish the methodology behind the 140-deployment figure as a linked page, or attribute the numbers to two or three named customers with logos and roles.",
+        "expectedImpact": "Stronger conversion from evaluation traffic, and a citable asset that can earn links over time.",
+        "impact": "medium",
+        "effort": "medium",
+        "owner": "marketer",
+        "confidence": "medium",
+        "evidence": {
+          "label": "Outcome claim on page",
+          "value": "\"distributors report an average 38% reduction in stockout events\" — no source cited",
+          "factPath": "content.text"
+        }
+      }
+    ],
+    "strengths": [
+      {
+        "id": "specific-positioning",
+        "category": "content",
+        "title": "Positioning names a specific segment",
+        "detail": "Stating \"five to fifty warehouses\" up front tells the right buyer they are in the right place and tells the wrong one to leave. Most B2B homepages avoid this level of specificity and are weaker for it."
+      },
+      {
+        "id": "clean-technical-foundation",
+        "category": "technicalSEO",
+        "title": "Technical foundations are correctly configured",
+        "detail": "HTTPS, a self-referencing canonical, a valid viewport, a reachable robots.txt referencing a sitemap, and three types of structured data are all in place with no parse errors."
+      },
+      {
+        "id": "transparent-pricing",
+        "category": "userExperience",
+        "title": "Pricing is stated openly",
+        "detail": "Publishing a starting price of $890 per month removes a qualification step for the buyer and captures search demand from people explicitly looking for cost information."
+      },
+      {
+        "id": "faq-schema",
+        "category": "onPageSEO",
+        "title": "FAQ content is marked up correctly",
+        "detail": "Three FAQ entries carry valid FAQPage structured data, making the page eligible for expanded search result treatment."
+      }
+    ],
+    "topPriorities": [
+      {
+        "rank": 1,
+        "issueId": "title-tag-too-long",
+        "rationale": "Five minutes of work that affects every search impression the page already earns. Nothing else on this list has that ratio."
+      },
+      {
+        "rank": 2,
+        "issueId": "thin-homepage-content",
+        "rationale": "The single largest constraint on how much traffic this page can attract, and the one that takes longest to pay off — which is exactly why it should start now."
+      },
+      {
+        "rank": 3,
+        "issueId": "customer-claims-unattributed",
+        "rationale": "Directly affects conversion of traffic you already have, and the resulting study becomes an asset that earns links."
+      },
+      {
+        "rank": 4,
+        "issueId": "missing-image-alt",
+        "rationale": "A few minutes of developer time that removes an accessibility gap. Cheap enough that it should not wait."
+      }
+    ],
+    "actionPlan": {
+      "immediate": [
+        {
+          "id": "fix-title-tag",
+          "title": "Shorten the title tag to under 60 characters",
+          "description": "Rewrite leading with the differentiating term. Verify the rendered length in a SERP preview tool before deploying.",
+          "issueIds": ["title-tag-too-long"],
+          "owner": "marketer",
+          "effort": "low"
+        },
+        {
+          "id": "add-missing-alt",
+          "title": "Add the one missing alt attribute",
+          "description": "Identify the image with no alt attribute and describe what it communicates. Confirm the two empty alt attributes are genuinely decorative.",
+          "issueIds": ["missing-image-alt"],
+          "owner": "developer",
+          "effort": "low"
+        }
+      ],
+      "next30Days": [
+        {
+          "id": "attribute-outcome-claims",
+          "title": "Attribute the stockout and carrying-cost figures",
+          "description": "Either publish the methodology behind the 140-deployment analysis or replace the aggregate with two or three named customer results.",
+          "issueIds": ["customer-claims-unattributed"],
+          "owner": "marketer",
+          "effort": "medium"
+        },
+        {
+          "id": "outline-homepage-expansion",
+          "title": "Outline the homepage expansion from real sales calls",
+          "description": "Collect the ten questions that come up most often before a demo. That list becomes the section outline rather than inventing topics.",
+          "issueIds": ["thin-homepage-content"],
+          "owner": "marketer",
+          "effort": "medium"
+        },
+        {
+          "id": "decide-international",
+          "title": "Decide whether international is a real market",
+          "description": "The multi-currency claim implies international selling. Confirm with sales whether that is a target segment before investing in hreflang.",
+          "issueIds": ["no-hreflang-multicurrency"],
+          "owner": "owner",
+          "effort": "low"
+        }
+      ],
+      "next90Days": [
+        {
+          "id": "publish-expanded-homepage",
+          "title": "Publish the expanded homepage",
+          "description": "Write and ship the 800–1,200 word version built from the sales-call outline, keeping the current clarity intact.",
+          "issueIds": ["thin-homepage-content"],
+          "owner": "marketer",
+          "effort": "high"
+        },
+        {
+          "id": "measure-title-change",
+          "title": "Measure the click-through effect of the title change",
+          "description": "Compare click-through rate in Search Console for the eight weeks before and after the title change, controlling for impression volume.",
+          "issueIds": ["title-tag-too-long"],
+          "owner": "marketer",
+          "effort": "low"
+        }
+      ]
+    },
+    "opportunities": [
+      {
+        "id": "erp-comparison-pages",
+        "type": "content",
+        "title": "Build a page per ERP integration",
+        "description": "Three connectors are named on the homepage but none has a dedicated page. Buyers search for \"NetSuite demand forecasting\" far more often than for generic forecasting terms.",
+        "rationale": "The integrations are already built and already named on the page — this captures existing demand rather than creating new content debt.",
+        "impact": "high",
+        "effort": "medium"
+      },
+      {
+        "id": "stockout-calculator",
+        "type": "conversion",
+        "title": "Publish a stockout cost calculator",
+        "description": "An interactive tool that estimates annual cost of stockouts from warehouse count, average order value and current stockout rate.",
+        "rationale": "Turns the 38% claim into something the visitor computes for their own business, which is far more persuasive than a stated average.",
+        "impact": "medium",
+        "effort": "high"
+      },
+      {
+        "id": "methodology-study",
+        "type": "seo",
+        "title": "Publish the 140-deployment analysis as a study",
+        "description": "A documented analysis with methodology, sample composition and confidence intervals, published as a linkable page.",
+        "rationale": "Industry publications cite original data. This dataset already exists internally, so the cost is writing rather than research.",
+        "impact": "medium",
+        "effort": "medium"
+      },
+      {
+        "id": "pricing-page-schema",
+        "type": "technical",
+        "title": "Add Product and Offer structured data",
+        "description": "Pricing is stated on the page but not marked up. Adding Offer structured data makes it machine-readable.",
+        "rationale": "Low effort, and it extends the structured data foundation already working well on this site.",
+        "impact": "low",
+        "effort": "low"
+      }
+    ],
+    "limitations": [
+      {
+        "id": "no-performance-measurement",
+        "area": "Page speed",
+        "detail": "The performance score is inferred from response time, page weight and image formats in the HTML. No Core Web Vitals, lab timings or field data were collected.",
+        "howToResolve": "Connect PageSpeed Insights or Chrome UX Report data for measured Core Web Vitals."
+      },
+      {
+        "id": "homepage-only",
+        "area": "Site coverage",
+        "detail": "Only the homepage was retrieved. Internal pages, the blog, and the 34 other internal links found were not analysed.",
+        "howToResolve": "A multi-page crawl would assess site structure, internal linking and content depth across the whole site."
+      },
+      {
+        "id": "no-rendering",
+        "area": "JavaScript rendering",
+        "detail": "The page was analysed as served, without executing JavaScript. Content injected after load would not appear in this audit.",
+        "howToResolve": "Rendered-page retrieval would capture client-side content."
+      },
+      {
+        "id": "no-search-data",
+        "area": "Search performance",
+        "detail": "No keyword rankings, impressions, click-through rates or backlink data were available. Conclusions about traffic are inferences from page content alone.",
+        "howToResolve": "Connecting Google Search Console would replace these inferences with measured performance."
+      },
+      {
+        "id": "no-mobile-rendering",
+        "area": "Mobile experience",
+        "detail": "Mobile readiness is judged from the viewport declaration and responsive image markup. The page was not rendered at a mobile viewport.",
+        "howToResolve": "Device-emulated rendering would allow assessment of actual mobile layout and tap targets."
+      }
+    ]
+  },
+  "meta": {
+    "model": "fixture",
+    "promptVersion": "fixture-v1",
+    "durationMs": 0,
+    "repairAttempts": 0,
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}
