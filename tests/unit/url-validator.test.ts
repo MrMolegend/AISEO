@@ -189,3 +189,32 @@ describe('validateAndNormalizeUrl — determinism', () => {
     expect(twice).toBe(once);
   });
 });
+
+describe('validateAndNormalizeUrl — legacy IP encodings are canonicalised', () => {
+  /**
+   * The WHATWG URL parser expands decimal, hex, octal and short-form IPv4 into a
+   * canonical dotted quad. That canonicalisation is load-bearing security
+   * behaviour, not a curiosity: it means the SSRF guard downstream always sees
+   * the real destination rather than an obfuscated string it would fail to
+   * recognise. These assertions pin that behaviour so a future change to the
+   * normalisation path cannot silently reintroduce the classic bypass.
+   */
+  it.each([
+    ['http://2130706433/', '127.0.0.1'],
+    ['http://0x7f.0.0.1/', '127.0.0.1'],
+    ['http://0177.0.0.1/', '127.0.0.1'],
+    ['http://127.1/', '127.0.0.1'],
+    ['http://10.1/', '10.0.0.1'],
+    ['http://192.168.1/', '192.168.0.1'],
+  ])('expands %s to %s so the SSRF guard sees the true address', (input, expected) => {
+    expect(ok(input).hostname).toBe(expected);
+  });
+
+  it('expands a bare zero host to the unspecified address', () => {
+    expect(ok('http://0/').hostname).toBe('0.0.0.0');
+  });
+
+  it('accepts a well-formed dotted quad, leaving the range check to the guard', () => {
+    expect(ok('http://93.184.216.34/').hostname).toBe('93.184.216.34');
+  });
+});

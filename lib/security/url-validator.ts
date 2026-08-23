@@ -35,6 +35,18 @@ export interface UrlValidationFailure {
 
 export type UrlValidationResult = UrlValidationSuccess | UrlValidationFailure;
 
+export interface UrlValidationOptions {
+  /**
+   * Permit ports other than 80 and 443.
+   *
+   * Local test servers bind ephemeral ports, so the integration suite needs
+   * this. It is never enabled in production: allowing arbitrary ports would turn
+   * the audit endpoint into a port scanner pointed at whatever the fetcher can
+   * reach.
+   */
+  allowNonStandardPorts?: boolean;
+}
+
 export const MAX_URL_LENGTH = 500;
 
 /** Only these ports are reachable; anything else is a scan attempt or a typo. */
@@ -122,7 +134,10 @@ function hasPublicShape(hostname: string): boolean {
  * Accepts the forms people actually type: "example.com", "www.example.com/path",
  * "HTTPS://Example.com". Always returns an absolute, lowercase-host URL.
  */
-export function validateAndNormalizeUrl(input: string): UrlValidationResult {
+export function validateAndNormalizeUrl(
+  input: string,
+  options: UrlValidationOptions = {},
+): UrlValidationResult {
   const trimmed = input.trim();
   if (!trimmed) return { ok: false, reason: 'empty' };
   if (trimmed.length > MAX_URL_LENGTH) return { ok: false, reason: 'too-long' };
@@ -156,12 +171,20 @@ export function validateAndNormalizeUrl(input: string): UrlValidationResult {
     return { ok: false, reason: 'has-credentials' };
   }
 
-  if (!ALLOWED_PORTS.has(url.port)) {
+  if (!options.allowNonStandardPorts && !ALLOWED_PORTS.has(url.port)) {
     return { ok: false, reason: 'unsupported-port' };
   }
 
-  // URL already lowercases and punycodes the hostname; strip any trailing dot,
-  // which is a valid FQDN form that bypasses naive suffix matching.
+  /*
+   * URL has already lowercased the hostname, punycoded any unicode, and — this
+   * part is load-bearing for SSRF — expanded legacy IPv4 encodings into a
+   * canonical dotted quad. "2130706433", "0x7f.0.0.1" and "127.1" all arrive
+   * here as "127.0.0.1", so the address check downstream sees the true
+   * destination rather than an obfuscated string it would not recognise.
+   *
+   * The trailing dot is stripped separately: "example.com." is a valid FQDN that
+   * would otherwise slip past naive suffix matching.
+   */
   const hostname = url.hostname.replace(/\.$/, '').toLowerCase();
   if (!hostname) return { ok: false, reason: 'malformed' };
 
