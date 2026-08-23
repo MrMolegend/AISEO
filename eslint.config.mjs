@@ -18,6 +18,8 @@ export default tseslint.config(
       'test-results/**',
       'next-env.d.ts',
       'coverage/**',
+      // Local visual/a11y probes; these become Playwright specs in tests/e2e.
+      '.shots/**',
     ],
   },
 

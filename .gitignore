@@ -45,6 +45,5 @@ yarn-error.log*
 supabase/.branches
 supabase/.temp
 
-# local screenshot / a11y tooling output
-.shots/*.png
-.shots/*.log
+# local visual/a11y probes (ported to tests/e2e in Phase 7)
+.shots/

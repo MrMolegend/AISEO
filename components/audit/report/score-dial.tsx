@@ -74,29 +74,37 @@ export function ScoreDial({
         viewBox={`0 0 ${size} ${size}`}
         // The accessible value lives on the wrapper text below; the arc is decoration.
         aria-hidden="true"
-        className="-rotate-[225deg]"
       >
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="var(--color-surface-sunken)"
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={`${arcLength} ${circumference}`}
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={color}
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={`${arcLength * progress} ${circumference}`}
-          style={{ transition: 'stroke-dasharray 40ms linear' }}
-        />
+        {/*
+          Rotated with an SVG transform rather than a CSS class. A CSS rotation
+          leaves the layout box alone but expands the element's *bounding* rect to
+          the diagonal (size x sqrt(2)), which pushed the page into horizontal
+          overflow at 768px. Transforming inside the viewBox keeps the painted
+          box exactly size x size.
+        */}
+        <g transform={`rotate(-225 ${size / 2} ${size / 2})`}>
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="var(--color-surface-sunken)"
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={`${arcLength} ${circumference}`}
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={`${arcLength * progress} ${circumference}`}
+            style={{ transition: 'stroke-dasharray 40ms linear' }}
+          />
+        </g>
       </svg>
 
       <div className="absolute inset-0 flex flex-col items-center justify-center">

@@ -26,10 +26,16 @@
   --color-surface-subtle: oklch(98.4% 0.001 286);
   --color-surface-sunken: oklch(96.7% 0.001 286);
 
+  /*
+   * Neutral text ramp. Every step clears WCAG AA (4.5:1) against the darkest
+   * surface it is used on — surface-sunken, not white — because muted labels
+   * sit inside tinted panels. Verified with axe; do not lighten without
+   * re-measuring.
+   */
   --color-ink: oklch(21% 0.006 285);
-  --color-ink-muted: oklch(44.2% 0.008 286);
-  --color-ink-subtle: oklch(55.2% 0.009 286);
-  --color-ink-faint: oklch(70.5% 0.008 286);
+  --color-ink-muted: oklch(42% 0.008 286);
+  --color-ink-subtle: oklch(49% 0.009 286);
+  --color-ink-faint: oklch(54% 0.008 286);
   --color-ink-inverse: oklch(98.5% 0 0);
 
   --color-line: oklch(92% 0.003 286);
@@ -44,10 +50,10 @@
 
   /* ── Score / rating ───────────────────────────────────────────────────── */
   /* Restrained tints, not traffic lights. Always paired with a text label. */
-  --color-score-excellent: oklch(58% 0.13 162);
-  --color-score-good: oklch(64% 0.13 145);
-  --color-score-mid: oklch(70% 0.15 75);
-  --color-score-poor: oklch(58% 0.19 22);
+  --color-score-excellent: oklch(54% 0.13 162);
+  --color-score-good: oklch(54.5% 0.13 145);
+  --color-score-mid: oklch(56.5% 0.15 75);
+  --color-score-poor: oklch(58.5% 0.19 22);
 
   --color-score-excellent-bg: oklch(96% 0.03 162);
   --color-score-good-bg: oklch(96% 0.03 145);
@@ -59,7 +65,7 @@
   --color-severity-critical-bg: oklch(96% 0.02 22);
   --color-severity-critical-line: oklch(88% 0.05 22);
 
-  --color-severity-high: oklch(56% 0.15 60);
+  --color-severity-high: oklch(54.5% 0.15 60);
   --color-severity-high-bg: oklch(96.5% 0.04 75);
   --color-severity-high-line: oklch(89% 0.07 75);
 
@@ -104,6 +110,15 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+
+    /*
+     * Reports render text taken from audited pages: URLs, query strings, minified
+     * attribute values — none of which contain spaces and all of which would
+     * otherwise blow out of their card. overflow-wrap is inherited, so setting it
+     * here covers every surface, and `break-word` only breaks a word that genuinely
+     * cannot fit, leaving normal prose untouched.
+     */
+    overflow-wrap: break-word;
   }
 
   /* Display type: tight tracking, balanced wrapping. */
