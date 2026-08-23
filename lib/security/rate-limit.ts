@@ -259,3 +259,64 @@ export function resetRateLimiter(): void {
   if (limiter instanceof MemoryRateLimiter) limiter.reset();
   limiter = null;
 }
+
+/**
+ * The abuse check a research submission goes through.
+ *
+ * Limits are keyed on the authenticated user first and the IP hash second. The
+ * user is the meaningful unit — that is who holds the tokens — but a single
+ * actor making accounts to get around a per-user limit is still one actor, and
+ * the IP window catches that without punishing colleagues behind one office
+ * address as long as the per-user window is the tighter of the two.
+ *
+ * The global cap is checked last and is the backstop against a runaway bill. It
+ * is deliberately a different failure from a personal rate limit: CAPACITY
+ * refunds, RATE_LIMITED does not, because a personal limit never took anything.
+ */
+export interface ResearchLimitVerdict {
+  allowed: boolean;
+  reason: 'RATE_LIMITED' | 'CAPACITY';
+  message: string;
+  retryAfterSeconds: number;
+}
+
+export async function checkResearchRateLimit(
+  userId: string,
+  ipHash: string | null,
+): Promise<ResearchLimitVerdict> {
+  const limiter = await getRateLimiter();
+
+  const perUser = await limiter.check(`user:${userId}`);
+  if (!perUser.allowed) {
+    return {
+      allowed: false,
+      reason: 'RATE_LIMITED',
+      message: 'Too many reports started recently on this account',
+      retryAfterSeconds: perUser.retryAfterSeconds,
+    };
+  }
+
+  if (ipHash) {
+    const perIp = await limiter.check(`ip:${ipHash}`);
+    if (!perIp.allowed) {
+      return {
+        allowed: false,
+        reason: 'RATE_LIMITED',
+        message: 'Too many reports started recently from this location',
+        retryAfterSeconds: perIp.retryAfterSeconds,
+      };
+    }
+  }
+
+  const withinGlobalCap = await limiter.checkGlobalCap();
+  if (!withinGlobalCap) {
+    return {
+      allowed: false,
+      reason: 'CAPACITY',
+      message: 'The service has reached its processing limit for today',
+      retryAfterSeconds: 3_600,
+    };
+  }
+
+  return { allowed: true, reason: 'RATE_LIMITED', message: '', retryAfterSeconds: 0 };
+}
