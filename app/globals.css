@@ -95,6 +95,74 @@
   --duration-slow: 600ms;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   DARK THEME
+
+   A token swap, not a second design — which is the whole reason every colour
+   was defined as a variable from the start.
+
+   The dark palette is not the light one inverted. Surfaces lift as they come
+   forward (canvas is darkest, cards sit above it) rather than darkening, and the
+   accent and status hues are lightened so they clear 4.5:1 against a dark ground
+   instead of the light one they were tuned for.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-canvas: oklch(17.5% 0.005 285);
+    --color-surface: oklch(21% 0.006 285);
+    --color-surface-subtle: oklch(19.5% 0.006 285);
+    --color-surface-sunken: oklch(25% 0.007 285);
+
+    --color-ink: oklch(96% 0.002 286);
+    --color-ink-muted: oklch(78% 0.006 286);
+    --color-ink-subtle: oklch(70% 0.007 286);
+    /* 63.5%, not 62%: measured against surface-sunken, the darkest ground a
+       muted label sits on. The light theme's ink-faint failed the same check. */
+    --color-ink-faint: oklch(63.5% 0.008 286);
+    --color-ink-inverse: oklch(17.5% 0.005 285);
+
+    --color-line: oklch(28% 0.007 285);
+    --color-line-strong: oklch(34% 0.008 285);
+
+    --color-brand: oklch(70% 0.15 267);
+    --color-brand-hover: oklch(77% 0.14 267);
+    --color-brand-subtle: oklch(26% 0.05 267);
+    --color-brand-line: oklch(36% 0.08 267);
+
+    --color-score-excellent: oklch(76% 0.14 162);
+    --color-score-good: oklch(78% 0.15 145);
+    --color-score-mid: oklch(80% 0.15 80);
+    --color-score-poor: oklch(72% 0.17 22);
+
+    --color-score-excellent-bg: oklch(26% 0.05 162);
+    --color-score-good-bg: oklch(26% 0.05 145);
+    --color-score-mid-bg: oklch(27% 0.06 80);
+    --color-score-poor-bg: oklch(26% 0.06 22);
+
+    --color-severity-critical: oklch(74% 0.16 22);
+    --color-severity-critical-bg: oklch(25% 0.06 22);
+    --color-severity-critical-line: oklch(36% 0.09 22);
+
+    --color-severity-high: oklch(80% 0.14 75);
+    --color-severity-high-bg: oklch(26% 0.05 75);
+    --color-severity-high-line: oklch(37% 0.07 75);
+
+    --color-severity-medium: oklch(76% 0.13 240);
+    --color-severity-medium-bg: oklch(25% 0.05 240);
+    --color-severity-medium-line: oklch(36% 0.08 240);
+
+    --color-severity-low: oklch(72% 0.007 286);
+    --color-severity-low-bg: oklch(25% 0.006 286);
+    --color-severity-low-line: oklch(34% 0.008 286);
+
+    /* Shadows do almost nothing on a dark ground; borders carry the separation,
+       so the shadow tokens are reduced rather than removed. */
+    --shadow-card: 0 1px 2px oklch(0% 0 0 / 0.3);
+    --shadow-raised: 0 4px 14px oklch(0% 0 0 / 0.4);
+  }
+}
+
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
