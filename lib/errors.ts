@@ -15,6 +15,8 @@ export const AUDIT_ERROR_CODES = [
   'SITE_BLOCKED',
   'SITE_TOO_LARGE',
   'NOT_HTML',
+  'UNSUPPORTED_CONTENT',
+  'RESPONSE_DECODE_FAILED',
   'NO_CONTENT',
   'AI_TIMEOUT',
   'AI_RATE_LIMITED',
@@ -88,6 +90,18 @@ export const AUDIT_ERROR_COPY: Record<AuditErrorCode, AuditErrorCopy> = {
     body: 'We received a file rather than a web page. Point us at the homepage of the site you want audited.',
     retryable: false,
     status: 415,
+  },
+  UNSUPPORTED_CONTENT: {
+    title: 'We could not read that response',
+    body: '{domain} returned the page in a format we do not support. This is usually an unusual compression or content type rather than anything wrong with the site.',
+    retryable: false,
+    status: 415,
+  },
+  RESPONSE_DECODE_FAILED: {
+    title: 'That response arrived damaged',
+    body: '{domain} sent a compressed page that we could not unpack. The data was incomplete or corrupt in transit.',
+    retryable: true,
+    status: 502,
   },
   NO_CONTENT: {
     title: "We couldn't find enough content to audit",

@@ -4,6 +4,7 @@ import { AuditError } from '@/lib/errors';
 import { assertAddressIsPublic, assertHostnameResolvesPublicly } from './ssrf-guard';
 import { validateAndNormalizeUrl } from './url-validator';
 import { localTestingEnabled } from './local-testing';
+import { ACCEPT_ENCODING, readDecodedBody } from './decode-body';
 
 /**
  * Hardened HTTP client for fetching untrusted, user-nominated pages.
@@ -18,17 +19,28 @@ import { localTestingEnabled } from './local-testing';
  *     answered with a public address and the connect lookup with 169.254.169.254.
  *   · The body is read as a stream and abandoned past a byte ceiling, so a
  *     multi-gigabyte response cannot exhaust memory.
+ *   · Compressed responses are decoded before anything looks at them, under a
+ *     separate ceiling — see lib/security/decode-body.ts. Every byte figure
+ *     below means decoded content bytes.
  */
 
 export const FETCH_LIMITS = {
-  maxBytes: 2 * 1024 * 1024, // 2 MB of HTML is already pathological
+  /** Ceiling on *decoded* HTML. 2 MB of markup is already pathological. */
+  maxBytes: 2 * 1024 * 1024,
+  /**
+   * Ceiling on compressed bytes read from the socket. Well under the decoded
+   * ceiling because compressed HTML runs about 5:1 — anything needing more than
+   * this on the wire is not a page we want to analyse. It also bounds how much
+   * a decompression bomb can make us read before we stop.
+   */
+  maxEncodedBytes: 768 * 1024,
   maxRedirects: 3,
   connectTimeoutMs: 10_000,
   totalTimeoutMs: 15_000,
 } as const;
 
 export const USER_AGENT =
-  'AISEOAuditBot/1.0 (+https://aiseo.app/bot; automated SEO audit; one request per audit)';
+  'ResearchSuiteBot/1.0 (+https://research-suite.example/bot; automated business research; bounded crawl)';
 
 const ACCEPTED_CONTENT_TYPES = ['text/html', 'application/xhtml+xml'];
 
@@ -37,7 +49,12 @@ export interface SafeFetchResult {
   status: number;
   headers: Record<string, string>;
   body: string;
+  /** Decoded content bytes. */
   bytes: number;
+  /** Bytes read off the socket before decoding. Observability only. */
+  encodedBytes: number;
+  /** Which Content-Encoding the server used. */
+  encoding: string;
   redirectChain: string[];
   responseTimeMs: number;
   /** True when the response was cut short at the byte ceiling. */
@@ -95,6 +112,7 @@ interface SingleRequest {
   bodyStream: Dispatcher.ResponseData['body'] | null;
   contentType: string | null;
   contentLength: number | null;
+  contentEncoding: string | null;
 }
 
 async function requestOnce(
@@ -112,7 +130,7 @@ async function requestOnce(
         'user-agent': USER_AGENT,
         accept: 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
         'accept-language': 'en-GB,en;q=0.9',
-        'accept-encoding': 'gzip, deflate',
+        'accept-encoding': ACCEPT_ENCODING,
         'cache-control': 'no-cache',
       },
       // Note: undici neither follows redirects nor throws on 4xx/5xx unless
@@ -152,39 +170,7 @@ async function requestOnce(
     bodyStream: response.body,
     contentType: headers['content-type'] ?? null,
     contentLength: Number.isFinite(contentLength) ? contentLength : null,
-  };
-}
-
-/** Reads a stream to a string, abandoning it past the byte ceiling. */
-async function readCapped(
-  stream: Dispatcher.ResponseData['body'],
-  maxBytes: number,
-): Promise<{ text: string; bytes: number; truncated: boolean }> {
-  const chunks: Buffer[] = [];
-  let bytes = 0;
-  let truncated = false;
-
-  for await (const chunk of stream) {
-    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as string);
-    bytes += buffer.length;
-
-    if (bytes > maxBytes) {
-      // Keep the portion up to the ceiling; the head of an HTML document holds
-      // the metadata that matters most, so a truncated read is still useful.
-      const keep = buffer.length - (bytes - maxBytes);
-      if (keep > 0) chunks.push(buffer.subarray(0, keep));
-      truncated = true;
-      // Abandoning the stream frees the connection without draining the body.
-      stream.destroy();
-      break;
-    }
-    chunks.push(buffer);
-  }
-
-  return {
-    text: Buffer.concat(chunks).toString('utf8'),
-    bytes,
-    truncated,
+    contentEncoding: headers['content-encoding'] ?? null,
   };
 }
 
@@ -280,11 +266,28 @@ export async function safeFetch(rawUrl: string): Promise<SafeFetchResult> {
         });
       }
 
-      // A declared length over the ceiling saves us downloading it to find out.
-      if (result.contentLength !== null && result.contentLength > FETCH_LIMITS.maxBytes) {
+      /*
+       * A declared length over the ceiling saves us downloading it to find out.
+       *
+       * Content-Length describes the bytes on the wire, so which ceiling applies
+       * depends on whether the server compressed the body. Comparing a
+       * compressed length against the decoded ceiling would wave through a
+       * 700 KB gzip that inflates to 40 MB, which is precisely the case the
+       * encoded ceiling exists for.
+       */
+      const declaredCeiling =
+        (result.contentEncoding ?? 'identity').trim().toLowerCase() === 'identity'
+          ? FETCH_LIMITS.maxBytes
+          : FETCH_LIMITS.maxEncodedBytes;
+
+      if (result.contentLength !== null && result.contentLength > declaredCeiling) {
         result.bodyStream?.resume?.();
         throw new AuditError('SITE_TOO_LARGE', `Declared ${result.contentLength} bytes`, {
-          context: { url: validation.normalized, contentLength: result.contentLength },
+          context: {
+            url: validation.normalized,
+            contentLength: result.contentLength,
+            contentEncoding: result.contentEncoding,
+          },
         });
       }
 
@@ -294,20 +297,22 @@ export async function safeFetch(rawUrl: string): Promise<SafeFetchResult> {
         });
       }
 
-      const { text, bytes, truncated } = await readCapped(
-        result.bodyStream,
-        FETCH_LIMITS.maxBytes,
-      );
+      const decoded = await readDecodedBody(result.bodyStream, result.contentEncoding, {
+        maxDecodedBytes: FETCH_LIMITS.maxBytes,
+        maxEncodedBytes: FETCH_LIMITS.maxEncodedBytes,
+      });
 
       return {
         finalUrl: validation.normalized,
         status: result.status,
         headers: result.headers,
-        body: text,
-        bytes,
+        body: decoded.text,
+        bytes: decoded.bytes,
+        encodedBytes: decoded.encodedBytes,
+        encoding: decoded.encoding,
         redirectChain,
         responseTimeMs: Date.now() - started,
-        truncated,
+        truncated: decoded.truncated,
       };
     }
 
