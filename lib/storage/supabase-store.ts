@@ -221,6 +221,33 @@ export class SupabaseLeadStore implements LeadStore {
 }
 
 /**
+ * Normalises a Postgres timestamptz to canonical UTC.
+ *
+ * Postgres returns timestamptz with an explicit offset —
+ * `2026-08-23T21:04:33.572839+00:00` — while `z.iso.datetime()` accepts only
+ * the `Z` form by default. Reports were therefore written successfully and then
+ * rejected on read: `rowToRecord` produced `report: null` for a perfectly good
+ * row, and the page rendered a STORAGE_ERROR.
+ *
+ * Normalising here rather than loosening the schema keeps `AuditReport.createdAt`
+ * a single canonical format everywhere downstream — the renderer, the OG image
+ * and the fixtures all already assume it. This is a driver-specific detail of
+ * how Postgres serialises a column, so the driver is where it belongs.
+ *
+ * Sub-millisecond precision is lost (`.572839` becomes `.572`), which is what
+ * every other consumer of this value already assumes: JS Date is millisecond-
+ * resolution, and it is a report timestamp, not an ordering key.
+ *
+ * An unparseable value is returned untouched rather than thrown on. The caller
+ * hands it to Zod, which rejects it exactly as before — a corrupt row must stay
+ * a rejected row, not become a crash.
+ */
+function toIsoUtc(value: string): string {
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString();
+}
+
+/**
  * Converts a row to a record, re-validating the stored report.
  *
  * Stored JSON is re-parsed rather than cast: a row written by an older schema
@@ -231,13 +258,17 @@ export class SupabaseLeadStore implements LeadStore {
 function rowToRecord(row: AuditRow): AuditRecord {
   let report: AuditReport | null = null;
 
+  // One value for both the report and the record: the same audit must not carry
+  // two different spellings of the same instant.
+  const createdAt = toIsoUtc(row.created_at);
+
   if (row.status === 'complete' && row.facts && row.analysis) {
     const candidate = {
       schemaVersion: row.schema_version,
       publicId: row.public_id,
       url: row.normalized_url,
       domain: row.domain,
-      createdAt: row.created_at,
+      createdAt,
       overallScore: row.overall_score,
       overallRating: row.overall_rating,
       facts: row.facts,
@@ -270,7 +301,7 @@ function rowToRecord(row: AuditRow): AuditRecord {
     stageIndex: row.stage_index,
     errorCode: isAuditErrorCode(row.error_code) ? row.error_code : null,
     report,
-    createdAt: row.created_at,
-    completedAt: row.completed_at,
+    createdAt,
+    completedAt: row.completed_at ? toIsoUtc(row.completed_at) : null,
   };
 }
