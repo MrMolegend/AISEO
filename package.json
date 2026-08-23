@@ -23,6 +23,7 @@
     "verify": "npm run typecheck && npm run lint && npm run test"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.120.0",
     "@radix-ui/react-accordion": "^1.2.20",
     "@radix-ui/react-tooltip": "^1.2.16",
     "cheerio": "^1.2.0",
