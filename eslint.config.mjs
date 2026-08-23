@@ -50,7 +50,7 @@ export default tseslint.config(
             {
               name: '@anthropic-ai/sdk',
               message:
-                'Import the AIProvider interface from @/lib/ai instead. Only lib/ai/anthropic-provider.ts may use the SDK directly.',
+                'Import from @/lib/ai instead. Only the provider adapters under lib/ai may use the SDK directly.',
             },
           ],
         },
@@ -73,7 +73,7 @@ export default tseslint.config(
 
   // The one file permitted to touch the Anthropic SDK.
   {
-    files: ['lib/ai/anthropic-provider.ts'],
+    files: ['lib/ai/anthropic-provider.ts', 'lib/ai/research-provider.ts'],
     rules: { 'no-restricted-imports': 'off' },
   },
 
