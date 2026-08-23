@@ -5,6 +5,7 @@ import { SiteFooter } from '@/components/marketing/site-footer';
 import { ReportShell } from '@/components/audit/report/report-shell';
 import { ProcessingScreen } from '@/components/audit/processing/processing-screen';
 import { AuditErrorState } from '@/components/audit/states/audit-error-state';
+import { LeadCapture } from '@/components/audit/report/lead-capture';
 import { getAuditStore } from '@/lib/storage';
 
 /**
@@ -57,7 +58,12 @@ export default async function AuditPage({
       <SiteHeader />
       <main>
         {record.status === 'complete' && record.report ? (
-          <ReportShell report={record.report} />
+          <ReportShell
+            report={record.report}
+            footer={
+              <LeadCapture auditPublicId={record.publicId} domain={record.domain} />
+            }
+          />
         ) : record.status === 'failed' ? (
           <AuditErrorState code={record.errorCode ?? 'UNKNOWN'} domain={record.domain} />
         ) : record.status === 'complete' ? (

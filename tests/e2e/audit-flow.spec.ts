@@ -126,3 +126,58 @@ test.describe('report interaction', () => {
     }
   });
 });
+
+test.describe('lead capture', () => {
+  test('the CTA appears only at the end of the report and never gates it', async ({
+    page,
+    request,
+  }) => {
+    const response = await request.post('/api/audits', {
+      data: { url: 'http://127.0.0.1:3100/' },
+    });
+    const { publicId } = (await response.json()) as { publicId: string };
+
+    await page.goto(`/audit/${publicId}`);
+    await expect(page.getByRole('heading', { name: 'Executive summary' })).toBeVisible({
+      timeout: 60_000,
+    });
+
+    // The report is readable without interacting with the CTA: no modal, no
+    // overlay, nothing intercepting a click on the content.
+    await expect(page.locator('[role="dialog"]')).toHaveCount(0);
+
+    const cta = page.getByRole('heading', { name: /want help implementing/i });
+    await expect(cta).toBeVisible();
+
+    // It sits after the limitations section, which is the last report content.
+    const limitations = page.locator('#limitations');
+    const ctaBox = await cta.boundingBox();
+    const limitationsBox = await limitations.boundingBox();
+    expect(ctaBox!.y).toBeGreaterThan(limitationsBox!.y);
+  });
+
+  test('a submission is accepted and confirmed', async ({ page, request }) => {
+    const response = await request.post('/api/audits', {
+      data: { url: 'http://127.0.0.1:3100/' },
+    });
+    const { publicId } = (await response.json()) as { publicId: string };
+
+    await page.goto(`/audit/${publicId}`);
+    await expect(
+      page.getByRole('heading', { name: /want help implementing/i }),
+    ).toBeVisible({ timeout: 60_000 });
+
+    await page.getByLabel(/your name/i).fill('Alex Harrington');
+    await page.getByLabel(/^email/i).fill('alex@example.com');
+    await page
+      .getByLabel(/what would you like help with/i)
+      .fill('Technical fixes please.');
+
+    // The route rejects submissions completed faster than a human could read
+    // the form, so wait past that threshold before submitting.
+    await page.waitForTimeout(2_200);
+    await page.getByRole('button', { name: /send message/i }).click();
+
+    await expect(page.getByText(/message received/i)).toBeVisible();
+  });
+});
