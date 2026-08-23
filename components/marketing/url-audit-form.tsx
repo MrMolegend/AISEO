@@ -31,7 +31,15 @@ export function UrlAuditForm({ autoFocus = false }: { autoFocus?: boolean }) {
     event.preventDefault();
     if (submitting) return;
 
-    const validation = validateAndNormalizeUrl(value);
+    /*
+     * Everything except the port rule is checked here for instant feedback.
+     * Ports are left to the server, which is authoritative: the browser cannot
+     * know whether this deployment permits a non-standard port, and guessing
+     * wrong produces the worst outcome — an address the client rejects and the
+     * server would have accepted. A server-side rejection is shown inline
+     * below, so the only cost is one round-trip on a rare mistake.
+     */
+    const validation = validateAndNormalizeUrl(value, { allowNonStandardPorts: true });
     if (!validation.ok) {
       setError(URL_REJECTION_MESSAGES[validation.reason]);
       inputRef.current?.focus();

@@ -3,6 +3,7 @@ import { Agent, buildConnector, request as undiciRequest, type Dispatcher } from
 import { AuditError } from '@/lib/errors';
 import { assertAddressIsPublic, assertHostnameResolvesPublicly } from './ssrf-guard';
 import { validateAndNormalizeUrl } from './url-validator';
+import { localTestingEnabled } from './local-testing';
 
 /**
  * Hardened HTTP client for fetching untrusted, user-nominated pages.
@@ -30,18 +31,6 @@ export const USER_AGENT =
   'AISEOAuditBot/1.0 (+https://aiseo.app/bot; automated SEO audit; one request per audit)';
 
 const ACCEPTED_CONTENT_TYPES = ['text/html', 'application/xhtml+xml'];
-
-/**
- * The single place the local-testing escape hatch is read.
- *
- * Set only by the integration and end-to-end suites, which serve their own
- * fixture sites on loopback and ephemeral ports. Production never sets it, so
- * both relaxations are unreachable there.
- */
-function localTestingEnabled(): boolean {
-  const flag = process.env.E2E_ALLOW_LOCAL_FETCH;
-  return flag === '1' || flag === 'true';
-}
 
 export interface SafeFetchResult {
   finalUrl: string;

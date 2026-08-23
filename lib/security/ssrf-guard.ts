@@ -2,6 +2,7 @@ import 'server-only';
 import { lookup } from 'node:dns/promises';
 import ipaddr from 'ipaddr.js';
 import { AuditError } from '@/lib/errors';
+import { localTestingEnabled } from './local-testing';
 
 /**
  * IP-level SSRF protection.
@@ -120,10 +121,7 @@ function classifyV6(base: string): AddressRejection {
 export function assertAddressIsPublic(address: string, context: string): void {
   // Loopback is permitted only for the local end-to-end suite, which serves its
   // own fixture site. Never reachable in production: the flag is not set there.
-  if (
-    process.env.E2E_ALLOW_LOCAL_FETCH === '1' ||
-    process.env.E2E_ALLOW_LOCAL_FETCH === 'true'
-  ) {
+  if (localTestingEnabled()) {
     const parsed = ipaddr.parse(address);
     const isLoopback =
       (parsed.kind() === 'ipv4' && address.startsWith('127.')) || address === '::1';
