@@ -6,7 +6,7 @@ import { SYSTEM_PROMPT, buildUserMessage } from '@/prompts/seo-audit';
 import { buildRepairMessage } from '@/prompts/repair';
 import type { AIProvider, AuditModelInput, AuditModelResult } from './provider';
 import { classifyProviderError } from './errors';
-import { AuditError } from '@/lib/errors';
+import { PlatformError } from '@/lib/errors';
 
 /**
  * The only file in the codebase permitted to import the Anthropic SDK.
@@ -132,7 +132,7 @@ export class AnthropicProvider implements AIProvider {
       const truncated = response.stop_reason === 'max_tokens';
 
       if (response.stop_reason === 'refusal') {
-        throw new AuditError('AI_REFUSED', 'The model declined to analyse this page', {
+        throw new PlatformError('AI_REFUSED', 'The model declined to analyse this page', {
           context: { category: response.stop_details?.category ?? null },
         });
       }

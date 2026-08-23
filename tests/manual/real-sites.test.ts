@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { retrieveSiteFacts } from '@/lib/retrieval/fetch-page';
 import { validateAndNormalizeUrl } from '@/lib/security/url-validator';
-import { isAuditError } from '@/lib/errors';
+import { isPlatformError } from '@/lib/errors';
 
 /**
  * Smoke test against the real internet.
@@ -68,7 +68,7 @@ describe('retrieval against real websites', () => {
         expect(facts.httpStatus).toBe(200);
         expect(facts.checks.length).toBeGreaterThan(5);
       } catch (error) {
-        const code = isAuditError(error) ? error.code : 'THREW';
+        const code = isPlatformError(error) ? error.code : 'THREW';
         console.log(
           `${validation.domain.padEnd(24)} ${code}: ${error instanceof Error ? error.message.slice(0, 80) : ''}`,
         );

@@ -1,6 +1,6 @@
 import 'server-only';
 import { Agent, buildConnector, request as undiciRequest, type Dispatcher } from 'undici';
-import { AuditError } from '@/lib/errors';
+import { PlatformError } from '@/lib/errors';
 import { assertAddressIsPublic, assertHostnameResolvesPublicly } from './ssrf-guard';
 import { validateAndNormalizeUrl } from './url-validator';
 import { localTestingEnabled } from './local-testing';
@@ -83,7 +83,7 @@ function createGuardedAgent(): Agent {
       const address = socket.remoteAddress;
       if (!address) {
         socket.destroy();
-        callback(new AuditError('BLOCKED_URL', 'Socket had no peer address'), null);
+        callback(new PlatformError('BLOCKED_URL', 'Socket had no peer address'), null);
         return;
       }
       try {
@@ -139,15 +139,15 @@ async function requestOnce(
       // safeFetch), and non-2xx statuses are mapped to typed errors below.
     });
   } catch (cause) {
-    if (cause instanceof AuditError) throw cause;
+    if (cause instanceof PlatformError) throw cause;
     const message = cause instanceof Error ? cause.message : String(cause);
     if (/timeout|timed out|UND_ERR_(HEADERS|BODY|CONNECT)_TIMEOUT/i.test(message)) {
-      throw new AuditError('SITE_TIMEOUT', message, {
+      throw new PlatformError('SITE_TIMEOUT', message, {
         cause,
         context: { url: url.href },
       });
     }
-    throw new AuditError('SITE_UNREACHABLE', message, {
+    throw new PlatformError('SITE_UNREACHABLE', message, {
       cause,
       context: { url: url.href },
     });
@@ -175,24 +175,24 @@ async function requestOnce(
 }
 
 /** Maps an HTTP status to the right user-facing failure, or returns null if OK. */
-function statusToError(status: number, url: string): AuditError | null {
+function statusToError(status: number, url: string): PlatformError | null {
   if (status >= 200 && status < 300) return null;
   if (status === 401 || status === 403 || status === 429) {
-    return new AuditError('SITE_BLOCKED', `Blocked with status ${status}`, {
+    return new PlatformError('SITE_BLOCKED', `Blocked with status ${status}`, {
       context: { url, status },
     });
   }
   if (status === 404 || status === 410) {
-    return new AuditError('SITE_UNREACHABLE', `Not found (${status})`, {
+    return new PlatformError('SITE_UNREACHABLE', `Not found (${status})`, {
       context: { url, status },
     });
   }
   if (status === 408 || status === 504) {
-    return new AuditError('SITE_TIMEOUT', `Upstream timeout (${status})`, {
+    return new PlatformError('SITE_TIMEOUT', `Upstream timeout (${status})`, {
       context: { url, status },
     });
   }
-  return new AuditError('SITE_UNREACHABLE', `Unexpected status ${status}`, {
+  return new PlatformError('SITE_UNREACHABLE', `Unexpected status ${status}`, {
     context: { url, status },
   });
 }
@@ -223,7 +223,7 @@ export async function safeFetch(rawUrl: string): Promise<SafeFetchResult> {
         allowNonStandardPorts: localTestingEnabled(),
       });
       if (!validation.ok) {
-        throw new AuditError(
+        throw new PlatformError(
           'BLOCKED_URL',
           `Redirect target rejected: ${validation.reason}`,
           {
@@ -241,7 +241,7 @@ export async function safeFetch(rawUrl: string): Promise<SafeFetchResult> {
       if (result.status >= 300 && result.status < 400 && result.location) {
         result.bodyStream?.resume?.();
         if (hop === FETCH_LIMITS.maxRedirects) {
-          throw new AuditError('SITE_UNREACHABLE', 'Too many redirects', {
+          throw new PlatformError('SITE_UNREACHABLE', 'Too many redirects', {
             context: { url: rawUrl, hops: redirectChain.length },
           });
         }
@@ -261,7 +261,7 @@ export async function safeFetch(rawUrl: string): Promise<SafeFetchResult> {
       const contentType = (result.contentType ?? '').toLowerCase();
       if (contentType && !ACCEPTED_CONTENT_TYPES.some((t) => contentType.includes(t))) {
         result.bodyStream?.resume?.();
-        throw new AuditError('NOT_HTML', `Content-Type was ${contentType}`, {
+        throw new PlatformError('NOT_HTML', `Content-Type was ${contentType}`, {
           context: { url: validation.normalized, contentType },
         });
       }
@@ -282,17 +282,21 @@ export async function safeFetch(rawUrl: string): Promise<SafeFetchResult> {
 
       if (result.contentLength !== null && result.contentLength > declaredCeiling) {
         result.bodyStream?.resume?.();
-        throw new AuditError('SITE_TOO_LARGE', `Declared ${result.contentLength} bytes`, {
-          context: {
-            url: validation.normalized,
-            contentLength: result.contentLength,
-            contentEncoding: result.contentEncoding,
+        throw new PlatformError(
+          'SITE_TOO_LARGE',
+          `Declared ${result.contentLength} bytes`,
+          {
+            context: {
+              url: validation.normalized,
+              contentLength: result.contentLength,
+              contentEncoding: result.contentEncoding,
+            },
           },
-        });
+        );
       }
 
       if (!result.bodyStream) {
-        throw new AuditError('SITE_UNREACHABLE', 'Empty response body', {
+        throw new PlatformError('SITE_UNREACHABLE', 'Empty response body', {
           context: { url: validation.normalized },
         });
       }
@@ -316,19 +320,19 @@ export async function safeFetch(rawUrl: string): Promise<SafeFetchResult> {
       };
     }
 
-    throw new AuditError('SITE_UNREACHABLE', 'Redirect loop', {
+    throw new PlatformError('SITE_UNREACHABLE', 'Redirect loop', {
       context: { url: rawUrl },
     });
   } catch (error) {
-    if (error instanceof AuditError) throw error;
+    if (error instanceof PlatformError) throw error;
     const message = error instanceof Error ? error.message : String(error);
     if (controller.signal.aborted || /abort/i.test(message)) {
-      throw new AuditError('SITE_TIMEOUT', 'Request exceeded the time budget', {
+      throw new PlatformError('SITE_TIMEOUT', 'Request exceeded the time budget', {
         cause: error,
         context: { url: rawUrl },
       });
     }
-    throw new AuditError('SITE_UNREACHABLE', message, {
+    throw new PlatformError('SITE_UNREACHABLE', message, {
       cause: error,
       context: { url: rawUrl },
     });

@@ -89,7 +89,7 @@ class MemoryRateLimiter implements RateLimiter {
     const inHour = window.timestamps.filter((t) => now - t < hourMs).length;
     const inDay = window.timestamps.length;
 
-    if (inHour >= env.AUDIT_RATE_LIMIT_PER_HOUR) {
+    if (inHour >= env.RESEARCH_RATE_LIMIT_PER_HOUR) {
       const oldest = window.timestamps.find((t) => now - t < hourMs) ?? now;
       this.windows.set(identifier, window);
       return {
@@ -99,7 +99,7 @@ class MemoryRateLimiter implements RateLimiter {
       };
     }
 
-    if (inDay >= env.AUDIT_RATE_LIMIT_PER_DAY) {
+    if (inDay >= env.RESEARCH_RATE_LIMIT_PER_DAY) {
       const oldest = window.timestamps[0] ?? now;
       this.windows.set(identifier, window);
       return {
@@ -115,7 +115,7 @@ class MemoryRateLimiter implements RateLimiter {
     return {
       allowed: true,
       retryAfterSeconds: 0,
-      remaining: env.AUDIT_RATE_LIMIT_PER_HOUR - inHour - 1,
+      remaining: env.RESEARCH_RATE_LIMIT_PER_HOUR - inHour - 1,
     };
   }
 
@@ -126,7 +126,7 @@ class MemoryRateLimiter implements RateLimiter {
       this.globalWindowStart = now;
       this.globalCount = 0;
     }
-    if (this.globalCount >= env.AUDIT_DAILY_GLOBAL_CAP) return false;
+    if (this.globalCount >= env.RESEARCH_DAILY_GLOBAL_CAP) return false;
     this.globalCount += 1;
     return true;
   }
@@ -191,12 +191,12 @@ class UpstashRateLimiter implements RateLimiter {
     const dayCount = await this.redis.incr(dayKey);
     if (dayCount === 1) await this.redis.expire(dayKey, 86_400);
 
-    if (hourCount > env.AUDIT_RATE_LIMIT_PER_HOUR) {
+    if (hourCount > env.RESEARCH_RATE_LIMIT_PER_HOUR) {
       const ttl = await this.redis.ttl(hourKey);
       return { allowed: false, retryAfterSeconds: Math.max(ttl, 60), remaining: 0 };
     }
 
-    if (dayCount > env.AUDIT_RATE_LIMIT_PER_DAY) {
+    if (dayCount > env.RESEARCH_RATE_LIMIT_PER_DAY) {
       const ttl = await this.redis.ttl(dayKey);
       return { allowed: false, retryAfterSeconds: Math.max(ttl, 3_600), remaining: 0 };
     }
@@ -204,7 +204,7 @@ class UpstashRateLimiter implements RateLimiter {
     return {
       allowed: true,
       retryAfterSeconds: 0,
-      remaining: Math.max(0, env.AUDIT_RATE_LIMIT_PER_HOUR - hourCount),
+      remaining: Math.max(0, env.RESEARCH_RATE_LIMIT_PER_HOUR - hourCount),
     };
   }
 
@@ -213,7 +213,7 @@ class UpstashRateLimiter implements RateLimiter {
     const key = `rl:global:${Math.floor(Date.now() / 86_400_000)}`;
     const count = await this.redis.incr(key);
     if (count === 1) await this.redis.expire(key, 86_400);
-    return count <= env.AUDIT_DAILY_GLOBAL_CAP;
+    return count <= env.RESEARCH_DAILY_GLOBAL_CAP;
   }
 
   /** SET NX EX — the standard atomic lock. */

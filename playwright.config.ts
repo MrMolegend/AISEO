@@ -59,11 +59,11 @@ export default defineConfig({
       E2E_ALLOW_LOCAL_FETCH: '1',
       // Generous, so rate limiting never makes the suite flaky. Limit behaviour
       // is asserted directly in tests/unit and tests/integration.
-      AUDIT_RATE_LIMIT_PER_HOUR: '500',
-      AUDIT_RATE_LIMIT_PER_DAY: '2000',
-      AUDIT_DAILY_GLOBAL_CAP: '5000',
+      RESEARCH_RATE_LIMIT_PER_HOUR: '500',
+      RESEARCH_RATE_LIMIT_PER_DAY: '2000',
+      RESEARCH_DAILY_GLOBAL_CAP: '5000',
       // Disable the cache so each test starts a genuinely new audit.
-      AUDIT_CACHE_TTL_HOURS: '1',
+      RESEARCH_CACHE_TTL_HOURS: '1',
       LOG_LEVEL: 'warn',
     },
   },

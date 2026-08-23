@@ -7,7 +7,7 @@ import { buildReport } from '@/lib/validation/post-process';
 import { computeOverallScore } from '@/lib/validation/cross-reference';
 import { auditReportSchema, ratingForScore } from '@/schemas/audit';
 import { getFixtureReport } from '@/fixtures';
-import { isAuditError } from '@/lib/errors';
+import { isPlatformError } from '@/lib/errors';
 import type { SiteFacts } from '@/schemas/facts';
 
 /**
@@ -76,8 +76,8 @@ describe('runAnalysis — repair path', () => {
       await runAnalysis(facts(), DOMAIN);
       throw new Error('expected AI_INVALID_OUTPUT');
     } catch (error) {
-      expect(isAuditError(error)).toBe(true);
-      if (isAuditError(error)) expect(error.code).toBe('AI_INVALID_OUTPUT');
+      expect(isPlatformError(error)).toBe(true);
+      if (isPlatformError(error)) expect(error.code).toBe('AI_INVALID_OUTPUT');
     }
   });
 
@@ -87,8 +87,8 @@ describe('runAnalysis — repair path', () => {
       await runAnalysis(facts(), DOMAIN);
       throw new Error('expected AI_INVALID_OUTPUT');
     } catch (error) {
-      expect(isAuditError(error)).toBe(true);
-      if (isAuditError(error)) expect(error.code).toBe('AI_INVALID_OUTPUT');
+      expect(isPlatformError(error)).toBe(true);
+      if (isPlatformError(error)) expect(error.code).toBe('AI_INVALID_OUTPUT');
     }
   });
 
@@ -98,7 +98,7 @@ describe('runAnalysis — repair path', () => {
       await runAnalysis(facts(), DOMAIN);
       throw new Error('expected AI_INVALID_OUTPUT');
     } catch (error) {
-      if (isAuditError(error)) expect(error.code).toBe('AI_INVALID_OUTPUT');
+      if (isPlatformError(error)) expect(error.code).toBe('AI_INVALID_OUTPUT');
     }
   });
 
@@ -108,7 +108,7 @@ describe('runAnalysis — repair path', () => {
       await runAnalysis(facts(), DOMAIN);
       throw new Error('expected AI_INVALID_OUTPUT');
     } catch (error) {
-      if (isAuditError(error)) expect(error.code).toBe('AI_INVALID_OUTPUT');
+      if (isPlatformError(error)) expect(error.code).toBe('AI_INVALID_OUTPUT');
     }
   });
 });
@@ -122,8 +122,8 @@ describe('runAnalysis — transport failures', () => {
         await runAnalysis(facts(), DOMAIN);
         throw new Error(`expected ${code}`);
       } catch (error) {
-        expect(isAuditError(error)).toBe(true);
-        if (isAuditError(error)) expect(error.code).toBe(code);
+        expect(isPlatformError(error)).toBe(true);
+        if (isPlatformError(error)) expect(error.code).toBe(code);
       }
     },
   );

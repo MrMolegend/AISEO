@@ -2,7 +2,7 @@ import 'server-only';
 import { getEnv } from '@/lib/env';
 import type { AIProvider } from './provider';
 import { MockProvider } from './mock-provider';
-import { AuditError } from '@/lib/errors';
+import { PlatformError } from '@/lib/errors';
 
 export type { AIProvider, AuditModelInput, AuditModelResult } from './provider';
 export { MockProvider } from './mock-provider';
@@ -28,7 +28,7 @@ export async function getProvider(): Promise<AIProvider> {
   }
 
   if (!env.ANTHROPIC_API_KEY) {
-    throw new AuditError(
+    throw new PlatformError(
       'AI_UNAVAILABLE',
       'AI_PROVIDER is "anthropic" but ANTHROPIC_API_KEY is not set',
     );

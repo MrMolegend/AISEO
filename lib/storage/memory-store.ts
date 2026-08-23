@@ -8,7 +8,7 @@ import type {
 import type { AuditReport } from '@/schemas/audit';
 import type { StageId } from '@/lib/pipeline/stages';
 import { stageIndex } from '@/lib/pipeline/stages';
-import type { AuditErrorCode } from '@/lib/errors';
+import type { ErrorCode } from '@/lib/errors';
 
 /**
  * In-memory storage driver.
@@ -98,7 +98,7 @@ export class MemoryAuditStore implements AuditStore {
     record.completedAt = new Date().toISOString();
   }
 
-  async fail(publicId: string, code: AuditErrorCode): Promise<void> {
+  async fail(publicId: string, code: ErrorCode): Promise<void> {
     const record = this.records.get(publicId);
     if (!record) return;
     record.status = 'failed';

@@ -5,7 +5,7 @@ import type { AuditAnalysis, AuditMeta } from '@/schemas/audit';
 import { getProvider } from './index';
 import { isRetryable } from './errors';
 import { validateAnalysis } from '@/lib/validation/validate-report';
-import { AuditError, toAuditError } from '@/lib/errors';
+import { PlatformError, toPlatformError } from '@/lib/errors';
 import { getEnv } from '@/lib/env';
 import { PROMPT_VERSION } from '@/prompts/seo-audit';
 import { createLogger, LOG_EVENTS, type Logger } from '@/lib/observability/logger';
@@ -40,7 +40,7 @@ const sleep = (ms: number, signal: AbortSignal) =>
       'abort',
       () => {
         clearTimeout(timer);
-        reject(new AuditError('AI_TIMEOUT', 'Aborted while backing off'));
+        reject(new PlatformError('AI_TIMEOUT', 'Aborted while backing off'));
       },
       { once: true },
     );
@@ -78,7 +78,7 @@ export async function runAnalysis(
    */
   if (options.signal?.aborted) {
     clearTimeout(budgetTimer);
-    throw new AuditError('AI_TIMEOUT', 'Analysis was cancelled before it started');
+    throw new PlatformError('AI_TIMEOUT', 'Analysis was cancelled before it started');
   }
   const onExternalAbort = () => controller.abort();
   options.signal?.addEventListener('abort', onExternalAbort, { once: true });
@@ -137,7 +137,7 @@ export async function runAnalysis(
       // instruction to be briefer, which is the right correction.
       if (result.truncated) {
         if (round >= ANALYSIS_LIMITS.maxRepairAttempts) {
-          throw new AuditError(
+          throw new PlatformError(
             'AI_INVALID_OUTPUT',
             'Output exceeded the token budget twice',
           );
@@ -185,7 +185,7 @@ export async function runAnalysis(
       });
 
       if (round >= ANALYSIS_LIMITS.maxRepairAttempts) {
-        throw new AuditError(
+        throw new PlatformError(
           'AI_INVALID_OUTPUT',
           `Validation failed after ${repairAttempts} repair attempt(s)`,
           { context: { problems: validation.problems.slice(0, 5) } },
@@ -197,7 +197,7 @@ export async function runAnalysis(
       log.warn(LOG_EVENTS.repairTriggered, { reason: 'validation' });
     }
 
-    throw new AuditError('AI_INVALID_OUTPUT', 'Exhausted validation attempts');
+    throw new PlatformError('AI_INVALID_OUTPUT', 'Exhausted validation attempts');
   } finally {
     clearTimeout(budgetTimer);
     options.signal?.removeEventListener('abort', onExternalAbort);
@@ -216,13 +216,13 @@ async function callWithRetry<T>(
   signal: AbortSignal,
   log: Logger,
 ): Promise<T> {
-  let lastError: AuditError | null = null;
+  let lastError: PlatformError | null = null;
 
   for (let attempt = 0; attempt <= ANALYSIS_LIMITS.maxTransportRetries; attempt += 1) {
     try {
       return await call();
     } catch (error) {
-      const auditError = toAuditError(error);
+      const auditError = toPlatformError(error);
       lastError = auditError;
 
       const canRetry =
@@ -241,5 +241,5 @@ async function callWithRetry<T>(
     }
   }
 
-  throw lastError ?? new AuditError('AI_UNAVAILABLE', 'Exhausted retries');
+  throw lastError ?? new PlatformError('AI_UNAVAILABLE', 'Exhausted retries');
 }

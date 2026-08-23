@@ -10,7 +10,7 @@ import type {
 } from './types';
 import { auditReportSchema, type AuditReport, type AuditStatus } from '@/schemas/audit';
 import { stageIndex, isStageId, type StageId } from '@/lib/pipeline/stages';
-import { AuditError, isAuditErrorCode, type AuditErrorCode } from '@/lib/errors';
+import { PlatformError, isErrorCode, type ErrorCode } from '@/lib/errors';
 import { logger } from '@/lib/observability/logger';
 
 /**
@@ -80,7 +80,7 @@ export class SupabaseAuditStore implements AuditStore {
       .single<AuditRow>();
 
     if (error || !data) {
-      throw new AuditError('STORAGE_ERROR', 'Could not create the audit record', {
+      throw new PlatformError('STORAGE_ERROR', 'Could not create the audit record', {
         cause: error,
       });
     }
@@ -123,13 +123,13 @@ export class SupabaseAuditStore implements AuditStore {
       .eq('public_id', publicId);
 
     if (error) {
-      throw new AuditError('STORAGE_ERROR', 'Could not save the completed audit', {
+      throw new PlatformError('STORAGE_ERROR', 'Could not save the completed audit', {
         cause: error,
       });
     }
   }
 
-  async fail(publicId: string, code: AuditErrorCode): Promise<void> {
+  async fail(publicId: string, code: ErrorCode): Promise<void> {
     const { error } = await this.client
       .from('audits')
       .update({
@@ -152,7 +152,9 @@ export class SupabaseAuditStore implements AuditStore {
       .maybeSingle<AuditRow>();
 
     if (error) {
-      throw new AuditError('STORAGE_ERROR', 'Could not read the audit', { cause: error });
+      throw new PlatformError('STORAGE_ERROR', 'Could not read the audit', {
+        cause: error,
+      });
     }
     return data ? rowToRecord(data) : null;
   }
@@ -213,7 +215,7 @@ export class SupabaseLeadStore implements LeadStore {
     });
 
     if (error) {
-      throw new AuditError('STORAGE_ERROR', 'Could not save the enquiry', {
+      throw new PlatformError('STORAGE_ERROR', 'Could not save the enquiry', {
         cause: error,
       });
     }
@@ -299,7 +301,7 @@ function rowToRecord(row: AuditRow): AuditRecord {
       : 'failed',
     stage: isStageId(row.stage) ? row.stage : 'queued',
     stageIndex: row.stage_index,
-    errorCode: isAuditErrorCode(row.error_code) ? row.error_code : null,
+    errorCode: isErrorCode(row.error_code) ? row.error_code : null,
     report,
     createdAt,
     completedAt: row.completed_at ? toIsoUtc(row.completed_at) : null,

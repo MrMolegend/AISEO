@@ -7,7 +7,7 @@ import {
   createInflate,
   createInflateRaw,
 } from 'node:zlib';
-import { AuditError } from '@/lib/errors';
+import { PlatformError } from '@/lib/errors';
 
 /**
  * Response-body decoding.
@@ -84,7 +84,7 @@ export function parseContentEncoding(header: string | null | undefined): Content
   if (parts.length === 0) return 'identity';
 
   if (parts.length > 1) {
-    throw new AuditError('UNSUPPORTED_CONTENT', `Stacked Content-Encoding: ${raw}`, {
+    throw new PlatformError('UNSUPPORTED_CONTENT', `Stacked Content-Encoding: ${raw}`, {
       context: { contentEncoding: raw },
     });
   }
@@ -94,9 +94,13 @@ export function parseContentEncoding(header: string | null | undefined): Content
   if (only === 'deflate') return 'deflate';
   if (only === 'br') return 'br';
 
-  throw new AuditError('UNSUPPORTED_CONTENT', `Unsupported Content-Encoding: ${only}`, {
-    context: { contentEncoding: raw },
-  });
+  throw new PlatformError(
+    'UNSUPPORTED_CONTENT',
+    `Unsupported Content-Encoding: ${only}`,
+    {
+      context: { contentEncoding: raw },
+    },
+  );
 }
 
 /**
@@ -186,7 +190,7 @@ async function readCompressed(
   const head = first.done ? Buffer.alloc(0) : toBuffer(first.value);
 
   if (head.length === 0) {
-    throw new AuditError('RESPONSE_DECODE_FAILED', 'Compressed body was empty', {
+    throw new PlatformError('RESPONSE_DECODE_FAILED', 'Compressed body was empty', {
       context: { encoding },
     });
   }
@@ -241,7 +245,7 @@ async function readCompressed(
       chunks.push(buffer);
     }
   } catch (cause) {
-    throw new AuditError(
+    throw new PlatformError(
       'RESPONSE_DECODE_FAILED',
       `Could not decompress ${encoding} response`,
       { cause, context: { encoding, encodedBytes } },
@@ -256,7 +260,7 @@ async function readCompressed(
   }
 
   if (pumpError) {
-    throw new AuditError('RESPONSE_DECODE_FAILED', 'Compressed body ended early', {
+    throw new PlatformError('RESPONSE_DECODE_FAILED', 'Compressed body ended early', {
       cause: pumpError,
       context: { encoding, encodedBytes },
     });

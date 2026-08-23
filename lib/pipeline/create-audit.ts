@@ -5,7 +5,7 @@ import { localTestingEnabled } from '@/lib/security/local-testing';
 import { assertAddressIsPublic, checkAddress } from '@/lib/security/ssrf-guard';
 import { getAuditStore } from '@/lib/storage';
 import { clientIpFrom, getRateLimiter, hashIp, hashUrl } from '@/lib/security/rate-limit';
-import { AuditError } from '@/lib/errors';
+import { PlatformError } from '@/lib/errors';
 import { getEnv } from '@/lib/env';
 import { createLogger, LOG_EVENTS } from '@/lib/observability/logger';
 
@@ -47,7 +47,7 @@ export async function createAudit(
   });
   if (!validation.ok) {
     log.info(LOG_EVENTS.urlRejected, { reason: validation.reason });
-    throw new AuditError('INVALID_URL', `Rejected: ${validation.reason}`, {
+    throw new PlatformError('INVALID_URL', `Rejected: ${validation.reason}`, {
       context: { reason: validation.reason },
     });
   }
@@ -71,7 +71,7 @@ export async function createAudit(
       assertAddressIsPublic(validation.hostname, 'intake');
     } catch {
       log.info(LOG_EVENTS.urlRejected, { reason: literal.reason });
-      throw new AuditError('BLOCKED_URL', 'Address is not publicly routable', {
+      throw new PlatformError('BLOCKED_URL', 'Address is not publicly routable', {
         context: { reason: literal.reason },
       });
     }
@@ -88,7 +88,7 @@ export async function createAudit(
   const store = await getAuditStore();
 
   // ── Cache first: a hit costs nothing and skips every limit below ────────
-  const cacheTtlMs = env.AUDIT_CACHE_TTL_HOURS * 3_600_000;
+  const cacheTtlMs = env.RESEARCH_CACHE_TTL_HOURS * 3_600_000;
   const fresh = await store.findFreshByUrlHash(urlHash, cacheTtlMs);
   if (fresh) {
     log.info(LOG_EVENTS.cacheHit, { domain, publicId: fresh.publicId });
@@ -98,7 +98,7 @@ export async function createAudit(
   // ── Global circuit breaker ──────────────────────────────────────────────
   if (!(await limiter.checkGlobalCap())) {
     log.warn(LOG_EVENTS.rateLimited, { scope: 'global' });
-    throw new AuditError('CAPACITY', 'Daily global audit cap reached');
+    throw new PlatformError('CAPACITY', 'Daily global audit cap reached');
   }
 
   // ── Per-client limits ───────────────────────────────────────────────────
@@ -109,7 +109,7 @@ export async function createAudit(
         scope: 'ip',
         retryAfterSeconds: verdict.retryAfterSeconds,
       });
-      throw new AuditError('RATE_LIMITED', 'Per-client rate limit reached', {
+      throw new PlatformError('RATE_LIMITED', 'Per-client rate limit reached', {
         context: { retryAfterSeconds: verdict.retryAfterSeconds },
       });
     }
@@ -122,7 +122,7 @@ export async function createAudit(
   const acquired = await limiter.acquireLock(urlHash, 300);
   if (!acquired) {
     log.info('audit.already_in_flight', { domain });
-    throw new AuditError('RATE_LIMITED', 'An audit of this site is already running', {
+    throw new PlatformError('RATE_LIMITED', 'An audit of this site is already running', {
       context: { retryAfterSeconds: 30 },
     });
   }

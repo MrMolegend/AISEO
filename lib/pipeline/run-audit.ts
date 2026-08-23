@@ -4,7 +4,7 @@ import { runAnalysis } from '@/lib/ai/run-analysis';
 import { buildReport } from '@/lib/validation/post-process';
 import { getAuditStore } from '@/lib/storage';
 import { getRateLimiter, hashUrl } from '@/lib/security/rate-limit';
-import { toAuditError } from '@/lib/errors';
+import { toPlatformError } from '@/lib/errors';
 import { createLogger, LOG_EVENTS } from '@/lib/observability/logger';
 import type { StageId } from './stages';
 
@@ -90,7 +90,7 @@ export async function runAuditPipeline(publicId: string): Promise<void> {
       repairAttempts: meta.repairAttempts,
     });
   } catch (error) {
-    const auditError = toAuditError(error);
+    const auditError = toPlatformError(error);
     log.error(LOG_EVENTS.auditFailed, {
       code: auditError.code,
       durationMs: Date.now() - started,

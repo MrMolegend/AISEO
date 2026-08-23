@@ -3,7 +3,7 @@ import { createAudit } from '@/lib/pipeline/create-audit';
 import { resetRateLimiter } from '@/lib/security/rate-limit';
 import { resetStores } from '@/lib/storage';
 import { resetEnvCache } from '@/lib/env';
-import { isAuditError } from '@/lib/errors';
+import { isPlatformError } from '@/lib/errors';
 
 /**
  * The controls that stand between a public endpoint and an unbounded bill.
@@ -31,10 +31,10 @@ beforeEach(() => {
   // socket, and the flag would relax the port rule these tests assert.
   delete process.env.E2E_ALLOW_LOCAL_FETCH;
   setLimits({
-    AUDIT_RATE_LIMIT_PER_HOUR: '3',
-    AUDIT_RATE_LIMIT_PER_DAY: '10',
-    AUDIT_DAILY_GLOBAL_CAP: '200',
-    AUDIT_CACHE_TTL_HOURS: '24',
+    RESEARCH_RATE_LIMIT_PER_HOUR: '3',
+    RESEARCH_RATE_LIMIT_PER_DAY: '10',
+    RESEARCH_DAILY_GLOBAL_CAP: '200',
+    RESEARCH_CACHE_TTL_HOURS: '24',
     IP_HASH_SALT: 'test-salt-value',
   });
 });
@@ -50,8 +50,8 @@ async function expectRejection(fn: () => Promise<unknown>, code: string) {
   try {
     await fn();
   } catch (error) {
-    expect(isAuditError(error)).toBe(true);
-    if (isAuditError(error)) expect(error.code).toBe(code);
+    expect(isPlatformError(error)).toBe(true);
+    if (isPlatformError(error)) expect(error.code).toBe(code);
     return;
   }
   throw new Error(`Expected rejection with ${code}`);
@@ -99,7 +99,7 @@ describe('per-client rate limiting', () => {
       await createAudit('https://c-x.example/', headers);
       throw new Error('expected rejection');
     } catch (error) {
-      if (isAuditError(error)) {
+      if (isPlatformError(error)) {
         expect(typeof error.context.retryAfterSeconds).toBe('number');
         expect(error.context.retryAfterSeconds as number).toBeGreaterThan(0);
       }
@@ -111,9 +111,9 @@ describe('global circuit breaker', () => {
   it('refuses everything once the daily cap is reached', async () => {
     // The backstop that turns a runaway into an error message rather than a bill.
     setLimits({
-      AUDIT_DAILY_GLOBAL_CAP: '2',
-      AUDIT_RATE_LIMIT_PER_HOUR: '100',
-      AUDIT_RATE_LIMIT_PER_DAY: '100',
+      RESEARCH_DAILY_GLOBAL_CAP: '2',
+      RESEARCH_RATE_LIMIT_PER_HOUR: '100',
+      RESEARCH_RATE_LIMIT_PER_DAY: '100',
     });
 
     await createAudit('https://g-1.example/', headersFor('198.51.100.1'));

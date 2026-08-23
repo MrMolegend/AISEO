@@ -1,6 +1,6 @@
 import type { AuditStatus, AuditReport } from '@/schemas/audit';
 import type { StageId } from '@/lib/pipeline/stages';
-import type { AuditErrorCode } from '@/lib/errors';
+import type { ErrorCode } from '@/lib/errors';
 
 /**
  * The storage contract.
@@ -19,7 +19,7 @@ export interface AuditRecord {
   status: AuditStatus;
   stage: StageId;
   stageIndex: number;
-  errorCode: AuditErrorCode | null;
+  errorCode: ErrorCode | null;
   report: AuditReport | null;
   createdAt: string;
   completedAt: string | null;
@@ -39,7 +39,7 @@ export interface AuditStore {
   create(input: CreateAuditInput): Promise<AuditRecord>;
   setStage(publicId: string, stage: StageId): Promise<void>;
   complete(publicId: string, report: AuditReport): Promise<void>;
-  fail(publicId: string, code: AuditErrorCode): Promise<void>;
+  fail(publicId: string, code: ErrorCode): Promise<void>;
   getByPublicId(publicId: string): Promise<AuditRecord | null>;
   /** Most recent completed audit for a URL within the freshness window. */
   findFreshByUrlHash(urlHash: string, maxAgeMs: number): Promise<AuditRecord | null>;

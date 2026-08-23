@@ -3,7 +3,7 @@ import { createServer, type Server, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { gzipSync, deflateSync, deflateRawSync, brotliCompressSync } from 'node:zlib';
 import { safeFetch, FETCH_LIMITS } from '@/lib/security/safe-fetch';
-import { isAuditError, type AuditErrorCode } from '@/lib/errors';
+import { isPlatformError, type ErrorCode } from '@/lib/errors';
 import { parseHtml } from '@/lib/extraction/parse-html';
 import { extractMeta } from '@/lib/extraction/extractors/meta';
 import { extractHeadings, extractContent } from '@/lib/extraction/extractors/structure';
@@ -125,12 +125,12 @@ afterAll(async () => {
 
 async function codeOf(
   promise: Promise<unknown>,
-): Promise<AuditErrorCode | 'NOT_AN_AUDIT_ERROR'> {
+): Promise<ErrorCode | 'NOT_AN_AUDIT_ERROR'> {
   try {
     await promise;
     return 'NOT_AN_AUDIT_ERROR';
   } catch (error) {
-    return isAuditError(error) ? error.code : 'NOT_AN_AUDIT_ERROR';
+    return isPlatformError(error) ? error.code : 'NOT_AN_AUDIT_ERROR';
   }
 }
 

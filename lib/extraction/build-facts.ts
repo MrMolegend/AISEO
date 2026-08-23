@@ -13,7 +13,7 @@ import { computeChecks } from './checks';
 import { siteFactsSchema, type SiteFacts } from '@/schemas/facts';
 import type { SafeFetchResult } from '@/lib/security/safe-fetch';
 import type { RobotsResult } from '@/lib/retrieval/robots';
-import { AuditError } from '@/lib/errors';
+import { PlatformError } from '@/lib/errors';
 
 export interface BuildFactsInput {
   requestedUrl: string;
@@ -85,7 +85,7 @@ export function buildFacts(input: BuildFactsInput): SiteFacts {
   if (!parsed.success) {
     // A cap breach here would silently inflate the prompt, so it is a hard error
     // rather than something to trim and continue past.
-    throw new AuditError('UNKNOWN', 'Extracted facts failed their own schema', {
+    throw new PlatformError('UNKNOWN', 'Extracted facts failed their own schema', {
       context: {
         issues: parsed.error.issues
           .slice(0, 5)
@@ -106,7 +106,7 @@ export function buildFacts(input: BuildFactsInput): SiteFacts {
  */
 export function assertAuditable(facts: SiteFacts): void {
   if (facts.technical.likelyClientRendered) {
-    throw new AuditError('NO_CONTENT', 'Page appears to be a client-rendered shell', {
+    throw new PlatformError('NO_CONTENT', 'Page appears to be a client-rendered shell', {
       context: {
         wordCount: facts.content.wordCount,
         externalScripts: facts.technical.externalScriptCount,
@@ -115,7 +115,7 @@ export function assertAuditable(facts: SiteFacts): void {
   }
 
   if (facts.content.wordCount < 30 && facts.headingCounts.h1 === 0 && !facts.meta.title) {
-    throw new AuditError('NO_CONTENT', 'Page has no usable content', {
+    throw new PlatformError('NO_CONTENT', 'Page has no usable content', {
       context: { wordCount: facts.content.wordCount },
     });
   }

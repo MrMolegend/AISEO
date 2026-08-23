@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { renderErrorCopy, type AuditErrorCode } from '@/lib/errors';
+import { renderErrorCopy, type ErrorCode } from '@/lib/errors';
 
 /**
  * The designed failure state.
@@ -16,7 +16,7 @@ export function AuditErrorState({
   code,
   domain,
 }: {
-  code: AuditErrorCode;
+  code: ErrorCode;
   domain: string | null;
 }) {
   const copy = renderErrorCopy(code, domain);

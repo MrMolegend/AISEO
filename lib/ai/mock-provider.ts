@@ -1,7 +1,7 @@
 import { getFixtureReport } from '@/fixtures';
 import type { AIProvider, AuditModelInput, AuditModelResult } from './provider';
 import type { AuditAnalysis } from '@/schemas/audit';
-import { AuditError } from '@/lib/errors';
+import { PlatformError } from '@/lib/errors';
 
 /**
  * Deterministic provider for tests, CI and local development.
@@ -34,7 +34,7 @@ export class MockProvider implements AIProvider {
     const fault = MockProvider.fault;
 
     if (fault?.kind === 'error') {
-      throw new AuditError(fault.code, `Mock provider fault: ${fault.code}`);
+      throw new PlatformError(fault.code, `Mock provider fault: ${fault.code}`);
     }
 
     if (fault?.kind === 'null-output') {

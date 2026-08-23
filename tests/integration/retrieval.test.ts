@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { retrieveSiteFacts } from '@/lib/retrieval/fetch-page';
 import { siteFactsSchema } from '@/schemas/facts';
-import { isAuditError } from '@/lib/errors';
+import { isPlatformError } from '@/lib/errors';
 
 /**
  * The retrieval layer end to end: URL in, validated SiteFacts out.
@@ -108,8 +108,8 @@ describe('retrieveSiteFacts — pages we refuse to audit', () => {
       await retrieveSiteFacts(`${origin()}/spa-shell`);
       throw new Error('expected NO_CONTENT');
     } catch (error) {
-      expect(isAuditError(error)).toBe(true);
-      if (isAuditError(error)) expect(error.code).toBe('NO_CONTENT');
+      expect(isPlatformError(error)).toBe(true);
+      if (isPlatformError(error)) expect(error.code).toBe('NO_CONTENT');
     }
   });
 
@@ -119,8 +119,8 @@ describe('retrieveSiteFacts — pages we refuse to audit', () => {
       await retrieveSiteFacts(`${origin()}/`);
       throw new Error('expected ROBOTS_DISALLOWED');
     } catch (error) {
-      expect(isAuditError(error)).toBe(true);
-      if (isAuditError(error)) expect(error.code).toBe('ROBOTS_DISALLOWED');
+      expect(isPlatformError(error)).toBe(true);
+      if (isPlatformError(error)) expect(error.code).toBe('ROBOTS_DISALLOWED');
     } finally {
       robotsBody = 'User-agent: *\nDisallow:\n';
     }

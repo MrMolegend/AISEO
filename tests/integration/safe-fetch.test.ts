@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { safeFetch, FETCH_LIMITS } from '@/lib/security/safe-fetch';
-import { isAuditError } from '@/lib/errors';
+import { isPlatformError } from '@/lib/errors';
 
 /**
  * safeFetch exercised against a real HTTP server.
@@ -131,8 +131,10 @@ async function expectError(url: string, code: string) {
   try {
     await safeFetch(url);
   } catch (error) {
-    expect(isAuditError(error), `expected AuditError, got ${String(error)}`).toBe(true);
-    if (isAuditError(error)) expect(error.code).toBe(code);
+    expect(isPlatformError(error), `expected PlatformError, got ${String(error)}`).toBe(
+      true,
+    );
+    if (isPlatformError(error)) expect(error.code).toBe(code);
     return;
   }
   throw new Error(`Expected ${url} to fail with ${code}, but it succeeded`);

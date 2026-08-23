@@ -4,7 +4,7 @@ import { checkRobots } from './robots';
 import { resolveFavicon } from './favicon';
 import { parseHtml } from '@/lib/extraction/parse-html';
 import { buildFacts, assertAuditable } from '@/lib/extraction/build-facts';
-import { AuditError } from '@/lib/errors';
+import { PlatformError } from '@/lib/errors';
 import type { SiteFacts } from '@/schemas/facts';
 
 /**
@@ -18,7 +18,7 @@ export async function retrieveSiteFacts(normalizedUrl: string): Promise<SiteFact
   const robots = await checkRobots(normalizedUrl);
 
   if (!robots.allowsOurAgent) {
-    throw new AuditError('ROBOTS_DISALLOWED', 'robots.txt disallows our agent', {
+    throw new PlatformError('ROBOTS_DISALLOWED', 'robots.txt disallows our agent', {
       context: { url: normalizedUrl },
     });
   }

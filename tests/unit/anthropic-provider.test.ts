@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { AnthropicProvider, AUDIT_TOOL_NAME } from '@/lib/ai/anthropic-provider';
-import { AuditError } from '@/lib/errors';
+import { PlatformError } from '@/lib/errors';
 import type { AuditModelInput } from '@/lib/ai/provider';
 
 /**
@@ -258,7 +258,7 @@ describe('AnthropicProvider response handling', () => {
       .runAudit(AUDIT_INPUT, new AbortController().signal)
       .catch((e) => e);
 
-    expect(error).toBeInstanceOf(AuditError);
+    expect(error).toBeInstanceOf(PlatformError);
     expect(error.code).toBe('AI_RATE_LIMITED');
   });
 });
@@ -286,7 +286,7 @@ describe('AnthropicProvider cancellation', () => {
     controller.abort();
 
     const error = await pending.catch((e) => e);
-    expect(error).toBeInstanceOf(AuditError);
+    expect(error).toBeInstanceOf(PlatformError);
     expect(error.code).toBe('AI_TIMEOUT');
   });
 });

@@ -2,7 +2,7 @@ import { after, type NextRequest } from 'next/server';
 import { z } from 'zod';
 import { createAudit } from '@/lib/pipeline/create-audit';
 import { runAuditPipeline } from '@/lib/pipeline/run-audit';
-import { isAuditError, renderErrorCopy, toAuditError } from '@/lib/errors';
+import { isPlatformError, renderErrorCopy, toPlatformError } from '@/lib/errors';
 import { MAX_URL_LENGTH } from '@/lib/security/url-validator';
 import { logger } from '@/lib/observability/logger';
 
@@ -52,8 +52,8 @@ export async function POST(request: NextRequest) {
 
     return Response.json({ publicId, cached }, { status: cached ? 200 : 202 });
   } catch (error) {
-    const auditError = toAuditError(error);
-    if (!isAuditError(error)) {
+    const auditError = toPlatformError(error);
+    if (!isPlatformError(error)) {
       logger.error('api.audits.unexpected', { error: auditError });
     }
 
