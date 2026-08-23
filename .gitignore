@@ -44,3 +44,7 @@ yarn-error.log*
 # supabase
 supabase/.branches
 supabase/.temp
+
+# local screenshot / a11y tooling output
+.shots/*.png
+.shots/*.log

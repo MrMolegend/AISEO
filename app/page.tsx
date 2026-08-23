@@ -1,10 +1,23 @@
+import { SiteHeader } from '@/components/marketing/site-header';
+import { SiteFooter } from '@/components/marketing/site-footer';
+import { HeroSection } from '@/components/marketing/hero-section';
+import { FeatureGrid } from '@/components/marketing/feature-grid';
+import { HowItWorks } from '@/components/marketing/how-it-works';
+import { ReportPreview } from '@/components/marketing/report-preview';
+import { FinalCta } from '@/components/marketing/final-cta';
+
 export default function HomePage() {
   return (
-    <main className="mx-auto max-w-2xl px-6 py-24">
-      <h1 className="text-4xl font-semibold tracking-tight">AISEO</h1>
-      <p className="mt-4 text-zinc-600">
-        Foundation is in place. The landing page arrives in Phase 1.
-      </p>
-    </main>
+    <>
+      <SiteHeader />
+      <main>
+        <HeroSection />
+        <FeatureGrid />
+        <ReportPreview />
+        <HowItWorks />
+        <FinalCta />
+      </main>
+      <SiteFooter />
+    </>
   );
 }
