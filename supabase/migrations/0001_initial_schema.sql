@@ -6,6 +6,11 @@
 -- painful; adding an owner_id predicate to a policy that already exists is one
 -- line. The owner_id column is present and nullable for the same reason — when
 -- accounts arrive, an anonymous audit is claimed by setting one field.
+--
+-- Privileges are declared explicitly at the end of this file rather than left to
+-- the project's defaults. See the reasoning there: the defaults on this project
+-- hand ALL privileges on new public tables to anon and authenticated, which is
+-- the opposite of what this application wants.
 -- ═══════════════════════════════════════════════════════════════════════════
 
 create extension if not exists "pgcrypto";
@@ -93,29 +98,100 @@ create index if not exists audit_events_audit_idx
   on public.audit_events (audit_id, created_at);
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- Row Level Security
+-- Row Level Security and privileges
 --
--- Every write goes through the service-role client on the server, which bypasses
--- RLS. These policies therefore describe what an ANONYMOUS BROWSER may do, and
--- the answer is: read a finished audit, and nothing else.
+-- The application reaches Postgres exclusively through the service-role client,
+-- on the server. Verified in the codebase: exactly one module imports
+-- @supabase/supabase-js (lib/storage/supabase-store.ts), both of its clients are
+-- constructed with the service-role key, and that module plus lib/storage/index.ts
+-- and lib/env.ts each carry `import 'server-only'`, so a browser bundle importing
+-- any of them is a build failure. NEXT_PUBLIC_SUPABASE_ANON_KEY is declared in
+-- the env schema but referenced by no source file.
+--
+-- Public report pages are Server Components that look an audit up by exact
+-- public_id. The 12-character id is the capability; it is never a filter applied
+-- in the browser.
+--
+-- Therefore anon and authenticated need no access to any table here, and get
+-- none.
 -- ═══════════════════════════════════════════════════════════════════════════
 
-alter table public.audits enable row level security;
-alter table public.leads enable row level security;
+alter table public.audits       enable row level security;
+alter table public.leads        enable row level security;
 alter table public.audit_events enable row level security;
 
--- Reports are public-by-link: the 12-character public_id is the capability.
--- An in-progress or failed audit is not readable, so a partially-written row
--- can never be scraped.
-drop policy if exists "completed audits are readable by link" on public.audits;
-create policy "completed audits are readable by link"
-  on public.audits
-  for select
-  using (status = 'complete');
+-- No policies are defined, on purpose.
+--
+-- RLS enabled with zero policies denies every row to every non-bypassing role,
+-- which is exactly right here: service_role holds BYPASSRLS, so the server keeps
+-- working, and anon/authenticated are refused unconditionally.
+--
+-- An earlier draft of this migration carried:
+--
+--   create policy "completed audits are readable by link"
+--     on public.audits for select using (status = 'complete');
+--
+-- That policy was removed rather than kept, because it did not do what its name
+-- claimed. The predicate tests only `status`; public_id appears nowhere in it. Any
+-- role holding SELECT on the table could therefore read EVERY completed audit,
+-- not merely the one whose id it already knew — turning a capability URL into a
+-- full listing of every site ever audited. The unguessable id only protects
+-- anything when the lookup is constrained to it, which is what the server does
+-- and what a status-only policy does not.
+--
+-- When accounts arrive, the owner predicate belongs here as
+--   using (owner_id = auth.uid())
+-- which is genuinely row-scoped, unlike the one this replaces.
 
--- When accounts arrive this becomes:
---   using (status = 'complete' or owner_id = auth.uid())
--- and nothing else changes.
+-- ── Default privileges for future objects ─────────────────────────────────
+--
+-- This project grants ALL privileges on new public tables to anon and
+-- authenticated by default (verified against pg_default_acl before writing this).
+-- Without the following, every table created by a later migration is silently
+-- exposed to the Data API the moment it exists, and RLS becomes the only thing
+-- standing between an anonymous request and the data.
+--
+-- Revoking the defaults makes exposure opt-in: a future table that genuinely
+-- needs browser access must say so explicitly, in a migration, in review.
+alter default privileges for role postgres in schema public
+  revoke all on tables from anon, authenticated;
 
--- No anonymous access at all to leads or the event log.
--- Deliberately no policies: with RLS enabled and no policy, everything is denied.
+alter default privileges for role postgres in schema public
+  revoke all on sequences from anon, authenticated;
+
+-- ── Revoke the privileges these tables already inherited ──────────────────
+--
+-- ALTER DEFAULT PRIVILEGES applies only to objects created after it runs. The
+-- three tables above already exist by this point in the migration, so their
+-- inherited grants must be revoked explicitly.
+revoke all on public.audits       from anon, authenticated, public;
+revoke all on public.leads        from anon, authenticated, public;
+revoke all on public.audit_events from anon, authenticated, public;
+
+revoke all on all sequences in schema public from anon, authenticated, public;
+
+-- ── Grant service_role exactly what the application uses ──────────────────
+--
+-- Each grant below is traceable to a call site. No DELETE is granted anywhere:
+-- nothing in the application deletes a row, and audit removal is a support
+-- action performed with elevated credentials, not something the app can do.
+
+-- lib/storage/supabase-store.ts
+--   create()             → insert
+--   getByPublicId(),
+--   findFreshByUrlHash() → select
+--   setStage(), complete(), fail() → update
+grant select, insert, update on public.audits to service_role;
+
+-- SupabaseLeadStore.create() → insert only. The audit lookup it performs first
+-- reads public.audits, which is covered above.
+grant select, insert on public.leads to service_role;
+
+-- Not yet written to by application code. Granted because the table exists for
+-- a declared purpose — a per-audit debugging timeline — and a table its only
+-- client cannot use is worse than no table.
+grant select, insert on public.audit_events to service_role;
+
+-- audit_events.id is bigserial, so INSERT needs the sequence. audits.id and
+-- leads.id are uuid defaults and need none.
+grant usage, select on sequence public.audit_events_id_seq to service_role;

@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { Database, Json } from '@/supabase/database.types';
 import type {
   AuditRecord,
   AuditStore,
@@ -24,31 +25,39 @@ import { logger } from '@/lib/observability/logger';
  * component is a build failure rather than a leaked service-role key.
  */
 
-interface AuditRow {
-  public_id: string;
-  requested_url: string;
-  normalized_url: string;
-  domain: string;
-  status: string;
-  stage: string;
-  stage_index: number;
-  error_code: string | null;
-  schema_version: number | null;
-  overall_score: number | null;
-  overall_rating: string | null;
-  facts: unknown;
-  analysis: unknown;
-  report_meta: unknown;
-  created_at: string;
-  completed_at: string | null;
+/**
+ * Derived from the generated schema rather than hand-written.
+ *
+ * The previous version restated every column by hand, which meant a migration
+ * renaming a column left this interface describing a table that no longer
+ * existed — and nothing failed until an audit could not be saved. Deriving it
+ * turns that into a typecheck error.
+ */
+type AuditRow = Database['public']['Tables']['audits']['Row'];
+
+/**
+ * Narrows a validated domain object to the database's Json type.
+ *
+ * SiteFacts and AuditAnalysis are JSON-serialisable by construction: every value
+ * in them came from JSON.parse or a Zod-validated literal. TypeScript cannot
+ * prove that, because SiteFacts.structuredData.blocks is typed `unknown[]` — the
+ * crawler deliberately does not constrain the shape of third-party JSON-LD, since
+ * a stranger's markup can contain anything.
+ *
+ * The cast is confined to this one function, at the boundary where a domain
+ * object legitimately becomes a database row, rather than scattered at each call
+ * site or hidden behind a client typed as `any`.
+ */
+function toJson(value: unknown): Json {
+  return value as Json;
 }
 
 export class SupabaseAuditStore implements AuditStore {
   readonly name = 'supabase';
-  private readonly client: SupabaseClient;
+  private readonly client: SupabaseClient<Database>;
 
   constructor(url: string, serviceRoleKey: string) {
-    this.client = createClient(url, serviceRoleKey, {
+    this.client = createClient<Database>(url, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
   }
@@ -106,9 +115,9 @@ export class SupabaseAuditStore implements AuditStore {
         schema_version: report.schemaVersion,
         overall_score: report.overallScore,
         overall_rating: report.overallRating,
-        facts: report.facts,
-        analysis: report.analysis,
-        report_meta: report.meta,
+        facts: toJson(report.facts),
+        analysis: toJson(report.analysis),
+        report_meta: toJson(report.meta),
         completed_at: new Date().toISOString(),
       })
       .eq('public_id', publicId);
@@ -174,10 +183,10 @@ export class SupabaseAuditStore implements AuditStore {
 }
 
 export class SupabaseLeadStore implements LeadStore {
-  private readonly client: SupabaseClient;
+  private readonly client: SupabaseClient<Database>;
 
   constructor(url: string, serviceRoleKey: string) {
-    this.client = createClient(url, serviceRoleKey, {
+    this.client = createClient<Database>(url, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
   }
