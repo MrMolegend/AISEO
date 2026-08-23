@@ -109,7 +109,8 @@ export async function runAnalysis(
               factsJson,
               nonce,
               // Kept for providers that take a JSON Schema directly; the
-              // Anthropic path uses output_config.format instead.
+              // Anthropic path derives its own from the Zod schema and attaches
+              // it to the submit_audit tool.
               jsonSchema: {},
               maxOutputTokens: ANALYSIS_LIMITS.maxOutputTokens,
               ...(repair ? { repair } : {}),
