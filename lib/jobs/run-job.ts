@@ -1,6 +1,6 @@
 import 'server-only';
 import { randomBytes } from 'node:crypto';
-import { getPackage, type ResearchPackageId } from '@/config/packages';
+import { getPackage } from '@/config/packages';
 import { getEnv, hasAnthropic } from '@/lib/env';
 import { PlatformError, toPlatformError } from '@/lib/errors';
 import { logger, type Logger } from '@/lib/observability/logger';

@@ -21,6 +21,13 @@
  * executable.
  */
 
+/**
+ * Byte-order mark. Written as an escape rather than a literal so the character
+ * is visible in source rather than being an invisible byte at the front of a
+ * template string.
+ */
+const UTF8_BOM = '\ufeff';
+
 /** Characters that make a spreadsheet treat a cell as a formula. */
 const FORMULA_PREFIXES = ['=', '+', '-', '@', '\t', '\r'];
 
@@ -77,7 +84,7 @@ export function toCsv<T>(rows: readonly T[], columns: readonly CsvColumn<T>[]): 
   }
 
   // CRLF per RFC 4180.
-  return `﻿${lines.join('\r\n')}\r\n`;
+  return `${UTF8_BOM}${lines.join('\r\n')}\r\n`;
 }
 
 /** A filename safe for Content-Disposition and for a filesystem. */
