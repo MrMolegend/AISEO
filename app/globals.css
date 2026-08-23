@@ -1,0 +1,42 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens.
+ *
+ * Phase 1 replaces this with the full system. For now it establishes the
+ * variable-based structure so dark mode is a token swap later rather than a
+ * refactor, and so nothing hard-codes a colour.
+ */
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, 'SF Mono', monospace;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-white);
+    color: var(--color-zinc-900);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Score digits must not jitter as they animate. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

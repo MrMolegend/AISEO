@@ -1,0 +1,733 @@
+{
+  "schemaVersion": 1,
+  "publicId": "fx-weak-002",
+  "url": "http://harringtonplumbing.co.uk/index.html",
+  "domain": "harringtonplumbing.co.uk",
+  "createdAt": "2026-03-14T11:05:02.000Z",
+  "overallScore": 20,
+  "overallRating": "poor",
+  "facts": {
+    "fetchedAt": "2026-03-14T11:04:47.000Z",
+    "requestedUrl": "http://harringtonplumbing.co.uk/index.html",
+    "finalUrl": "http://harringtonplumbing.co.uk/index.html",
+    "redirectChain": [],
+    "httpStatus": 200,
+    "responseTimeMs": 3840,
+    "htmlBytes": 412903,
+    "isHttps": false,
+    "faviconUrl": null,
+    "meta": {
+      "title": "Home",
+      "titleLength": 4,
+      "description": null,
+      "descriptionLength": 0,
+      "canonical": null,
+      "robotsMeta": null,
+      "viewport": null,
+      "lang": null,
+      "charset": "iso-8859-1"
+    },
+    "openGraph": {},
+    "twitterCard": {},
+    "headings": {
+      "h1": [],
+      "h2": ["Welcome to our website", "Our Services", "Contact Us"],
+      "h3": ["Emergency Callout", "Boiler Servicing", "Bathroom Installation"]
+    },
+    "headingCounts": {
+      "h1": 0,
+      "h2": 3,
+      "h3": 3,
+      "h4": 0,
+      "h5": 0,
+      "h6": 0
+    },
+    "content": {
+      "text": "Welcome to our website. Harrington Plumbing has been serving customers for over 20 years. We are a family run business and pride ourselves on quality workmanship and competitive prices. No job too big or too small! Our Services. Emergency Callout. We offer 24 hour emergency callout. Boiler Servicing. Annual boiler servicing and repairs. Bathroom Installation. Full bathroom design and installation. Contact Us. Phone us today for a free quote. All work guaranteed. Fully insured. Gas Safe registered.",
+      "wordCount": 79,
+      "truncated": false
+    },
+    "links": {
+      "internal": [
+        {
+          "href": "index.html",
+          "text": "Home",
+          "rel": null
+        },
+        {
+          "href": "services.html",
+          "text": "Services",
+          "rel": null
+        },
+        {
+          "href": "about.html",
+          "text": "About",
+          "rel": null
+        },
+        {
+          "href": "contact.html",
+          "text": "Contact",
+          "rel": null
+        },
+        {
+          "href": "#",
+          "text": "",
+          "rel": null
+        }
+      ],
+      "external": [],
+      "counts": {
+        "internal": 5,
+        "external": 0,
+        "nofollow": 0,
+        "empty": 1
+      }
+    },
+    "images": {
+      "sample": [
+        {
+          "src": "images/header_banner_final_v2_LARGE.jpg",
+          "alt": null,
+          "loading": null,
+          "width": null,
+          "height": null
+        },
+        {
+          "src": "images/plumber1.jpg",
+          "alt": null,
+          "loading": null,
+          "width": null,
+          "height": null
+        },
+        {
+          "src": "images/bathroom_photo.JPG",
+          "alt": null,
+          "loading": null,
+          "width": null,
+          "height": null
+        },
+        {
+          "src": "images/gassafe.gif",
+          "alt": "gas safe",
+          "loading": null,
+          "width": null,
+          "height": null
+        },
+        {
+          "src": "images/spacer.gif",
+          "alt": null,
+          "loading": null,
+          "width": null,
+          "height": null
+        }
+      ],
+      "counts": {
+        "total": 23,
+        "missingAlt": 21,
+        "emptyAlt": 0,
+        "lazyLoaded": 0
+      }
+    },
+    "structuredData": {
+      "types": [],
+      "blocks": [],
+      "parseErrors": 0
+    },
+    "robotsTxt": {
+      "found": false,
+      "allowsOurAgent": true,
+      "sitemapUrls": []
+    },
+    "sitemapXml": {
+      "found": false,
+      "url": null
+    },
+    "technical": {
+      "hasHreflang": false,
+      "hasAmp": false,
+      "inlineStyleCount": 47,
+      "scriptCount": 2,
+      "externalScriptCount": 0,
+      "iframeCount": 1,
+      "formCount": 0,
+      "hasHttpResourcesOnHttps": false,
+      "likelyClientRendered": false
+    },
+    "checks": [
+      {
+        "id": "title-present",
+        "label": "Title tag present",
+        "status": "fail",
+        "observed": "\"Home\" — 4 characters, no business or location name"
+      },
+      {
+        "id": "meta-description-present",
+        "label": "Meta description present",
+        "status": "fail",
+        "observed": "(absent)"
+      },
+      {
+        "id": "h1-count",
+        "label": "Exactly one H1",
+        "status": "fail",
+        "observed": "0 H1 elements found"
+      },
+      {
+        "id": "canonical-present",
+        "label": "Canonical URL present",
+        "status": "fail",
+        "observed": "(absent)"
+      },
+      {
+        "id": "viewport-present",
+        "label": "Mobile viewport declared",
+        "status": "fail",
+        "observed": "(absent)"
+      },
+      {
+        "id": "https",
+        "label": "Served over HTTPS",
+        "status": "fail",
+        "observed": "http"
+      },
+      {
+        "id": "image-alt-coverage",
+        "label": "Image alt coverage",
+        "status": "fail",
+        "observed": "21 of 23 images missing alt text"
+      },
+      {
+        "id": "structured-data",
+        "label": "Structured data present",
+        "status": "fail",
+        "observed": "(none found)"
+      },
+      {
+        "id": "robots-txt",
+        "label": "robots.txt reachable",
+        "status": "warn",
+        "observed": "Not found (404)"
+      },
+      {
+        "id": "content-volume",
+        "label": "Sufficient indexable text",
+        "status": "fail",
+        "observed": "79 words"
+      },
+      {
+        "id": "response-time",
+        "label": "Server response time",
+        "status": "fail",
+        "observed": "3840ms"
+      },
+      {
+        "id": "page-weight",
+        "label": "HTML document size",
+        "status": "fail",
+        "observed": "412 KB of HTML"
+      },
+      {
+        "id": "lang-declared",
+        "label": "Page language declared",
+        "status": "fail",
+        "observed": "(absent)"
+      }
+    ]
+  },
+  "analysis": {
+    "website": {
+      "name": "Harrington Plumbing",
+      "industry": "Local trade services — plumbing and heating",
+      "description": "A family-run plumbing and heating business offering emergency callouts, boiler servicing and bathroom installation, apparently serving a local UK area.",
+      "targetAudience": "Homeowners in the local area needing plumbing repairs, boiler service or bathroom work"
+    },
+    "executiveSummary": {
+      "headline": "This site is almost invisible to search engines, and the fixes are mostly straightforward",
+      "summary": "Harrington Plumbing has a website, but search engines have almost nothing to work with. The page title is the single word \"Home\", there is no description for search results to show, no main heading, and — most damaging for a local trade business — no location named anywhere on the page. Someone searching for a plumber in your town has no way to find you. The site also runs on an insecure connection, which browsers now flag to visitors with a warning, and it does not adapt to phone screens, where most people searching for a plumber will be. None of this requires a rebuild. The title, description, heading and location can be fixed in an afternoon, and they are the changes that matter most.",
+      "biggestStrength": "The business has real credibility signals to work with — twenty years of trading, Gas Safe registration, full insurance and a guarantee. These are exactly what customers look for; they are simply not being presented in a way that search engines or visitors can find.",
+      "biggestWeakness": "No location appears anywhere on the page. For a local trade business this is the difference between being findable and being invisible: essentially every customer search for this kind of service includes a place name.",
+      "firstThingToDo": "Put the town or service area in the page title, alongside the business name and the trade. \"Harrington Plumbing — Emergency Plumber in [your town]\" would immediately give search engines what they currently have no way to know."
+    },
+    "categoryScores": {
+      "technicalSEO": {
+        "score": 18,
+        "confidence": "high",
+        "basis": "measured",
+        "summary": "No HTTPS, no canonical, no sitemap, no robots.txt and no structured data. Almost nothing that helps a search engine understand this site is present."
+      },
+      "onPageSEO": {
+        "score": 12,
+        "confidence": "high",
+        "basis": "measured",
+        "summary": "Title is one generic word, there is no meta description, no H1, and no location keyword anywhere on the page."
+      },
+      "content": {
+        "score": 28,
+        "confidence": "high",
+        "basis": "measured",
+        "summary": "79 words of generic trade copy with no location, no pricing guidance and no answers to what customers actually ask."
+      },
+      "performance": {
+        "score": 22,
+        "confidence": "low",
+        "basis": "heuristic",
+        "summary": "Inferred from a 3.8 second response time, 412 KB of HTML and 23 unoptimised images with no lazy loading. No field timing data was collected."
+      },
+      "mobile": {
+        "score": 15,
+        "confidence": "medium",
+        "basis": "heuristic",
+        "summary": "No viewport declaration and 47 inline styles suggest a fixed-width desktop layout. The page was not rendered on a mobile device to confirm."
+      },
+      "userExperience": {
+        "score": 30,
+        "confidence": "medium",
+        "basis": "inferred",
+        "summary": "No contact form, no clickable phone number, an empty link in the navigation, and a browser security warning on every visit."
+      }
+    },
+    "issues": [
+      {
+        "id": "no-location-anywhere",
+        "severity": "critical",
+        "category": "onPageSEO",
+        "title": "No town or service area appears anywhere on the page",
+        "finding": "The page text, title, headings and meta tags contain no place name, postcode or service area. The 79 words of content describe services generically without saying where they are offered.",
+        "whyItMatters": "Nearly every search for a trade service includes a location — \"emergency plumber Guildford\", \"boiler repair near me\". Without a location on the page, a search engine has no basis for showing this site to anyone nearby, no matter how good the business is.",
+        "recommendation": "Add the primary town to the page title, the H1 and the opening sentence, then list the surrounding areas you cover further down. If you serve several towns, name them explicitly rather than saying \"and surrounding areas\".",
+        "expectedImpact": "This is the change most likely to produce visible results. Local search visibility is currently near zero and this addresses the direct cause.",
+        "impact": "high",
+        "effort": "low",
+        "owner": "owner",
+        "confidence": "high",
+        "evidence": {
+          "label": "Page text (79 words, complete)",
+          "value": "\"Welcome to our website. Harrington Plumbing has been serving customers for over 20 years...\" — contains no place name",
+          "factPath": "content.text"
+        }
+      },
+      {
+        "id": "title-tag-generic",
+        "severity": "critical",
+        "category": "onPageSEO",
+        "title": "Page title is the single word \"Home\"",
+        "finding": "The title tag reads \"Home\" — four characters. This is the headline shown in search results and the label on the browser tab.",
+        "whyItMatters": "The title is the strongest on-page signal about what a page is for, and the most prominent line in a search result. \"Home\" tells a search engine nothing and gives a searcher no reason to click.",
+        "recommendation": "Write a title of 50–60 characters containing the trade, the location and the business name. For example: \"Emergency Plumber in [town] — Harrington Plumbing\".",
+        "expectedImpact": "Directly improves both how the page is understood and how often it is clicked when shown.",
+        "impact": "high",
+        "effort": "low",
+        "owner": "owner",
+        "confidence": "high",
+        "evidence": {
+          "label": "Title tag",
+          "value": "Home (4 characters)",
+          "factPath": "meta.title"
+        }
+      },
+      {
+        "id": "no-https",
+        "severity": "critical",
+        "category": "technicalSEO",
+        "title": "Site is served over an insecure connection",
+        "finding": "The page loads over HTTP rather than HTTPS. Browsers display a \"Not secure\" warning in the address bar for such sites.",
+        "whyItMatters": "Visitors see a security warning before they read a word, which undermines trust for a business asking to be let into people's homes. HTTPS is also a confirmed ranking signal.",
+        "recommendation": "Ask your hosting provider to enable a TLS certificate — most now include one free — then redirect all HTTP traffic to HTTPS permanently.",
+        "expectedImpact": "Removes the browser warning and closes a known ranking disadvantage. Usually an hour of hosting support time.",
+        "impact": "high",
+        "effort": "low",
+        "owner": "developer",
+        "confidence": "high",
+        "evidence": {
+          "label": "Protocol",
+          "value": "http:// (no TLS)",
+          "factPath": "isHttps"
+        }
+      },
+      {
+        "id": "no-viewport",
+        "severity": "critical",
+        "category": "mobile",
+        "title": "Page does not adapt to phone screens",
+        "finding": "No viewport meta tag is declared, and the page uses 47 inline style attributes typical of a fixed-width desktop layout.",
+        "whyItMatters": "Most people searching for an emergency plumber are on a phone. Without a viewport declaration the page renders at desktop width and is zoomed out, leaving text unreadable and phone numbers hard to tap.",
+        "recommendation": "Add the standard viewport meta tag, then review the layout at phone width. Given the fixed-width markup, this will likely need layout work rather than just the one tag.",
+        "expectedImpact": "Addresses the experience of the majority of visitors, and mobile usability affects rankings on mobile searches.",
+        "impact": "high",
+        "effort": "medium",
+        "owner": "developer",
+        "confidence": "high",
+        "evidence": {
+          "label": "Viewport meta tag",
+          "value": "(absent)",
+          "factPath": "meta.viewport"
+        }
+      },
+      {
+        "id": "no-meta-description",
+        "severity": "high",
+        "category": "onPageSEO",
+        "title": "No meta description for search results",
+        "finding": "The page has no meta description tag, so search engines assemble a snippet from whatever page text they find.",
+        "whyItMatters": "The description is your advertising copy in search results. Without one, Google shows an arbitrary fragment — here likely \"Welcome to our website\", which persuades nobody.",
+        "recommendation": "Write a 140–155 character description naming the trade, the area covered and one reason to call — the 24-hour callout and Gas Safe registration are both strong.",
+        "expectedImpact": "More clicks from the impressions the site already receives.",
+        "impact": "medium",
+        "effort": "low",
+        "owner": "owner",
+        "confidence": "high",
+        "evidence": {
+          "label": "Meta description",
+          "value": "(absent)",
+          "factPath": "meta.description"
+        }
+      },
+      {
+        "id": "no-h1",
+        "severity": "high",
+        "category": "onPageSEO",
+        "title": "Page has no main heading",
+        "finding": "There are no H1 elements. The page begins at H2 with \"Welcome to our website\".",
+        "whyItMatters": "The H1 states what the page is about. Its absence removes a clear signal, and \"Welcome to our website\" as the leading heading wastes the most prominent text on the page.",
+        "recommendation": "Replace the opening H2 with an H1 naming the trade and location, such as \"Emergency Plumbing and Boiler Repair in [town]\".",
+        "expectedImpact": "Clarifies the page topic for search engines and tells visitors what they have found.",
+        "impact": "medium",
+        "effort": "low",
+        "owner": "owner",
+        "confidence": "high",
+        "evidence": {
+          "label": "H1 elements",
+          "value": "0 found — page begins at H2 \"Welcome to our website\"",
+          "factPath": "headingCounts.h1"
+        }
+      },
+      {
+        "id": "slow-response",
+        "severity": "high",
+        "category": "performance",
+        "title": "Server takes nearly 4 seconds to respond",
+        "finding": "The server took 3,840 milliseconds to return the page, and the HTML document alone is 412 KB before images load.",
+        "whyItMatters": "Most visitors abandon a page that takes more than about three seconds. Someone with a burst pipe will not wait — they will go back and tap the next result.",
+        "recommendation": "Two things: ask your host whether the site is on an overloaded shared plan, and reduce the 412 KB of HTML, which is roughly ten times what this amount of content needs.",
+        "expectedImpact": "Fewer visitors leaving before the page appears. Response time also feeds directly into search rankings.",
+        "impact": "high",
+        "effort": "medium",
+        "owner": "developer",
+        "confidence": "high",
+        "evidence": {
+          "label": "Server response time",
+          "value": "3840ms, 412 KB of HTML",
+          "factPath": "responseTimeMs"
+        }
+      },
+      {
+        "id": "images-missing-alt",
+        "severity": "medium",
+        "category": "userExperience",
+        "title": "21 of 23 images have no alt text",
+        "finding": "Only one image on the page has an alt attribute. Filenames such as \"header_banner_final_v2_LARGE.jpg\" also carry no descriptive meaning.",
+        "whyItMatters": "Screen reader users hear nothing for those images, and search engines lose a signal — particularly for photographs of completed bathroom work, which could otherwise attract image search traffic.",
+        "recommendation": "Add descriptive alt text to the photographs of real work. Genuinely decorative images such as spacer.gif should have an empty alt attribute, and ideally be removed entirely.",
+        "expectedImpact": "Improves accessibility and opens a small amount of image search visibility.",
+        "impact": "low",
+        "effort": "medium",
+        "owner": "developer",
+        "confidence": "high",
+        "evidence": {
+          "label": "Images missing alt text",
+          "value": "21 of 23 images",
+          "factPath": "images.counts.missingAlt"
+        }
+      },
+      {
+        "id": "no-structured-data",
+        "severity": "medium",
+        "category": "technicalSEO",
+        "title": "No business information markup",
+        "finding": "The page contains no structured data of any kind — no LocalBusiness, no opening hours, no service area, no contact details in machine-readable form.",
+        "whyItMatters": "LocalBusiness markup is how search engines learn your address, hours and service area with confidence. For a local trade it is one of the higher-value technical additions available.",
+        "recommendation": "Add LocalBusiness structured data with the business name, address, phone number, opening hours and the areas served. This pairs naturally with fixing the missing location problem.",
+        "expectedImpact": "Better eligibility for local search features. Works best alongside a Google Business Profile.",
+        "impact": "medium",
+        "effort": "medium",
+        "owner": "developer",
+        "confidence": "high",
+        "evidence": {
+          "label": "Structured data types found",
+          "value": "(none)",
+          "factPath": "structuredData.types"
+        }
+      },
+      {
+        "id": "no-contact-mechanism",
+        "severity": "high",
+        "category": "userExperience",
+        "title": "No contact form and no clickable phone number",
+        "finding": "The page contains no form elements, and while it says \"Phone us today for a free quote\", no telephone number appears in the extracted text.",
+        "whyItMatters": "The page asks the visitor to call but does not give them a number to call. On a phone, a tappable tel: link is the difference between a job and a bounce.",
+        "recommendation": "Put the phone number in the header as a tappable tel: link, repeat it at the end of the page, and add a short callback request form for people who cannot talk immediately.",
+        "expectedImpact": "Directly affects how many visitors become enquiries — likely the highest commercial impact on this list.",
+        "impact": "high",
+        "effort": "low",
+        "owner": "developer",
+        "confidence": "medium",
+        "evidence": {
+          "label": "Forms and contact links",
+          "value": "0 form elements; no telephone number found in page text",
+          "factPath": "technical.formCount"
+        }
+      },
+      {
+        "id": "empty-navigation-link",
+        "severity": "low",
+        "category": "technicalSEO",
+        "title": "Navigation contains an empty link",
+        "finding": "One link points to \"#\" and has no link text.",
+        "whyItMatters": "Empty links are announced confusingly by screen readers and add a small amount of noise to how search engines interpret the page structure.",
+        "recommendation": "Remove the empty link, or give it a destination and descriptive text if it was intended to do something.",
+        "expectedImpact": "A small accessibility and cleanliness improvement.",
+        "impact": "low",
+        "effort": "low",
+        "owner": "developer",
+        "confidence": "high",
+        "evidence": {
+          "label": "Empty links",
+          "value": "1 link with href=\"#\" and no text",
+          "factPath": "links.counts.empty"
+        }
+      },
+      {
+        "id": "no-language-declared",
+        "severity": "low",
+        "category": "technicalSEO",
+        "title": "Page language is not declared",
+        "finding": "The html element has no lang attribute, and the character encoding is declared as iso-8859-1 rather than utf-8.",
+        "whyItMatters": "Screen readers use the language declaration to choose pronunciation. The dated encoding can also cause apostrophes and pound signs to display incorrectly.",
+        "recommendation": "Set lang=\"en-GB\" on the html element and change the charset declaration to utf-8.",
+        "expectedImpact": "A small accessibility and correctness improvement; prevents character display bugs.",
+        "impact": "low",
+        "effort": "low",
+        "owner": "developer",
+        "confidence": "high",
+        "evidence": {
+          "label": "Language and encoding",
+          "value": "lang: (absent); charset: iso-8859-1",
+          "factPath": "meta.lang"
+        }
+      }
+    ],
+    "strengths": [
+      {
+        "id": "real-credibility-signals",
+        "category": "content",
+        "title": "The business has genuine trust signals",
+        "detail": "Twenty years of trading, Gas Safe registration, full insurance and a work guarantee are all mentioned. These are precisely what customers check for — they simply need to be presented far more prominently."
+      },
+      {
+        "id": "clear-service-list",
+        "category": "content",
+        "title": "Services are clearly separated",
+        "detail": "Emergency callout, boiler servicing and bathroom installation are listed as distinct headings, which gives a sensible structure to build proper service pages on later."
+      }
+    ],
+    "topPriorities": [
+      {
+        "rank": 1,
+        "issueId": "no-location-anywhere",
+        "rationale": "For a local trade business this is the difference between being findable and being invisible. Nothing else on this list matters as much, and it costs an afternoon."
+      },
+      {
+        "rank": 2,
+        "issueId": "title-tag-generic",
+        "rationale": "The single highest-leverage tag on the page, currently wasted on the word \"Home\". Fixed at the same time as the location problem."
+      },
+      {
+        "rank": 3,
+        "issueId": "no-contact-mechanism",
+        "rationale": "The page asks visitors to call but gives them no number. Every visitor who wanted to make contact and could not is a lost job."
+      },
+      {
+        "rank": 4,
+        "issueId": "no-https",
+        "rationale": "Visitors see a security warning before reading anything. Usually one support ticket to the hosting provider."
+      },
+      {
+        "rank": 5,
+        "issueId": "no-viewport",
+        "rationale": "Most emergency plumbing searches happen on a phone, and the site currently does not work properly on one."
+      }
+    ],
+    "actionPlan": {
+      "immediate": [
+        {
+          "id": "add-location-and-title",
+          "title": "Add your town to the title, heading and opening paragraph",
+          "description": "Decide your primary town, then put it in the page title, a new H1, and the first sentence of the page. List surrounding areas you cover further down.",
+          "issueIds": ["no-location-anywhere", "title-tag-generic", "no-h1"],
+          "owner": "owner",
+          "effort": "low"
+        },
+        {
+          "id": "add-phone-number",
+          "title": "Put a tappable phone number on the page",
+          "description": "Add the number to the header as a tel: link so phone visitors can tap to call, and repeat it at the bottom of the page.",
+          "issueIds": ["no-contact-mechanism"],
+          "owner": "developer",
+          "effort": "low"
+        },
+        {
+          "id": "enable-https",
+          "title": "Ask your host to enable HTTPS",
+          "description": "Most hosting plans include a free certificate. Once enabled, redirect all HTTP traffic to HTTPS permanently.",
+          "issueIds": ["no-https"],
+          "owner": "developer",
+          "effort": "low"
+        },
+        {
+          "id": "write-meta-description",
+          "title": "Write a meta description",
+          "description": "140–155 characters naming the trade, the area and one reason to call — the 24-hour callout and Gas Safe registration both work well.",
+          "issueIds": ["no-meta-description"],
+          "owner": "owner",
+          "effort": "low"
+        }
+      ],
+      "next30Days": [
+        {
+          "id": "make-mobile-friendly",
+          "title": "Make the site work on phones",
+          "description": "Add the viewport meta tag and rework the fixed-width layout so it reflows at phone width. Test on a real device, not just a resized browser window.",
+          "issueIds": ["no-viewport"],
+          "owner": "developer",
+          "effort": "medium"
+        },
+        {
+          "id": "fix-hosting-speed",
+          "title": "Investigate the four-second response time",
+          "description": "Ask the hosting provider whether the site is on an overloaded shared server, and reduce the 412 KB of HTML.",
+          "issueIds": ["slow-response"],
+          "owner": "developer",
+          "effort": "medium"
+        },
+        {
+          "id": "add-alt-text",
+          "title": "Add alt text to the work photographs",
+          "description": "Describe each photograph of completed work. Remove spacer.gif and other layout images entirely.",
+          "issueIds": ["images-missing-alt", "empty-navigation-link"],
+          "owner": "developer",
+          "effort": "medium"
+        },
+        {
+          "id": "fix-lang-encoding",
+          "title": "Declare the page language and fix the encoding",
+          "description": "Set lang=\"en-GB\" and change the charset to utf-8 to prevent character display problems.",
+          "issueIds": ["no-language-declared"],
+          "owner": "developer",
+          "effort": "low"
+        }
+      ],
+      "next90Days": [
+        {
+          "id": "add-localbusiness-schema",
+          "title": "Add LocalBusiness structured data",
+          "description": "Mark up the business name, address, phone, opening hours and service area so search engines can read them reliably.",
+          "issueIds": ["no-structured-data"],
+          "owner": "developer",
+          "effort": "medium"
+        },
+        {
+          "id": "build-service-pages",
+          "title": "Build a page for each service",
+          "description": "Turn each of the three services into its own page with location included — emergency plumbing, boiler servicing, bathroom installation.",
+          "issueIds": ["no-location-anywhere", "title-tag-generic"],
+          "owner": "owner",
+          "effort": "high"
+        }
+      ]
+    },
+    "opportunities": [
+      {
+        "id": "google-business-profile",
+        "type": "growth",
+        "title": "Claim and complete a Google Business Profile",
+        "description": "A free listing showing the business in local map results with hours, photographs of completed work and customer reviews.",
+        "rationale": "For local trades this frequently drives more enquiries than the website itself, and it costs nothing but time.",
+        "impact": "high",
+        "effort": "low"
+      },
+      {
+        "id": "review-collection",
+        "type": "conversion",
+        "title": "Start collecting customer reviews",
+        "description": "Ask satisfied customers for a review after each completed job, and display them on the site alongside the existing trust signals.",
+        "rationale": "Twenty years of trading almost certainly means many happy customers whose feedback is currently invisible to anyone searching.",
+        "impact": "high",
+        "effort": "medium"
+      },
+      {
+        "id": "emergency-landing-page",
+        "type": "seo",
+        "title": "Build a dedicated emergency callout page",
+        "description": "A page targeting urgent searches, with the phone number prominent, response times stated and the covered area listed.",
+        "rationale": "Emergency searches convert immediately and are less competitive than general plumbing terms. The service is already offered.",
+        "impact": "medium",
+        "effort": "medium"
+      },
+      {
+        "id": "before-after-gallery",
+        "type": "content",
+        "title": "Publish a before-and-after gallery",
+        "description": "Photographs of completed bathroom installations with a short description of each job.",
+        "rationale": "Bathroom installation is the highest-value service listed, and it is the one where visual proof matters most to a buyer.",
+        "impact": "medium",
+        "effort": "medium"
+      }
+    ],
+    "limitations": [
+      {
+        "id": "no-performance-measurement",
+        "area": "Page speed",
+        "detail": "The performance score is inferred from the 3.8 second response time, HTML size and image handling. No Core Web Vitals or field data were collected.",
+        "howToResolve": "Connect PageSpeed Insights for measured Core Web Vitals."
+      },
+      {
+        "id": "homepage-only",
+        "area": "Site coverage",
+        "detail": "Only this page was retrieved. The services, about and contact pages linked in the navigation were not analysed and may differ significantly.",
+        "howToResolve": "A multi-page crawl would assess the whole site."
+      },
+      {
+        "id": "no-local-data",
+        "area": "Local search presence",
+        "detail": "We could not determine whether a Google Business Profile exists, how the business ranks in local map results, or what reviews it has. These often matter more than the website for a local trade.",
+        "howToResolve": "Connecting a Google Business Profile would allow assessment of local presence."
+      },
+      {
+        "id": "no-contact-details-visible",
+        "area": "Business details",
+        "detail": "No phone number, address or service area was found in the page text, so we could not verify what the business actually publishes. They may appear in an image, which we cannot read.",
+        "howToResolve": "Ensure contact details appear as real text rather than inside images."
+      },
+      {
+        "id": "no-search-data",
+        "area": "Search performance",
+        "detail": "No rankings, impressions or backlink data were available. Statements about visibility are inferences from page content alone.",
+        "howToResolve": "Connecting Google Search Console would replace these inferences with measured data."
+      },
+      {
+        "id": "no-mobile-rendering",
+        "area": "Mobile experience",
+        "detail": "Mobile problems are inferred from the missing viewport tag and inline styling. The page was not rendered at a mobile viewport to confirm the extent of the issue.",
+        "howToResolve": "Device-emulated rendering would confirm actual mobile layout behaviour."
+      }
+    ]
+  },
+  "meta": {
+    "model": "fixture",
+    "promptVersion": "fixture-v1",
+    "durationMs": 0,
+    "repairAttempts": 0,
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}
