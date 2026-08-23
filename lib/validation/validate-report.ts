@@ -7,10 +7,12 @@ import { sanitizeAnalysis } from './sanitize';
  * The validation layer.
  *
  * Deliberately separate from the provider: a component that could both produce
- * output and declare it valid would be marking its own homework. Structured
- * outputs constrain the shape at the API, but they cannot express coherence
- * (a priority must reference an issue that exists) or safety (no markup, no
- * off-domain links), and `parsed_output` can still be null.
+ * output and declare it valid would be marking its own homework. The provider
+ * sends the model a non-strict tool schema — advisory, not compiled into a
+ * decoding grammar — so the shape is requested rather than guaranteed, and the
+ * tool input can be missing entirely. Even a perfectly-shaped payload could not
+ * express coherence (a priority must reference an issue that exists) or safety
+ * (no markup, no off-domain links). This layer is where both are enforced.
  *
  * Failures are returned as a list of human-readable problems rather than thrown,
  * because that list is exactly what the repair prompt needs.

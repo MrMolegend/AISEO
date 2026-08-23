@@ -17,17 +17,45 @@ import { AuditError } from '@/lib/errors';
  * schema and the routes.
  */
 
+/** The name the system prompt already instructs the model to call. */
+export const AUDIT_TOOL_NAME = 'submit_audit';
+
 /**
- * Structured output via output_config.format.
+ * Structured output via a single forced tool call.
  *
- * The schema is handed to the API directly, so the model is constrained to our
- * shape rather than asked politely to follow it. We still re-validate the result
- * ourselves: JSON Schema cannot express the cross-reference rules (a priority
- * must point at an issue that exists) or the safety rules (no HTML, no
- * off-domain URLs), and a provider that could also declare its own output valid
- * would be marking its own homework.
+ * We reuse zodOutputFormat purely as a Zod -> JSON Schema converter; only its
+ * `.schema` is taken, and it is attached to a tool rather than to
+ * output_config.format.
+ *
+ * That distinction is the entire point of this shape. Handing the schema to
+ * output_config.format — or marking the tool `strict` — makes the API compile it
+ * into a constrained-decoding grammar, and this schema is large enough that the
+ * API rejects the request outright:
+ *
+ *   400 invalid_request_error: "The compiled grammar is too large, which would
+ *   cause performance issues. Simplify your tool schemas or reduce the number of
+ *   strict tools."
+ *
+ * A non-strict tool schema is advisory: it is shown to the model to describe the
+ * shape, not compiled. So the model is *asked* to follow this shape, not forced
+ * to — which is exactly why the validation layer downstream is load-bearing
+ * rather than belt-and-braces. It re-parses this output against the same Zod
+ * schema, applies the cross-reference rules JSON Schema cannot express (a
+ * priority must point at an issue that exists), applies the safety rules (no
+ * HTML, no off-domain URLs), and can send one repair round-trip. Nothing here
+ * declares its own output valid.
  */
-const OUTPUT_FORMAT = zodOutputFormat(auditAnalysisSchema);
+const AUDIT_TOOL: Anthropic.Tool = {
+  name: AUDIT_TOOL_NAME,
+  description:
+    'Submit the completed SEO audit. Call this exactly once, populating every required field. This is the only way to return the audit.',
+  // Cast because the SDK types input_schema as an object schema specifically,
+  // while zodOutputFormat is typed as an open JSON Schema record. The value is
+  // an object schema — auditAnalysisSchema is a z.object.
+  input_schema: zodOutputFormat(auditAnalysisSchema).schema as Anthropic.Tool.InputSchema,
+  // NOTE: `strict` is deliberately not set. Setting it would compile this schema
+  // into a grammar and reproduce the 400 described above.
+};
 
 export class AnthropicProvider implements AIProvider {
   readonly name = 'anthropic';
@@ -69,7 +97,7 @@ export class AnthropicProvider implements AIProvider {
     }
 
     try {
-      const response = await this.client.messages.parse(
+      const response = await this.client.messages.create(
         {
           model: this.model,
           max_tokens: input.maxOutputTokens,
@@ -84,11 +112,17 @@ export class AnthropicProvider implements AIProvider {
             },
           ],
           messages,
+          tools: [AUDIT_TOOL],
+          // Forcing the tool removes the free-text channel entirely: there is no
+          // prose turn for an injected instruction to be "complied" with.
+          tool_choice: { type: 'tool', name: AUDIT_TOOL_NAME },
           output_config: {
-            format: OUTPUT_FORMAT,
             // This is analysis, not creative writing. Note that temperature is
             // NOT set: sampling parameters are rejected with a 400 on Sonnet 5
             // and the rest of the current model family. Effort is the control.
+            //
+            // `format` is deliberately absent — see AUDIT_TOOL above. effort is
+            // the only member of output_config we set, and it compiles nothing.
             effort: 'high',
           },
         },
@@ -103,10 +137,16 @@ export class AnthropicProvider implements AIProvider {
         });
       }
 
+      const toolUse = response.content.find(
+        (block): block is Anthropic.ToolUseBlock =>
+          block.type === 'tool_use' && block.name === AUDIT_TOOL_NAME,
+      );
+
       return {
         // Deliberately `unknown`: the validation layer decides whether this is
-        // usable. parsed_output is null when the response could not be parsed.
-        data: response.parsed_output,
+        // usable. Null when the call was cut short before the tool block landed,
+        // which the caller treats as invalid output and sends to repair.
+        data: toolUse ? toolUse.input : null,
         usage: {
           inputTokens: response.usage.input_tokens,
           outputTokens: response.usage.output_tokens,
