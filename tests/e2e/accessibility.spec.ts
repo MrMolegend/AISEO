@@ -108,6 +108,29 @@ test.describe('the signed-out surface', () => {
     expect(scrolled.after).toBeGreaterThan(0);
   });
 
+  test('the security headers actually reach the browser', async ({ request }) => {
+    /*
+     * The unit suite asserts what the policy string should contain. This
+     * asserts that it is served at all — the header is assembled in
+     * lib/security/csp.ts, read by next.config.ts and baked into the routes
+     * manifest at build time, and a break anywhere along that path produces no
+     * error, just a page with no CSP.
+     *
+     * This build has no Supabase URL configured, so connect-src is the bare
+     * 'self' form. The origin case is covered in tests/unit/csp.test.ts.
+     */
+    const response = await request.get('/');
+    const policy = response.headers()['content-security-policy'];
+
+    expect(policy, 'no Content-Security-Policy header was served').toBeTruthy();
+    expect(policy).toContain(`connect-src 'self'`);
+    expect(policy).toContain(`frame-ancestors 'none'`);
+    expect(policy).toContain(`object-src 'none'`);
+    // A wildcard here would be a silent downgrade nobody would notice.
+    expect(policy).not.toMatch(/connect-src[^;]*[\s]https:[\s;]/);
+    expect(policy).not.toMatch(/connect-src[^;]*\*/);
+  });
+
   test('keyboard focus reaches the skip link first', async ({ page }) => {
     await page.goto('/');
     await page.keyboard.press('Tab');

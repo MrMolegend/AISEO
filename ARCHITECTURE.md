@@ -136,6 +136,28 @@ The service fetches user-supplied URLs from inside a cloud network, so:
 `E2E_ALLOW_LOCAL_FETCH` relaxes (1) and (3) for tests that serve their own
 loopback fixture. Production never sets it.
 
+## Content-Security-Policy
+
+Assembled in `lib/security/csp.ts` and read by `next.config.ts`. It lives in a
+module rather than inline in the config because a security control nobody can
+test is a security control nobody can be sure of, and its failures are silent
+in both directions: too tight and a feature stops working, too loose and
+injected script gets an exfiltration channel.
+
+`connect-src` carries `'self'` plus **the origin of `NEXT_PUBLIC_SUPABASE_URL`**,
+derived with `URL.origin` so a path, query, fragment or embedded credential
+cannot reach a world-readable response header. Not `https:`, not
+`*.supabase.co`, and not a hardcoded project ref. Without that origin the
+browser refuses `POST /auth/v1/otp` before it leaves the page and the sign-in
+form can only report a generic failure — which is exactly what production did.
+
+Nothing is listed for Anthropic, Tavily or Upstash. Those are called from route
+handlers and the job runner, where CSP does not apply.
+
+`headers()` is evaluated once at build time and baked into the routes manifest,
+so `NEXT_PUBLIC_SUPABASE_URL` must be present in the **build** environment, not
+just at runtime.
+
 ## Database
 
 Additive migrations only. The audit-era tables are untouched and their data is
