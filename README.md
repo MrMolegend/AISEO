@@ -1,22 +1,37 @@
-# AISEO
+# Research Suite
 
-Enter a website address, get an AI-powered SEO and growth audit in about a minute:
-scores, prioritised issues with evidence, an impact-versus-effort view, a phased
-action plan, and a plain statement of what the audit could not determine.
+A token-based business research platform. You create an account, hold research
+tokens, choose a package, describe your business, and spend tokens to generate a
+detailed report built from public sources — with a citation behind every factual
+claim.
 
-## The one idea that shapes everything
+The product name is a working title. It lives in exactly one file,
+[`config/brand.ts`](config/brand.ts), and a unit test fails if it appears as a
+string literal anywhere else.
 
-**The crawler owns facts. The AI owns interpretation.**
+## The ideas that shape everything
 
-The model is never asked how long a title tag is — it is told. Every significant
-finding carries `evidence`: the real value read from the page, rendered beside the
-model's commentary so a reader can check it. The overall score is computed from
-weighted category scores server-side, never generated.
+**The crawler owns facts. The model owns interpretation.** The model is never
+asked what a page says — it is given the page's actual text, headings and
+published contact routes, and asked what they imply. There is no AI call per
+crawled page: pages are read deterministically, summarised into a bounded
+context, and analysed once.
 
-The second half of that idea: **the AI produces data, never presentation.** Claude
-returns a strictly-typed object; React components own all rendering. That is what
-makes the report identical for every site, safe against injected page content,
-storable, diffable, and exportable later.
+**Every claim carries its evidence.** Sources are registered as they are found
+and given stable references — `S1`, `S2`, `S3` — before the model sees them. A
+claim that cites a reference which does not exist is rejected in validation, not
+rendered with a broken footnote. Every claim also carries a basis and a
+confidence, and every report states what it could not determine.
+
+**The model produces data, never presentation.** It returns a strictly typed
+object; React components own all rendering. That is what makes reports look
+identical for every subject, safe against content injected into a crawled page,
+storable, diffable and exportable.
+
+**A balance is only ever the result of an operation with a reason attached.**
+There is no `setBalance` anywhere in the system. Tokens are reserved, then either
+finalised or refunded, by database functions that take a row lock and an
+idempotency key. The ledger is append-only and application code cannot edit it.
 
 ## Running it locally
 
@@ -26,69 +41,102 @@ npm run dev
 ```
 
 That is the whole setup. With no `.env` at all the application runs end to end on
-the mock AI provider and an in-memory store: no API key, no accounts, no cost, no
-network egress. Visit http://localhost:3000 and audit any public site.
+in-memory drivers and fixture data: no API key, no accounts, no cost, no network
+egress. `/api/health` reports which driver is serving each subsystem.
 
-To use a real model, copy `.env.example` to `.env.local` and set:
-
-```
-AI_PROVIDER=anthropic
-ANTHROPIC_API_KEY=sk-ant-...
-```
-
-Everything else is optional and documented in `.env.example`.
+To use real services, copy `.env.example` to `.env.local`. Every variable is
+documented there, and every one is validated at boot, so a typo fails immediately
+with the variable's name rather than surfacing later as an undefined-property
+crash.
 
 ## Commands
 
-| Command            | What it does                                          |
-| ------------------ | ----------------------------------------------------- |
-| `npm run dev`      | Development server                                    |
-| `npm run verify`   | Typecheck, lint and the full unit + integration suite |
-| `npm test`         | Unit and integration tests                            |
-| `npm run test:e2e` | Playwright, against a real build                      |
-| `npm run build`    | Production build                                      |
+| Command            | What it does                                      |
+| ------------------ | ------------------------------------------------- |
+| `npm run dev`      | Development server                                |
+| `npm run verify`   | Typecheck, lint, format check, unit + integration |
+| `npm test`         | Unit and integration tests                        |
+| `npm run test:e2e` | Playwright, against a real production build       |
+| `npm run build`    | Production build                                  |
 
-The end-to-end suite audits the application's own landing page — a real HTML
-document over real HTTP — so retrieval and extraction do genuine work rather than
-being stubbed, with no fixture server to coordinate.
+`npm run verify` is exactly what CI runs before the build step, so a green local
+run means a green CI run.
 
-## Going to production
+No test makes a paid API call. The AI provider and the research provider both
+fall back to deterministic fixtures when no key is configured, and the test setup
+pins them there.
 
-Three services turn the development drivers into real ones. Each is independent;
-the app degrades to a labelled fallback and logs an error rather than breaking.
+## Packages and pricing
 
-| What                  | Why it is needed                       | Without it                                                    |
-| --------------------- | -------------------------------------- | ------------------------------------------------------------- |
-| **Anthropic API key** | Real analysis                          | Every audit returns fixture data                              |
-| **Supabase**          | Audits persist and are shareable       | Audits vanish on restart and are invisible to other instances |
-| **Upstash Redis**     | Rate limits that hold across instances | Limits apply per-instance only — not a real limit under load  |
+Both catalogues are typed configuration, not database rows, and neither is
+reachable from a request body. A client names a package; the server names the
+price.
 
-`GET /api/health` reports which drivers are live and returns 503 if any
-development driver is active in production, so a misconfigured deploy fails its
-health check rather than quietly serving fixture data.
+| Package                       | Tokens | What it produces                                      |
+| ----------------------------- | -----: | ----------------------------------------------------- |
+| Competitor Intelligence       |    100 | Ranked competitors, positioning, pricing signals      |
+| Target Customer & Lead Finder |    150 | Ideal customer profile, segments, named company leads |
+| Influencer Outreach List      |    180 | Relevant creators with published contact routes       |
+| Complete Market Pack          |    350 | All three, plus positioning and a 90-day plan         |
 
-Apply `supabase/migrations/0001_initial_schema.sql` before the first real audit.
+| Bundle  | Tokens | Price |
+| ------- | -----: | ----: |
+| Starter |    100 |    £9 |
+| Builder |    300 |   £24 |
+| Growth  |    700 |   £49 |
+| Agency  |   1500 |   £89 |
 
-### Before the first public link
+**Purchasing is not implemented.** There is no payment integration and no
+simulated one: `PURCHASING_ENABLED` is `false`, the pricing page labels bundles
+"Coming soon", and the only way tokens enter a wallet is the operator grant route
+below. Wiring a payment provider means crediting a wallet through the existing
+`grant()` path — the accounting is already there.
 
-Set `AUDIT_DAILY_GLOBAL_CAP`. It is the circuit breaker that turns a runaway into
-an error message rather than an invoice.
+## Granting tokens
 
-## Architecture
+The one operation that creates spendable value from nothing, so its reachability
+matters more than its implementation.
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md).
+`POST /api/admin/grant-tokens` requires `ADMIN_GRANT_SECRET`. If that variable is
+absent the route is **disabled outright** — not open, not warning — and a wrong
+secret returns 404 rather than 403, because an endpoint that admits it exists is
+an endpoint worth attacking. The secret must be at least 24 characters or the
+application refuses to boot. Every grant carries an operator reference that
+becomes its idempotency key, so re-running a command does not stack credits.
 
-## What V1 deliberately does not do
+`WELCOME_TOKEN_GRANT` defaults to `0`. Leave it there in production: an account
+that silently receives spendable credit is a cost leak.
 
-Stated plainly because the product's whole pitch is honesty about its own limits:
+## Testing what matters
 
-- **One page per audit.** The homepage only. Multi-page crawling is the next
-  retrieval-layer addition.
-- **No JavaScript rendering.** Pages are analysed as served. A client-rendered
-  shell is detected and refused with an explanation rather than audited as though
-  it were empty — which is itself a true finding about that site.
-- **No measured performance data.** Performance and Mobile are inferred from HTML
-  signals and are labelled `heuristic` in the data and "Estimated" in the UI.
-- **No search, ranking or backlink data.**
+- `tests/integration/job-lifecycle.test.ts` — the money path. Charged once,
+  refunded on our faults, never charged without delivery, never charged twice for
+  one click, free on a cached repeat, and never readable across accounts. Each
+  asserts the balance _and_ the ledger, because a job can look correct and still
+  have stranded a hold.
+- `tests/integration/token-grants.test.ts` — the grant route's closed states,
+  asserted as hard as its open one.
+- `tests/unit/research-provider.test.ts` — the Anthropic request shape, against
+  the real serialised HTTP body. See "The 400 that shaped the AI layer" in
+  [`ARCHITECTURE.md`](ARCHITECTURE.md).
+- `tests/unit/ssrf-guard.test.ts`, `tests/integration/safe-fetch.test.ts` — the
+  fetch guard, as a rule and as plumbing, against a real server.
+- `tests/e2e` — the signed-out surface, in both themes, at five viewport widths,
+  with axe. Signing in needs a real Supabase project; those paths are covered by
+  the integration suite against the same server code.
 
-Every generated report states these in its own limitations section.
+## Deploying
+
+See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the deployment checklist, the
+database migration list, and what to verify after a deploy.
+
+## What this will not do
+
+It does not scrape Google Search, Google Maps, Instagram, TikTok or LinkedIn.
+Those platforms forbid it, and a product built on a terms violation is a product
+with a deadline. Where a source can be cited but not fetched, it is cited without
+being fetched and marked as such.
+
+It does not guess contact details. An email address appears in a report only
+where the business published it. Constructing `firstname@company.com` is both
+useless and the kind of thing that gets a sender blocked.

@@ -3,143 +3,190 @@
 ## Layers
 
 Each layer may only import from the ones above it. The boundaries are enforced by
-ESLint where they can be, and by module structure where they cannot.
+ESLint where they can be and by module structure where they cannot.
 
 ```
-lib/security/     URL validation, SSRF guard, hardened fetch, rate limits
-lib/retrieval/    robots.txt, page fetch, favicon        → RawFetchResult
-lib/extraction/   parsing, extractors, deterministic checks → SiteFacts
-lib/ai/           provider interface, Anthropic, mock, retry → unknown
-lib/validation/   schema, cross-reference, sanitise, score  → AuditAnalysis
-lib/storage/      Supabase and in-memory drivers
-lib/pipeline/     intake and orchestration
+config/           brand, package catalogue, token bundles  (typed, no I/O)
+lib/security/     URL validation, SSRF guard, hardened fetch, decoding, limits
+lib/auth/         Supabase SSR session; the only source of a user id
+lib/tokens/       wallet drivers, ledger, idempotency, operator grants
+lib/crawl/        robots, frontier, sitemaps, source registry, page facts
+lib/research/     search provider interface, Tavily, deterministic mock, policy
+lib/ai/           the Anthropic call, the fixture synthesiser              → unknown
+lib/validation/   schema, citation checks, sanitisation                   → Report
+lib/jobs/         intake, cache key, stages, storage drivers, the pipeline
+lib/export/       CSV rendering
 components/       presentation
 ```
 
 ## Request flow
 
 ```
-POST /api/audits
-  ├─ validate + normalise URL          (syntactic, isomorphic)
-  ├─ reject non-public IP literals     (no DNS needed)
-  ├─ cache lookup by url hash          → hit returns instantly, no AI spend
-  ├─ global daily cap                  → circuit breaker
-  ├─ per-IP sliding window
-  ├─ in-flight lock on the url hash    → a double-click costs one call
-  └─ create row, return 202 { publicId }
+POST /api/research
+  ├─ requireUser()                     ← a signed JWT, never a body field
+  ├─ validate the brief                ← INVALID_INPUT never refunds: nothing taken yet
+  ├─ price from config/packages.ts     ← the request names a package, not a price
+  ├─ rate limit (per user, per IP, global daily cap)
+  ├─ cache lookup, scoped to this user → hit returns instantly, free, marked cached
+  ├─ balance check
+  ├─ create the job row
+  ├─ reserve tokens against it         ← idempotency key = the client's submission id
+  └─ return 202 { publicId }
         │
-        └─ after() → runAuditPipeline(publicId)
-             robots.txt → fetch → extract → analyse → validate → save
-                                                          │
-GET /audit/{publicId} ─────────────────────────────────────┘
-  status decides: processing | report | designed error
+        │  after() — the response has already gone back
+        ▼
+  runResearchJob
+    understanding  crawl the subject's own site, bounded          → PageFacts[]
+    discovering    search public sources, register each one       → S1..Sn
+    crawling       read the most promising external pages
+    extracting     deterministic facts, no model involved
+    building       assemble the bounded context
+    analysing      ONE Anthropic call, forced non-strict tool     → unknown
+    checking       Zod + citation + sanitisation; one repair pass → Report
+    saving         store.complete() — the last write to the row
+                   wallet.finalize() — the hold becomes a spend
 ```
 
-The response is returned before the work starts. A 90-second synchronous request
-is fragile against browser, proxy and mobile-network timeouts, and a refresh would
-abandon it. `runAuditPipeline` is a pure function of an audit id, so replacing
-`after()` with a queue later changes how it is called, not what it does.
+If anything throws, `settleFailure` writes the failure and consults the error
+taxonomy for whether to refund. The decision lives in `lib/errors.ts`, next to
+the code and the user-facing copy, so "does this refund?" has one answer in one
+place rather than a condition in the middle of a long function.
 
-## The two-halves schema
+`store.complete()` is deliberately the last write to the job row. Every stage
+maps to a non-terminal status, so a stage write landing after completion would
+move a finished job back to "still working" — and the status endpoint reports
+done from that status, so the browser would poll forever on a report that already
+existed and had been paid for. That happened. Both store drivers now refuse
+progress writes to a terminal job.
 
-`AuditReport` splits into `facts` (measured) and `analysis` (generated).
+## The token lifecycle
 
-Reasoning:
+```
+grant       +N available                        admin_grant / welcome_credit / purchase
+reserve     −cost available, +cost reserved     reservation
+finalize             0 available, −cost reserved   debit    ← the report exists
+refund      +cost available, −cost reserved     refund      ← our fault
+```
 
-1. **Anti-hallucination.** The model interprets measurements it is given rather
-   than producing them. `evidence` on each issue points at the real value, so a
-   fabricated finding has nowhere to hide.
-2. **Computed overall score.** A weighted mean over six categories, calculated
-   server-side. Reproducible, and the model cannot contradict its own breakdown.
-3. **Stable ids.** Issues carry kebab-case ids, so priorities and action items
-   _reference_ them rather than restating them and drifting out of sync.
-4. **Declared confidence.** Each category states `basis`: `measured`, `heuristic`
-   or `inferred`. V1 has no page-speed data, so Performance and Mobile are
-   heuristic — and the UI says so at the point the number is read.
-5. **Mandatory limitations.** Never empty. A reader who catches the product
-   pretending to know something it does not will discount everything else.
+`amount` in the ledger is the signed change to `available_balance`, which is why
+a debit is `0`: the tokens left `available` when they were reserved. Summing a
+job's entries gives its net cost, whatever order they are read in.
 
-## Security
+Every mutation goes through a `SECURITY DEFINER` Postgres function that takes a
+row lock on the wallet and checks an idempotency key before doing anything. The
+`service_role` holds `SELECT` only on `token_wallets` and `token_ledger`, so a
+write outside those functions is not merely discouraged — it is not permitted.
+The ledger has an append-only trigger; the one mutation it allows is the cascade
+from a deleted `auth.users` row, because refusing that made accounts
+undeletable.
 
-### SSRF
+## The 400 that shaped the AI layer
 
-This service fetches arbitrary user-supplied URLs from inside a cloud network,
-which makes it a confused deputy by construction. Four layers:
+Passing a schema of this size to `output_config.format`, or marking the tool
+`strict: true`, makes the API compile it into a constrained-decoding grammar:
 
-1. **Canonicalisation.** The WHATWG URL parser expands `2130706433`,
-   `0x7f.0.0.1` and `127.1` all into `127.0.0.1`, so the address check sees the
-   real destination rather than an obfuscated string. This is load-bearing, not
-   incidental.
-2. **Address classification.** Every non-public IPv4 and IPv6 range, with
-   IPv4-mapped IPv6 unwrapped first — otherwise `::ffff:127.0.0.1` passes a
-   v6-only test while the OS connects it to loopback.
-3. **Per-hop redirect validation.** Redirects are followed manually and every hop
-   is re-validated. A public URL that bounces to `169.254.169.254` is the
-   canonical payload, and following redirects automatically would permit it.
-4. **Connect-time re-validation.** A custom undici connector checks the socket's
-   real peer address before a request byte is written. Validating DNS once and
-   then connecting is a race an attacker with a low-TTL record wins.
+```
+400 invalid_request_error: "The compiled grammar is too large, which would cause
+performance issues. Simplify your tool schemas or reduce the number of strict tools."
+```
 
-### Prompt injection
+So the schema is attached to a **forced, non-strict tool**. That makes the shape
+advisory — the model is asked to follow it, not made to — which is why the
+validation layer downstream is load-bearing rather than belt-and-braces. Forcing
+the tool still removes the free-text channel entirely, so there is no prose turn
+for an injected instruction to be complied with.
 
-Page content is hostile input that ends up in a prompt. Defence in depth:
+Neither of those two facts is visible to the type system; both produce a runtime 400. `tests/unit/research-provider.test.ts` asserts them against the real
+serialised HTTP body, and has been verified to fail when either is put back.
 
-- **Extraction.** Scripts, comments, `[hidden]`, `aria-hidden`, `display:none` and
-  off-screen text are removed before any content is read — the usual hiding
-  places, gone for free.
-- **Structure.** Facts are JSON-encoded inside a block delimited by a per-request
-  nonce. Page content cannot forge a terminator it has never seen.
-- **Instruction.** The boundary is stated in the system prompt and repeated after
-  the data, where recency matters.
-- **Output.** Every string is scrubbed of markup, dangerous schemes, markdown link
-  targets and any URL outside the audited domain. `react/no-danger` is a lint
-  error repo-wide, so AI text can only ever render as React children.
+## Prompt injection
 
-The worst a fully successful injection achieves is odd prose.
+Crawled page content is hostile input. Four reinforcing defences:
 
-## Cost control
+1. **Structural** — content is JSON-encoded inside a nonce-delimited block. The
+   nonce is per-request from `crypto.randomBytes`, so a forged closing tag cannot
+   terminate it.
+2. **Instructional** — the boundary is stated in the system prompt and again
+   _after_ the data, where recency helps.
+3. **Mechanical** — `tool_choice` forces a schema-shaped call. There is no
+   free-text channel to comply through.
+4. **Output-side, and this is the real backstop** — every string is capped, HTML
+   and markdown links are scrubbed, script URIs are stripped, and a citation to a
+   source that was never registered is a validation failure. A fully successful
+   injection can produce a strange-sounding report, not an XSS.
 
-| Control                  | Effect                                                      |
-| ------------------------ | ----------------------------------------------------------- |
-| URL cache (24h)          | A repeat audit costs nothing                                |
-| In-flight lock           | A double-click costs one call, not two                      |
-| Tracking-param stripping | One page is one cache key, not five                         |
-| Per-IP limits            | 3/hour, 10/day by default                                   |
-| Global daily cap         | The backstop between a runaway and an invoice               |
-| Capped extraction        | 2MB HTML, 40k chars, 150 links, 50 images                   |
-| Prompt caching           | The static system prompt is marked ephemeral                |
-| Recorded usage           | Tokens and cost stored per audit — a SQL query, not a guess |
+`react/no-danger` is an ESLint error repo-wide, so rendering model output as HTML
+is a build failure rather than a code-review catch.
 
-## Swapping the AI provider
+## SSRF
 
-Implement `AIProvider` in one new file under `lib/ai/`. Nothing outside
-`lib/ai/anthropic-provider.ts` may import an SDK; a `no-restricted-imports` rule
-makes a violation a build failure. The provider returns `unknown` — validation is
-a separate layer, because a component that could declare its own output valid
-would be marking its own homework.
+The service fetches user-supplied URLs from inside a cloud network, so:
 
-## Adding data sources later
+1. Syntactic validation — scheme, no credentials, ports 80/443 only.
+2. Hostname denylist — `localhost`, `.local`, `.internal`, bare hostnames.
+3. DNS resolution and an IP allowlist — every private, loopback, link-local
+   (including `169.254.169.254`) and CGNAT range rejected, v4 and v6.
+4. **Connect-time re-validation** of the actual socket peer, which is the only
+   correct fix for DNS rebinding. Validating DNS and then calling `fetch` is a
+   race an attacker with a low-TTL record wins.
+5. Manual redirects, every hop re-validated.
+6. Separate ceilings for encoded and decoded bytes, so a compressed response
+   cannot expand past the limit after it has been accepted.
 
-Each slots into an existing seam:
+`E2E_ALLOW_LOCAL_FETCH` relaxes (1) and (3) for tests that serve their own
+loopback fixture. Production never sets it.
 
-| Addition         | Where it goes                                                      |
-| ---------------- | ------------------------------------------------------------------ |
-| Multi-page crawl | `lib/retrieval/crawler.ts`; `SiteFacts` gains `pages[]`            |
-| JS rendering     | `lib/retrieval/renderer.ts`, triggered by `likelyClientRendered`   |
-| PageSpeed / CrUX | New signals module; `basis` flips to `measured`, weights rebalance |
-| Search Console   | Needs auth first; `facts.searchData`                               |
-| Local SEO        | A seventh category — a keyed record plus one weight constant       |
-| Authentication   | `owner_id` and RLS already exist; backfill on sign-in              |
-| PDF export       | A second renderer over the same `AuditReport`                      |
+## Database
 
-## Testing
+Additive migrations only. The audit-era tables are untouched and their data is
+intact; nothing in this codebase reads them any more.
 
-| Suite               | What it proves                                                                 |
-| ------------------- | ------------------------------------------------------------------------------ |
-| `tests/unit`        | Rules: URL and address classification, extraction, checks, sanitising, scoring |
-| `tests/integration` | Plumbing: real HTTP through the guards, AI retry and repair, abuse controls    |
-| `tests/e2e`         | The journey, both themes, both viewports, plus accessibility and overflow      |
-| `tests/manual`      | Real websites. Excluded from CI — needs ordinary outbound access               |
+| Migration                                       | What it adds                                                                                                                      |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `0001`–`0003`                                   | The original audit schema. Left in place.                                                                                         |
+| `0004_research_platform`                        | `user_profiles`, `token_wallets`, `token_ledger`, `research_jobs`, `research_sources`, RLS, and the transactional token functions |
+| `0005_fix_token_function_output_names`          | `RETURNS TABLE` columns shadowed same-named table columns, making every balance-moving function raise 42702 at runtime            |
+| `0006_allow_ledger_removal_on_account_deletion` | The append-only trigger blocked the cascade from `auth.users`, so accounts could not be deleted                                   |
+| `0007_settle_reservations_individually`         | The settle-once guard was scoped to the job rather than the reservation, stranding a second hold                                  |
+| `0008_select_outstanding_reservation_directly`  | `created_at` ties inside one transaction made "the latest reservation" non-deterministic                                          |
+| `0009_index_research_jobs_cached_from`          | Unindexed foreign key                                                                                                             |
 
-CI runs everything except `tests/manual`, always against the mock provider: no
-key, no egress, no cost.
+Four of those were found by _executing_ the functions against a live database
+rather than reading them. None was visible to `tsc`.
+
+## Deployment checklist
+
+Environment variables — names only, values never printed anywhere:
+
+| Variable                                                 | Needed for                                             |
+| -------------------------------------------------------- | ------------------------------------------------------ |
+| `NEXT_PUBLIC_SITE_URL`                                   | Canonical URLs, auth redirects                         |
+| `NEXT_PUBLIC_SUPABASE_URL`                               | Auth and storage                                       |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `…_ANON_KEY`) | Browser auth client                                    |
+| `SUPABASE_SERVICE_ROLE_KEY`                              | Server-side storage. Never in a browser bundle         |
+| `ANTHROPIC_API_KEY`, `AI_PROVIDER=anthropic`, `AI_MODEL` | Report synthesis                                       |
+| `RESEARCH_PROVIDER=tavily`, `TAVILY_API_KEY`             | Finding public sources                                 |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`     | Limits that span instances                             |
+| `IP_HASH_SALT`                                           | Hashing IPs. Raw addresses are never stored            |
+| `RESEARCH_DAILY_GLOBAL_CAP`                              | The cost ceiling. **Set before the first public link** |
+| `ADMIN_GRANT_SECRET`                                     | The grant route. Absent ⇒ route disabled. Min 24 chars |
+| `WELCOME_TOKEN_GRANT`                                    | Leave at `0` in production                             |
+
+Steps:
+
+1. Apply `supabase/migrations/0004`–`0009` in order.
+2. Enable email sign-in in Supabase Auth and add
+   `${NEXT_PUBLIC_SITE_URL}/auth/callback` to the allowed redirect URLs.
+3. Set the variables above. `maxDuration` is 300s on the research route, which
+   needs Vercel Pro or Fluid Compute — the Hobby 60s ceiling cannot fit the
+   pipeline.
+4. Deploy, then check `/api/health`. It returns **503** while any subsystem is on
+   a development driver in production, and names which. A mock research provider
+   is reported as failing rather than degraded: it returns confident, well-shaped,
+   entirely fictional sources, and nothing downstream can tell.
+5. Grant yourself tokens via `POST /api/admin/grant-tokens` and run one real
+   report.
+6. Set Anthropic and Tavily spend alerts.
+
+Rollback is a Vercel instant rollback. The migrations are additive, so a rollback
+never orphans data.
