@@ -1,30 +1,18 @@
 import type { NextConfig } from 'next';
+import { contentSecurityPolicy } from './lib/security/csp';
 
 /**
- * Content-Security-Policy.
- *
- * `'unsafe-inline'` on style-src is required by Next's inlined critical CSS and by
- * React's style attributes; we compensate by banning dangerouslySetInnerHTML at the
- * lint level so no untrusted string ever reaches the DOM as markup.
- *
- * `'unsafe-eval'` is development-only (React Refresh needs it).
+ * Headers are evaluated once, at build time, and baked into the routes
+ * manifest — they are not recomputed per request. So NEXT_PUBLIC_SUPABASE_URL
+ * has to be present in the *build* environment for the browser to be allowed
+ * to reach Supabase at all. On Vercel it is, because it is a NEXT_PUBLIC_
+ * variable and is already inlined into the client bundle from the same place.
  */
-function contentSecurityPolicy(): string {
-  const isDev = process.env.NODE_ENV === 'development';
-  return [
-    `default-src 'self'`,
-    `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
-    `style-src 'self' 'unsafe-inline'`,
-    // Audited sites' favicons are rendered in the report header.
-    `img-src 'self' data: https:`,
-    `font-src 'self' data:`,
-    `connect-src 'self'${isDev ? ' ws: http://localhost:*' : ''}`,
-    `object-src 'none'`,
-    `base-uri 'self'`,
-    `form-action 'self'`,
-    `frame-ancestors 'none'`,
-    `upgrade-insecure-requests`,
-  ].join('; ');
+function cspHeader(): string {
+  return contentSecurityPolicy({
+    isDev: process.env.NODE_ENV === 'development',
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  });
 }
 
 const nextConfig: NextConfig = {
@@ -36,7 +24,7 @@ const nextConfig: NextConfig = {
       {
         source: '/:path*',
         headers: [
-          { key: 'Content-Security-Policy', value: contentSecurityPolicy() },
+          { key: 'Content-Security-Policy', value: cspHeader() },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'X-Frame-Options', value: 'DENY' },
