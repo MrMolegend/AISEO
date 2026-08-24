@@ -1,5 +1,5 @@
-import { SiteHeader } from '@/components/marketing/site-header';
-import { SiteFooter } from '@/components/marketing/site-footer';
+import { SiteHeader } from '@/components/layout/site-header';
+import { SiteFooter } from '@/components/layout/site-footer';
 
 /** Shared shell for the static legal pages. Prose measure is capped for readability. */
 export function LegalPage({
@@ -14,7 +14,7 @@ export function LegalPage({
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-[720px] px-5 py-16 md:px-8 md:py-24">
+      <main id="main" className="mx-auto max-w-[720px] px-5 py-16 md:px-8 md:py-24">
         <h1 className="text-3xl font-semibold md:text-4xl">{title}</h1>
         <p className="text-ink-faint mt-3 text-sm">Last updated {updated}</p>
         <div className="mt-10 space-y-8">{children}</div>

@@ -20,6 +20,10 @@ const badgeVariants = cva(
         medium:
           'border-[var(--color-severity-medium-line)] bg-[var(--color-severity-medium-bg)] text-[var(--color-severity-medium)]',
         low: 'border-[var(--color-severity-low-line)] bg-[var(--color-severity-low-bg)] text-[var(--color-severity-low)]',
+        /* Confidence and provenance. Distinct from severity, which reads as a
+           warning — a high-confidence finding is not an alarm. */
+        success:
+          'border-[var(--color-score-good-bg)] bg-[var(--color-score-good-bg)] text-[var(--color-score-good)]',
       },
       size: {
         sm: 'px-2 py-0.5 text-[11px]',

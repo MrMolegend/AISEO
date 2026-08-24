@@ -1,38 +1,34 @@
+import { BRAND } from '@/config/brand';
 import { cn } from '@/lib/utils';
 
 /**
- * A rising bar mark. Deliberately abstract: the product is about measurement and
- * improvement, and anything more literal (magnifying glass, robot) would date
- * badly and read as a template.
+ * The wordmark.
+ *
+ * Drawn from config/brand.ts rather than an image file, so renaming the product
+ * is a one-line change rather than an asset hunt. The monogram is a rounded
+ * square with two letters — deliberately plain, because a working title dressed
+ * up as a finished identity is harder to replace later.
  */
-export function Logo({ className }: { className?: string }) {
+export function Logo({
+  className,
+  showName = true,
+}: {
+  className?: string;
+  showName?: boolean;
+}) {
   return (
-    <svg
-      viewBox="0 0 28 28"
-      fill="none"
-      className={cn('shrink-0', className)}
-      aria-hidden="true"
-    >
-      <rect width="28" height="28" rx="7" className="fill-brand" />
-      <rect
-        x="7"
-        y="15"
-        width="3.5"
-        height="6"
-        rx="1.2"
-        fill="white"
-        fillOpacity="0.55"
-      />
-      <rect
-        x="12.25"
-        y="11"
-        width="3.5"
-        height="10"
-        rx="1.2"
-        fill="white"
-        fillOpacity="0.78"
-      />
-      <rect x="17.5" y="7" width="3.5" height="14" rx="1.2" fill="white" />
-    </svg>
+    <span className={cn('inline-flex items-center gap-2.5', className)}>
+      <span
+        aria-hidden="true"
+        className="bg-brand text-ink-inverse inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] text-[13px] font-semibold tracking-tight tabular-nums"
+      >
+        {BRAND.monogram}
+      </span>
+      {showName && (
+        <span className="text-ink text-[15px] font-semibold tracking-[-0.01em]">
+          {BRAND.name}
+        </span>
+      )}
+    </span>
   );
 }

@@ -2,12 +2,19 @@ import type { MetadataRoute } from 'next';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
+/**
+ * Only the public, stable pages.
+ *
+ * Report URLs are deliberately absent: listing them in a sitemap would publish
+ * the very links that are meant to be shared privately, which robots.txt then
+ * could not put back.
+ */
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
   return [
     { url: `${SITE_URL}/`, lastModified: now, changeFrequency: 'weekly', priority: 1 },
     {
-      url: `${SITE_URL}/sample`,
+      url: `${SITE_URL}/pricing`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.8,
