@@ -1,17 +1,21 @@
 import type { NextConfig } from 'next';
-import { contentSecurityPolicy } from './lib/security/csp';
+import { contentSecurityPolicy, DEFAULT_SUPABASE_ORIGIN } from './lib/security/csp';
 
 /**
- * Headers are evaluated once, at build time, and baked into the routes
- * manifest — they are not recomputed per request. So NEXT_PUBLIC_SUPABASE_URL
- * has to be present in the *build* environment for the browser to be allowed
- * to reach Supabase at all. On Vercel it is, because it is a NEXT_PUBLIC_
- * variable and is already inlined into the client bundle from the same place.
+ * Headers are evaluated once, during the build, and baked into the routes
+ * manifest — they are not recomputed per request. That is what broke the first
+ * attempt at this fix: NEXT_PUBLIC_SUPABASE_URL was not in the build
+ * environment, so the policy shipped with no Supabase source and every sign-in
+ * was blocked in the browser. The build itself was perfectly happy.
+ *
+ * So the environment is an override, not a dependency. The variable is used
+ * when it is there; otherwise the known project origin is, and either way the
+ * value goes through URL parsing before it reaches the header.
  */
 function cspHeader(): string {
   return contentSecurityPolicy({
     isDev: process.env.NODE_ENV === 'development',
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ?? DEFAULT_SUPABASE_ORIGIN,
   });
 }
 

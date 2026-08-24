@@ -108,27 +108,52 @@ test.describe('the signed-out surface', () => {
     expect(scrolled.after).toBeGreaterThan(0);
   });
 
-  test('the security headers actually reach the browser', async ({ request }) => {
+  test('the built app serves the Supabase origin in connect-src', async ({ request }) => {
     /*
-     * The unit suite asserts what the policy string should contain. This
-     * asserts that it is served at all — the header is assembled in
-     * lib/security/csp.ts, read by next.config.ts and baked into the routes
-     * manifest at build time, and a break anywhere along that path produces no
-     * error, just a page with no CSP.
+     * The test that would have caught the outage.
      *
-     * This build has no Supabase URL configured, so connect-src is the bare
-     * 'self' form. The origin case is covered in tests/unit/csp.test.ts.
+     * The policy is assembled in lib/security/csp.ts, read by next.config.ts
+     * and baked into the routes manifest during the build. A break anywhere
+     * along that path raises nothing — the build succeeds and the page simply
+     * ships without a usable policy, which is exactly what happened: Vercel
+     * built without NEXT_PUBLIC_SUPABASE_URL, connect-src went out as bare
+     * 'self', and every sign-in was blocked in the browser.
+     *
+     * This suite's webServer deliberately does NOT set that variable, so this
+     * runs in precisely the condition that broke production. The origin must
+     * be there anyway.
      */
-    const response = await request.get('/');
+    const SUPABASE_ORIGIN = 'https://euyhkmtxdigdnvmboebf.supabase.co';
+
+    const response = await request.get('/sign-in');
     const policy = response.headers()['content-security-policy'];
 
     expect(policy, 'no Content-Security-Policy header was served').toBeTruthy();
-    expect(policy).toContain(`connect-src 'self'`);
+    if (!policy) throw new Error('unreachable: the assertion above already failed');
+
+    // The literal directive production must serve, written out in full.
+    expect(policy).toContain(`connect-src 'self' ${SUPABASE_ORIGIN}`);
+
+    // Nothing broader standing in for it. A wildcard would satisfy the browser
+    // and hand injected script an exfiltration channel to every host under it.
+    const connectSrc = policy.split(';').find((d) => d.trim().startsWith('connect-src'));
+    expect(connectSrc?.trim()).toBe(`connect-src 'self' ${SUPABASE_ORIGIN}`);
+    expect(connectSrc).not.toMatch(/\*/);
+    // The bare `https:` scheme source, which allows every https origin there
+    // is. Note the lookahead: `https://host` is the allowance we want, and an
+    // earlier version of this line matched that too.
+    expect(connectSrc).not.toMatch(/\shttps:(?!\/\/)/);
+
+    // No credential of any kind rode along into a header every visitor reads.
+    expect(policy).not.toMatch(/eyJ[A-Za-z0-9_-]/);
+    expect(policy).not.toMatch(/sb_(publishable|secret)_/);
+    expect(policy).not.toMatch(/service[_-]?role/i);
+    expect(policy).not.toContain('apikey');
+
+    // And the rest of the policy is intact.
     expect(policy).toContain(`frame-ancestors 'none'`);
     expect(policy).toContain(`object-src 'none'`);
-    // A wildcard here would be a silent downgrade nobody would notice.
-    expect(policy).not.toMatch(/connect-src[^;]*[\s]https:[\s;]/);
-    expect(policy).not.toMatch(/connect-src[^;]*\*/);
+    expect(policy).toContain(`base-uri 'self'`);
   });
 
   test('keyboard focus reaches the skip link first', async ({ page }) => {
