@@ -144,19 +144,36 @@ test is a security control nobody can be sure of, and its failures are silent
 in both directions: too tight and a feature stops working, too loose and
 injected script gets an exfiltration channel.
 
-`connect-src` carries `'self'` plus **the origin of `NEXT_PUBLIC_SUPABASE_URL`**,
-derived with `URL.origin` so a path, query, fragment or embedded credential
-cannot reach a world-readable response header. Not `https:`, not
-`*.supabase.co`, and not a hardcoded project ref. Without that origin the
-browser refuses `POST /auth/v1/otp` before it leaves the page and the sign-in
-form can only report a generic failure — which is exactly what production did.
+`connect-src` carries `'self'` plus **exactly one Supabase origin**. The
+browser needs it: `supabase-js` posts to `/auth/v1/otp` from the page, and
+without it the request never leaves the browser and the sign-in form can only
+report a generic failure.
+
+The origin is a **constant**, `DEFAULT_SUPABASE_ORIGIN`, with
+`NEXT_PUBLIC_SUPABASE_URL` as an override. That order is the point, and it was
+learned the hard way: `headers()` is evaluated during the build, the variable
+was not in Vercel's build environment, and the deployment shipped bare
+`connect-src 'self'`. Nothing failed — not the build, not CI, not a typecheck
+— only every sign-in, in the browser. An environment variable that has to be
+present for a security header to be correct is a dependency you find out about
+in production.
+
+The constant is not a credential. It is a Supabase project's public API origin
+— the same string already inlined into the client bundle and present in every
+request the browser makes. It authorises nothing on its own: reaching it still
+requires the publishable key, and every table behind it is under row-level
+security. Listing one extra named host in `connect-src` widens the page's reach
+by that host and nothing more.
+
+Whatever the source, the value goes through `URL.origin` and then a strict
+pattern check, so a path, query, fragment, embedded credential, newline or
+semicolon cannot reach a world-readable response header. A value that is set
+but unusable falls back rather than dropping the origin — a typo must not be
+able to reproduce the outage. Not `https:`, not `*.supabase.co`, no wildcard of
+any kind.
 
 Nothing is listed for Anthropic, Tavily or Upstash. Those are called from route
 handlers and the job runner, where CSP does not apply.
-
-`headers()` is evaluated once at build time and baked into the routes manifest,
-so `NEXT_PUBLIC_SUPABASE_URL` must be present in the **build** environment, not
-just at runtime.
 
 ## Database
 
