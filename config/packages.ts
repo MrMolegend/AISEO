@@ -12,6 +12,8 @@
  * answer you can read rather than estimate.
  */
 
+import { PlatformError } from '@/lib/errors';
+
 export const RESEARCH_PACKAGE_IDS = [
   'competitor-intelligence',
   'lead-finder',
@@ -250,11 +252,16 @@ export function isResearchPackageId(value: unknown): value is ResearchPackageId 
  * is a request we should refuse, not one we should price at zero.
  */
 export function tokenCostFor(id: ResearchPackageId): number {
-  return RESEARCH_PACKAGES[id].tokenCost;
+  return getPackage(id).tokenCost;
 }
 
 export function getPackage(id: ResearchPackageId): ResearchPackage {
-  return RESEARCH_PACKAGES[id];
+  const pkg = RESEARCH_PACKAGES[id];
+  // The type says this cannot happen, but the id arrives from a request body.
+  // A TypeError here would surface as a 500 with a stack; this surfaces as the
+  // refusal it actually is.
+  if (!pkg) throw new PlatformError('INVALID_INPUT', `Unknown research package: ${id}`);
+  return pkg;
 }
 
 export function packageHasModule(id: ResearchPackageId, module: ResearchModule): boolean {

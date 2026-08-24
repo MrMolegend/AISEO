@@ -302,8 +302,13 @@ export async function runResearchJob(
     });
 
     /* ── Settle the tokens ─────────────────────────────────────────────── */
-    await store.setStage(job.id, 'settling');
 
+    // No stage write here. `complete` is the last write to the job row, and it
+    // sets both the terminal status and the final stage. Writing a stage after
+    // it used to move the status back to a non-terminal one, which left the
+    // status endpoint reporting "not done" for a report that existed and had
+    // been paid for — the browser polled forever.
+    //
     // The report exists and the user can read it, so the hold becomes a spend.
     // If this throws, the user has their report and their tokens are still
     // held; the reconciliation path is a support action, not a lost report.

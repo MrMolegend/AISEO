@@ -1,6 +1,6 @@
 import 'server-only';
 import { safeFetch } from '@/lib/security/safe-fetch';
-import { checkRobots } from '@/lib/retrieval/robots';
+import { checkRobots } from './robots';
 import { PlatformError, toPlatformError } from '@/lib/errors';
 import { logger } from '@/lib/observability/logger';
 import { isCrawlable } from '@/lib/research/policy';

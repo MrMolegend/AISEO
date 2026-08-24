@@ -1,6 +1,6 @@
 import type { CheerioAPI } from 'cheerio';
 import { normalizeText, resolveUrl } from '../parse-html';
-import type { MetaFacts } from '@/schemas/facts';
+import type { MetaFacts } from '@/schemas/page-facts';
 
 const cap = (value: string, max: number) =>
   value.length > max ? value.slice(0, max) : value;

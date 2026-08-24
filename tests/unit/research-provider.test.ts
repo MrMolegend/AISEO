@@ -1,7 +1,8 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { AnthropicProvider, AUDIT_TOOL_NAME } from '@/lib/ai/anthropic-provider';
+import { AnthropicResearchProvider, REPORT_TOOL_NAME } from '@/lib/ai/research-provider';
 import { PlatformError } from '@/lib/errors';
-import type { AuditModelInput } from '@/lib/ai/provider';
+import type { SynthesisInput } from '@/lib/ai/research-provider';
+import { REPORT_SCHEMAS } from '@/schemas/research/packages';
 
 /**
  * Regression tests for the production 400:
@@ -10,26 +11,29 @@ import type { AuditModelInput } from '@/lib/ai/provider';
  *   performance issues. Simplify your tool schemas or reduce the number of
  *   strict tools."
  *
- * The audit schema is far too large to be compiled into a constrained-decoding
- * grammar, so it must reach the API as an *advisory* tool schema: no
+ * The report schemas are far too large to be compiled into a constrained-
+ * decoding grammar, so they must reach the API as an *advisory* tool schema: no
  * output_config.format, and no `strict: true` on the tool. Those two facts are
  * invisible in the type system and produce a runtime 400 rather than a build
  * failure, which is exactly why they are asserted here.
  *
  * Assertions are made against the real serialised HTTP body rather than a mocked
- * SDK method, because the wire payload is what the API rejects.
+ * SDK method, because the wire payload is what the API rejects. The largest of
+ * the four package schemas is used deliberately — if any schema is going to
+ * exceed the grammar compiler, it is that one.
  */
 
-const AUDIT_INPUT: AuditModelInput = {
-  factsJson: '{"finalUrl":"https://example.com/"}',
-  nonce: 'deadbeefdeadbeef',
-  jsonSchema: {},
+const SYNTHESIS_INPUT: SynthesisInput = {
+  model: 'claude-sonnet-5',
+  systemPrompt: `You produce source-backed research reports. ${'Every claim carries a citation. '.repeat(30)}`,
+  userMessage: 'Research the business described in the untrusted data block below.',
+  schema: REPORT_SCHEMAS['market-pack'],
   maxOutputTokens: 16_000,
 };
 
 const TOOL_INPUT = {
-  website: { name: 'Example', industry: 'Testing' },
-  issues: [{ id: 'title-length' }],
+  business: { name: 'Example Ltd' },
+  competitors: [{ name: 'Rival Ltd' }],
 };
 
 interface CapturedRequest {
@@ -48,7 +52,7 @@ function messageBody(overrides: Record<string, any> = {}) {
       {
         type: 'tool_use',
         id: 'toolu_test',
-        name: AUDIT_TOOL_NAME,
+        name: REPORT_TOOL_NAME,
         caller: { type: 'direct' },
         input: TOOL_INPUT,
       },
@@ -92,17 +96,24 @@ function onlyRequest(captured: CapturedRequest[]): CapturedRequest {
 }
 
 function newProvider() {
-  return new AnthropicProvider('sk-ant-not-a-real-key', 'claude-sonnet-5');
+  return new AnthropicResearchProvider('sk-ant-not-a-real-key');
+}
+
+function synthesise(overrides: Partial<SynthesisInput> = {}, signal?: AbortSignal) {
+  return newProvider().synthesise(
+    { ...SYNTHESIS_INPUT, ...overrides },
+    signal ?? new AbortController().signal,
+  );
 }
 
 afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('AnthropicProvider request shape', () => {
+describe('AnthropicResearchProvider request shape', () => {
   it('sends no output_config.format — the oversized compiled grammar is the bug', async () => {
     const requests = captureRequests();
-    await newProvider().runAudit(AUDIT_INPUT, new AbortController().signal);
+    await synthesise();
 
     const { body } = onlyRequest(requests);
 
@@ -112,35 +123,37 @@ describe('AnthropicProvider request shape', () => {
 
   it('keeps effort: high, which is the only member of output_config we set', async () => {
     const requests = captureRequests();
-    await newProvider().runAudit(AUDIT_INPUT, new AbortController().signal);
+    await synthesise();
 
     expect(onlyRequest(requests).body.output_config).toEqual({ effort: 'high' });
   });
 
-  it('declares exactly one tool, named submit_audit', async () => {
+  it('declares exactly one tool, named submit_report, carrying the package schema', async () => {
     const requests = captureRequests();
-    await newProvider().runAudit(AUDIT_INPUT, new AbortController().signal);
+    await synthesise();
 
     const { tools } = onlyRequest(requests).body;
     expect(tools).toHaveLength(1);
-    expect(tools[0].name).toBe('submit_audit');
+    expect(tools[0].name).toBe('submit_report');
     expect(tools[0].input_schema.type).toBe('object');
-    expect(Object.keys(tools[0].input_schema.properties ?? {})).toContain('issues');
+    expect(Object.keys(tools[0].input_schema.properties ?? {})).toContain('competitors');
+    // The whole point of the failure this file guards: the schema is enormous.
+    expect(JSON.stringify(tools[0].input_schema).length).toBeGreaterThan(10_000);
   });
 
-  it('forces the submit_audit tool rather than leaving the choice to the model', async () => {
+  it('forces the submit_report tool rather than leaving the choice to the model', async () => {
     const requests = captureRequests();
-    await newProvider().runAudit(AUDIT_INPUT, new AbortController().signal);
+    await synthesise();
 
     expect(onlyRequest(requests).body.tool_choice).toEqual({
       type: 'tool',
-      name: 'submit_audit',
+      name: 'submit_report',
     });
   });
 
   it('does not enable strict mode on the tool', async () => {
     const requests = captureRequests();
-    await newProvider().runAudit(AUDIT_INPUT, new AbortController().signal);
+    await synthesise();
 
     const { body } = onlyRequest(requests);
     const tool = body.tools[0];
@@ -152,7 +165,7 @@ describe('AnthropicProvider request shape', () => {
 
   it('preserves max_tokens and the cacheable system prompt block', async () => {
     const requests = captureRequests();
-    await newProvider().runAudit(AUDIT_INPUT, new AbortController().signal);
+    await synthesise();
 
     const { body } = onlyRequest(requests);
     expect(body.max_tokens).toBe(16_000);
@@ -166,29 +179,26 @@ describe('AnthropicProvider request shape', () => {
 
   it('replays the failed output and the problem list on a repair attempt', async () => {
     const requests = captureRequests();
-    await newProvider().runAudit(
-      {
-        ...AUDIT_INPUT,
-        repair: { previousOutput: { broken: true }, problems: ['issues: too few items'] },
+    await synthesise({
+      repair: {
+        previousOutput: { broken: true },
+        problems: ['competitors: too few items'],
+        repairMessage: 'The previous report was rejected: competitors: too few items',
       },
-      new AbortController().signal,
-    );
+    });
 
     const { messages } = onlyRequest(requests).body;
     expect(messages).toHaveLength(3);
     expect(messages[1].role).toBe('assistant');
     expect(messages[1].content).toContain('"broken":true');
-    expect(messages[2].content).toContain('issues: too few items');
+    expect(messages[2].content).toContain('competitors: too few items');
   });
 });
 
-describe('AnthropicProvider response handling', () => {
-  it('returns the submit_audit tool input as data, unvalidated', async () => {
+describe('AnthropicResearchProvider response handling', () => {
+  it('returns the submit_report tool input as data, unvalidated', async () => {
     captureRequests();
-    const result = await newProvider().runAudit(
-      AUDIT_INPUT,
-      new AbortController().signal,
-    );
+    const result = await synthesise();
 
     expect(result.data).toEqual(TOOL_INPUT);
     expect(result.usage).toEqual({ inputTokens: 4321, outputTokens: 8765 });
@@ -206,26 +216,20 @@ describe('AnthropicProvider response handling', () => {
             id: 'toolu_other',
             name: 'something_else',
             caller: { type: 'direct' },
-            input: { not: 'the audit' },
+            input: { not: 'the report' },
           },
         ],
       }),
     );
 
-    const result = await newProvider().runAudit(
-      AUDIT_INPUT,
-      new AbortController().signal,
-    );
+    const result = await synthesise();
     expect(result.data).toBeNull();
   });
 
-  it('reports max_tokens as truncated so the caller can request a briefer audit', async () => {
+  it('reports max_tokens as truncated so the caller can request a briefer report', async () => {
     captureRequests(() => messageBody({ stop_reason: 'max_tokens', content: [] }));
 
-    const result = await newProvider().runAudit(
-      AUDIT_INPUT,
-      new AbortController().signal,
-    );
+    const result = await synthesise();
     expect(result.truncated).toBe(true);
     expect(result.data).toBeNull();
   });
@@ -239,9 +243,7 @@ describe('AnthropicProvider response handling', () => {
       }),
     );
 
-    await expect(
-      newProvider().runAudit(AUDIT_INPUT, new AbortController().signal),
-    ).rejects.toMatchObject({ code: 'AI_REFUSED' });
+    await expect(synthesise()).rejects.toMatchObject({ code: 'AI_REFUSED' });
   });
 
   it('maps a 429 onto AI_RATE_LIMITED rather than leaking the SDK error', async () => {
@@ -254,16 +256,14 @@ describe('AnthropicProvider response handling', () => {
         }),
     );
 
-    const error = await newProvider()
-      .runAudit(AUDIT_INPUT, new AbortController().signal)
-      .catch((e) => e);
+    const error = await synthesise().catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(PlatformError);
-    expect(error.code).toBe('AI_RATE_LIMITED');
+    expect((error as PlatformError).code).toBe('AI_RATE_LIMITED');
   });
 });
 
-describe('AnthropicProvider cancellation', () => {
+describe('AnthropicResearchProvider cancellation', () => {
   it('propagates the caller AbortSignal into the request', async () => {
     const controller = new AbortController();
 
@@ -281,12 +281,11 @@ describe('AnthropicProvider cancellation', () => {
         }),
     );
 
-    const provider = newProvider();
-    const pending = provider.runAudit(AUDIT_INPUT, controller.signal);
+    const pending = synthesise({}, controller.signal);
     controller.abort();
 
-    const error = await pending.catch((e) => e);
+    const error = await pending.catch((e: unknown) => e);
     expect(error).toBeInstanceOf(PlatformError);
-    expect(error.code).toBe('AI_TIMEOUT');
+    expect((error as PlatformError).code).toBe('AI_TIMEOUT');
   });
 });

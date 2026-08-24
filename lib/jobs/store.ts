@@ -203,7 +203,18 @@ export class SupabaseResearchJobStore implements ResearchJobStore {
         status: statusForStage(stage),
         ...(stage === 'understanding' ? { started_at: new Date().toISOString() } : {}),
       })
-      .eq('id', jobId);
+      .eq('id', jobId)
+      /*
+       * Terminal jobs are immutable to progress writes.
+       *
+       * Every stage maps to a non-terminal status, so a stage write landing
+       * after completion moves a finished job back to "still working" — the
+       * status endpoint then never reports done and the browser polls a report
+       * that already exists. The runner is ordered so this cannot happen; this
+       * filter is what makes it not happen again, including for a late write
+       * from a run that was abandoned.
+       */
+      .not('status', 'in', '(complete,failed,cancelled)');
 
     // A lost progress update costs the user a status line, not their report.
     if (error) {
@@ -402,9 +413,12 @@ export class MemoryResearchJobStore implements ResearchJobStore {
   }
 
   async setStage(jobId: string, stage: StageId): Promise<void> {
-    const { statusForStage } = await import('./stages');
+    const { statusForStage, isTerminal } = await import('./stages');
     const job = this.byId(jobId);
     if (!job) return;
+    // See the note on the Supabase driver: a terminal job takes no more
+    // progress writes, or a finished report reverts to "still working".
+    if (isTerminal(job.status)) return;
     job.stage = stage;
     job.stageIndex = stageIndex(stage);
     job.status = statusForStage(stage);
