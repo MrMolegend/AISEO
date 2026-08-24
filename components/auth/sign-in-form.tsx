@@ -1,141 +1,215 @@
 'use client';
-import { useState } from 'react';
-import { createAuthClient, authConfigured } from '@/lib/auth/client';
+import { useId, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { BRAND } from '@/config/brand';
+import { AuthMessage } from './auth-shell';
+import { ResendCountdown } from './resend-countdown';
+import {
+  signInWithPassword,
+  requestSignInLink,
+  type AuthResult,
+} from '@/lib/auth/actions';
 
 /**
- * Magic-link sign-in.
+ * Signing in.
  *
- * No password, which removes a whole category of problems: nothing to store,
- * nothing to leak, nothing to reset. The trade is that a person has to leave
- * for their inbox, so the confirmation state has to be unambiguous about what
- * just happened and what to do next.
+ * Password first, because that is what a returning user has. The magic link is
+ * one click away rather than the only option — the previous version offered
+ * nothing else, which meant every sign-in depended on an email arriving, and
+ * that is what turned one broken callback into a total outage.
  *
- * The submitted state deliberately does not say whether the address has an
- * account. "Check your inbox" for both means the form cannot be used to
- * enumerate who has signed up.
+ * Every failure that reaches the user here has been through the mapper in
+ * lib/auth/errors.ts, so a rate limit says "wait" and a wrong password says so.
+ * The old generic sentence is gone.
  */
-export function SignInForm({ next }: { next: string }) {
+
+type Mode = 'password' | 'link';
+type Phase = 'idle' | 'working' | 'sent';
+
+export function SignInForm({ next, configured }: { next: string; configured: boolean }) {
+  const router = useRouter();
+  const [mode, setMode] = useState<Mode>('password');
+  const [phase, setPhase] = useState<Phase>('idle');
   const [email, setEmail] = useState('');
-  const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
-  const [message, setMessage] = useState('');
+  const [password, setPassword] = useState('');
+  const [failure, setFailure] = useState<AuthResult['failure']>(undefined);
+  // Changing this remounts the countdown, which is how it restarts.
+  const [sendId, setSendId] = useState(0);
 
-  const configured = authConfigured();
-
-  async function onSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    if (state === 'sending') return;
-
-    setState('sending');
-    setMessage('');
-
-    try {
-      const supabase = createAuthClient();
-      const callback = new URL('/auth/callback', window.location.origin);
-      callback.searchParams.set('next', next);
-
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: { emailRedirectTo: callback.toString() },
-      });
-
-      if (error) throw error;
-      setState('sent');
-    } catch {
-      setState('error');
-      // Deliberately generic. The specific reason is usually a rate limit or a
-      // provider hiccup, and neither is actionable for the person reading it.
-      setMessage('We could not send that link. Please try again in a moment.');
-    }
-  }
+  const emailId = useId();
+  const passwordId = useId();
+  const errorId = useId();
 
   if (!configured) {
     return (
-      <div
-        role="status"
-        className="border-line bg-surface-subtle rounded-[var(--radius-card)] border p-5"
-      >
-        <p className="text-ink text-sm font-medium">Sign-in is not configured</p>
-        <p className="text-ink-subtle mt-1.5 text-sm leading-relaxed">
-          This deployment has no Supabase credentials, so accounts are unavailable. Set
-          NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to enable
-          them.
-        </p>
-      </div>
+      <AuthMessage tone="info" title="Sign-in is not available here">
+        This deployment has no authentication configured, so accounts and reports are
+        unavailable. Everything else on the site works.
+      </AuthMessage>
     );
   }
 
-  if (state === 'sent') {
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (phase === 'working') return;
+
+    setPhase('working');
+    setFailure(undefined);
+
+    const result =
+      mode === 'password'
+        ? await signInWithPassword(email, password)
+        : await requestSignInLink(email, next);
+
+    if (!result.ok) {
+      setFailure(result.failure);
+      setPhase('idle');
+      return;
+    }
+
+    if (mode === 'link') {
+      setSendId((n) => n + 1);
+      setPhase('sent');
+      return;
+    }
+
+    // A server-rendered header reads the session from cookies, so the page has
+    // to be re-fetched rather than merely navigated to.
+    router.replace(next);
+    router.refresh();
+  }
+
+  async function resend() {
+    setPhase('working');
+    const result = await requestSignInLink(email, next);
+    setFailure(result.ok ? undefined : result.failure);
+    setSendId((n) => n + 1);
+    setPhase('sent');
+  }
+
+  if (phase === 'sent') {
     return (
-      <div
-        role="status"
-        aria-live="polite"
-        className="border-brand-line bg-brand-subtle rounded-[var(--radius-card)] border p-5"
-      >
-        <p className="text-ink text-sm font-medium">Check your inbox</p>
-        <p className="text-ink-muted mt-1.5 text-sm leading-relaxed">
-          If <span className="font-medium">{email}</span> has an account with us, a
-          sign-in link is on its way. It expires in an hour, and it only works once.
-        </p>
+      <div className="space-y-5">
+        <AuthMessage tone="success" title="Check your inbox">
+          If <strong className="text-ink">{email}</strong> has an account with us, a
+          sign-in link is on its way. It works once and lasts an hour.
+        </AuthMessage>
+
+        {failure && (
+          <AuthMessage tone="error" title={failure.title}>
+            {failure.body}
+          </AuthMessage>
+        )}
+
+        <ResendCountdown
+          key={sendId}
+          seconds={60}
+          onResend={resend}
+          pending={false}
+          label="Send another link"
+        />
+
         <button
           type="button"
-          onClick={() => setState('idle')}
-          className="text-brand hover:text-brand-hover focus-visible:ring-brand mt-4 rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+          onClick={() => {
+            setPhase('idle');
+            setFailure(undefined);
+          }}
+          className="text-brand hover:text-brand-hover focus-visible:ring-brand rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
         >
-          Use a different address
+          Use a different email
         </button>
       </div>
     );
   }
 
+  const field =
+    'border-line-strong bg-surface text-ink placeholder:text-ink-faint focus:border-brand focus-visible:ring-brand h-12 w-full rounded-[var(--radius-control)] border px-3.5 text-base transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60';
+
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-4">
+    <form onSubmit={submit} noValidate className="space-y-5">
       <div>
-        <label htmlFor="email" className="text-ink mb-2 block text-sm font-medium">
+        <label htmlFor={emailId} className="text-ink mb-1.5 block text-sm font-medium">
           Email address
         </label>
         <input
-          id="email"
+          id={emailId}
           name="email"
           type="email"
-          inputMode="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          required
           autoComplete="email"
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck={false}
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          aria-describedby={state === 'error' ? 'sign-in-error' : 'sign-in-hint'}
-          aria-invalid={state === 'error'}
-          // 16px minimum, or iOS zooms the whole page on focus.
-          className="border-line-strong bg-surface text-ink placeholder:text-ink-faint focus:border-brand focus-visible:ring-brand h-12 w-full rounded-[var(--radius-control)] border px-4 text-base transition-colors focus-visible:ring-2 focus-visible:outline-none"
-          placeholder="you@company.com"
+          inputMode="email"
+          placeholder="you@example.com"
+          disabled={phase === 'working'}
+          aria-describedby={failure ? errorId : undefined}
+          aria-invalid={Boolean(failure)}
+          className={field}
         />
-        <p id="sign-in-hint" className="text-ink-subtle mt-2 text-sm">
-          We will email you a link. No password to remember.
-        </p>
       </div>
 
-      {state === 'error' && (
-        <p
-          id="sign-in-error"
-          role="alert"
-          className="text-sm text-[var(--color-severity-critical)]"
-        >
-          {message}
-        </p>
+      {mode === 'password' && (
+        <div>
+          <div className="mb-1.5 flex items-baseline justify-between gap-3">
+            <label htmlFor={passwordId} className="text-ink block text-sm font-medium">
+              Password
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-brand hover:text-brand-hover focus-visible:ring-brand rounded text-sm underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <input
+            id={passwordId}
+            name="password"
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+            autoComplete="current-password"
+            disabled={phase === 'working'}
+            aria-describedby={failure ? errorId : undefined}
+            aria-invalid={Boolean(failure)}
+            className={field}
+          />
+        </div>
       )}
 
-      <Button type="submit" size="lg" className="w-full" disabled={state === 'sending'}>
-        {state === 'sending' ? 'Sending…' : 'Email me a sign-in link'}
+      {failure && (
+        <AuthMessage id={errorId} tone="error" title={failure.title}>
+          {failure.body}
+        </AuthMessage>
+      )}
+
+      <Button type="submit" size="lg" className="w-full" disabled={phase === 'working'}>
+        {phase === 'working'
+          ? mode === 'password'
+            ? 'Signing in…'
+            : 'Sending…'
+          : mode === 'password'
+            ? 'Sign in'
+            : 'Email me a sign-in link'}
       </Button>
 
-      <p className="text-ink-faint text-xs leading-relaxed">
-        Signing in creates an account if you do not have one. {BRAND.currency.name} are
-        service credits attached to that account.
-      </p>
+      <button
+        type="button"
+        onClick={() => {
+          setMode(mode === 'password' ? 'link' : 'password');
+          setFailure(undefined);
+        }}
+        className="text-brand hover:text-brand-hover focus-visible:ring-brand w-full rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+      >
+        {mode === 'password'
+          ? 'Email me a sign-in link instead'
+          : 'Sign in with a password instead'}
+      </button>
     </form>
   );
 }

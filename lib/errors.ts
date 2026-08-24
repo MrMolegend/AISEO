@@ -25,6 +25,23 @@ export const ERROR_CODES = [
   'RATE_LIMITED',
   'CAPACITY',
 
+  // ── Authentication ──────────────────────────────────────────────────────
+  // These carry the copy a user reads when a sign-in attempt fails. They exist
+  // as codes rather than ad-hoc strings for the same reason as everything else
+  // here: the raw Supabase message can name internal endpoints and is written
+  // for a developer, not for someone who just wants to get in.
+  'AUTH_LINK_INVALID',
+  'AUTH_EMAIL_RATE_LIMITED',
+  'AUTH_INVALID_CREDENTIALS',
+  'AUTH_EMAIL_NOT_VERIFIED',
+  'AUTH_EMAIL_INVALID',
+  'AUTH_WEAK_PASSWORD',
+  'AUTH_PASSWORD_MISMATCH',
+  'AUTH_PASSWORD_UNCHANGED',
+  'AUTH_ACCOUNT_EXISTS',
+  'AUTH_SIGNUP_DISABLED',
+  'AUTH_NETWORK',
+
   // ── Tokens ──────────────────────────────────────────────────────────────
   'INSUFFICIENT_TOKENS',
   'WALLET_ERROR',
@@ -136,6 +153,87 @@ export const ERROR_COPY: Record<ErrorCode, ErrorCopy> = {
     retryable: false,
     status: 503,
     refundsTokens: true,
+  },
+
+  // ── Authentication ──────────────────────────────────────────────────────
+  AUTH_LINK_INVALID: {
+    title: 'That link has expired or been used',
+    body: 'Email links work once and last an hour. Request a new one and it will be waiting in your inbox.',
+    retryable: true,
+    status: 400,
+    refundsTokens: false,
+  },
+  AUTH_EMAIL_RATE_LIMITED: {
+    title: 'Please wait before requesting another email',
+    body: "You've already requested an email. Please wait before requesting another.",
+    retryable: true,
+    status: 429,
+    refundsTokens: false,
+  },
+  AUTH_INVALID_CREDENTIALS: {
+    title: 'That email or password is not right',
+    body: 'Check both and try again. If you have forgotten your password, you can reset it.',
+    // Deliberately does not say which of the two was wrong: telling someone the
+    // email exists but the password is wrong confirms the account for them.
+    retryable: true,
+    status: 400,
+    refundsTokens: false,
+  },
+  AUTH_EMAIL_NOT_VERIFIED: {
+    title: 'Please confirm your email first',
+    body: 'We sent a link when you created your account. Open it to finish setting up, or request a new one.',
+    retryable: true,
+    status: 400,
+    refundsTokens: false,
+  },
+  AUTH_EMAIL_INVALID: {
+    title: 'That does not look like an email address',
+    body: 'Check for a typo — an address needs an @ and a domain, like you@example.com.',
+    retryable: true,
+    status: 400,
+    refundsTokens: false,
+  },
+  AUTH_WEAK_PASSWORD: {
+    title: 'That password is too easy to guess',
+    body: 'Use at least 8 characters. A short phrase you will remember beats a short word with symbols in it.',
+    retryable: true,
+    status: 400,
+    refundsTokens: false,
+  },
+  AUTH_PASSWORD_MISMATCH: {
+    title: 'Those passwords do not match',
+    body: 'Type the same password in both fields. Use the show button if you would rather see what you are typing.',
+    retryable: true,
+    status: 400,
+    refundsTokens: false,
+  },
+  AUTH_PASSWORD_UNCHANGED: {
+    title: 'That is already your password',
+    body: 'Choose a different one, or sign in with the password you already have.',
+    retryable: true,
+    status: 400,
+    refundsTokens: false,
+  },
+  AUTH_ACCOUNT_EXISTS: {
+    title: 'You already have an account',
+    body: 'Sign in with your password instead, or reset it if you have forgotten it.',
+    retryable: false,
+    status: 409,
+    refundsTokens: false,
+  },
+  AUTH_SIGNUP_DISABLED: {
+    title: 'New accounts are closed right now',
+    body: 'We are not accepting new sign-ups at the moment. Please try again later.',
+    retryable: false,
+    status: 403,
+    refundsTokens: false,
+  },
+  AUTH_NETWORK: {
+    title: 'We could not reach the sign-in service',
+    body: 'Check your connection and try again. Nothing has changed on your account.',
+    retryable: true,
+    status: 503,
+    refundsTokens: false,
   },
 
   // ── Tokens ──────────────────────────────────────────────────────────────

@@ -84,6 +84,20 @@ const serverEnvSchema = z.object({
     .string()
     .optional()
     .transform((v) => v === '1' || v === 'true'),
+  /**
+   * Replaces Supabase Auth with an in-memory session, so the end-to-end suite
+   * can exercise the signed-in surface without a Supabase project.
+   *
+   * This is the only flag in the file that would be a vulnerability if it were
+   * ever true in production, so it does not merely get ignored there — see
+   * assertTestAuthDriverIsSafe() below, which refuses to let the process start.
+   */
+  AUTH_TEST_DRIVER: z
+    .string()
+    .optional()
+    .transform((v) => v === '1' || v === 'true'),
+  /** Set by the platform, not by us. Used only to refuse the auth stub. */
+  VERCEL_ENV: z.enum(['production', 'preview', 'development']).optional(),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 });
 
@@ -109,6 +123,60 @@ export function getEnv(): ServerEnv {
 /** Test-only: clears the memoised env so a test can vary process.env. */
 export function resetEnvCache(): void {
   cached = null;
+}
+
+/**
+ * Refuses to run with the fake auth driver enabled anywhere real.
+ *
+ * Every other development fallback in this application degrades: the memory
+ * wallet works, the mock research provider returns fixtures, and /api/health
+ * reports the deployment as unhealthy. This one cannot degrade, because a fake
+ * session driver alongside a real one is not a degraded service — it is an
+ * authentication bypass. So it fails closed and loudly, when the environment is
+ * first read, rather than being reported after the fact.
+ *
+ * Two independent conditions, either of which is fatal:
+ *
+ *   1. **Supabase auth is configured.** This is the load-bearing one. If a real
+ *      project's credentials are present then there are real accounts, real
+ *      wallets and real reports behind them, and nothing may stand in for
+ *      proving who you are. Conversely, with no project configured there is no
+ *      authentication to bypass — the application already treats every visitor
+ *      as signed out — so the stub cannot reach anything that was not already
+ *      open.
+ *   2. **The platform says this is a production deployment.** Belt and braces
+ *      for a deployment that has the flag but has not yet been given its keys.
+ *
+ * Note what is deliberately NOT a condition: NODE_ENV. `next start` sets it to
+ * 'production' unconditionally, including when the end-to-end suite runs
+ * against a production build — which is exactly the case this driver exists
+ * for. Keying on it would have made the guard vacuous or the suite impossible,
+ * and a guard that has to be switched off to run the tests is a guard that gets
+ * switched off.
+ */
+export function assertTestAuthDriverIsSafe(env: ServerEnv = getEnv()): void {
+  if (!env.AUTH_TEST_DRIVER) return;
+
+  if (hasSupabaseAuth(env)) {
+    throw new Error(
+      'AUTH_TEST_DRIVER is set alongside real Supabase credentials. It replaces ' +
+        'authentication with an in-memory stub and must never run against a real project.',
+    );
+  }
+
+  if (env.VERCEL_ENV === 'production') {
+    throw new Error(
+      'AUTH_TEST_DRIVER is set on a production deployment. It replaces ' +
+        'authentication with an in-memory stub and must never be enabled outside tests.',
+    );
+  }
+}
+
+/** Whether the in-memory auth stub is serving. Never true in production. */
+export function usingTestAuthDriver(env: ServerEnv = getEnv()): boolean {
+  if (!env.AUTH_TEST_DRIVER) return false;
+  assertTestAuthDriverIsSafe(env);
+  return true;
 }
 
 /**

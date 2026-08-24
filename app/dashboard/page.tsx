@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { SiteHeader } from '@/components/layout/site-header';
+import { FlashNotice } from '@/components/layout/flash-notice';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { Card, CardBody } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -29,9 +30,22 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ welcome?: string; 'password-reset'?: string }>;
+}) {
   const user = await getCurrentUser();
   if (!user) redirect(signInPath('/dashboard'));
+
+  // A redirect on its own tells a user nothing. This is how they learn the
+  // sign-in actually worked, and which account they landed in.
+  const params = await searchParams;
+  const notice = params.welcome
+    ? 'welcome'
+    : params['password-reset']
+      ? 'password-reset'
+      : null;
 
   const [wallet, store] = await Promise.all([getTokenWallet(), getResearchJobStore()]);
   const [balance, jobs] = await Promise.all([
@@ -44,6 +58,8 @@ export default async function DashboardPage() {
       <SiteHeader />
 
       <main id="main" className="mx-auto max-w-[1240px] px-5 py-12 md:px-8">
+        {notice && <FlashNotice kind={notice} email={user.email} />}
+
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-ink text-[30px] font-semibold tracking-[var(--tracking-display)]">

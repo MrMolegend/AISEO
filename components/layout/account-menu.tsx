@@ -1,36 +1,46 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { createAuthClient } from '@/lib/auth/client';
+import { BRAND } from '@/config/brand';
+import { formatTokens } from '@/config/tokens';
 
 /**
- * Account menu.
+ * The signed-in control.
  *
- * Hand-rolled rather than pulled from a component library, because the
- * behaviour needed here is small and specific: Escape closes it, a click
- * outside closes it, focus returns to the trigger, and the trigger describes
- * its own state. A dropdown that traps keyboard users is worse than no
- * dropdown.
+ * Carries the account's identity and its balance, so that on any page — and at
+ * any width — there is one obvious place that answers "am I signed in, as whom,
+ * and with how many tokens". Previously the balance lived in a chip that
+ * disappeared below `sm` and the navigation disappeared below `md`, which left
+ * a phone user with a logo and an unlabelled circle.
+ *
+ * Sign-out is a form posting to /auth/sign-out rather than a click handler. It
+ * works before hydration, it cannot be triggered by a stray GET, and the
+ * session is revoked at Supabase rather than merely forgotten by this browser.
  */
-export function AccountMenu({ email }: { email: string | null }) {
+
+export function AccountMenu({
+  email,
+  balance,
+}: {
+  email: string | null;
+  balance: { available: number; reserved: number } | null;
+}) {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setOpen(false);
-        triggerRef.current?.focus();
-      }
-    };
-    const onPointerDown = (event: PointerEvent) => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== 'Escape') return;
+      setOpen(false);
+      // Focus goes back where it came from, or it lands at the top of the page.
+      triggerRef.current?.focus();
+    }
+    function onPointerDown(event: PointerEvent) {
       if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
-    };
+    }
 
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('pointerdown', onPointerDown);
@@ -40,61 +50,76 @@ export function AccountMenu({ email }: { email: string | null }) {
     };
   }, [open]);
 
-  async function signOut() {
-    try {
-      await createAuthClient().auth.signOut();
-    } catch {
-      // Already signed out, or auth is not configured. Either way the next
-      // server render will show the signed-out header.
-    }
-    router.push('/');
-    router.refresh();
-  }
-
   const initial = (email ?? '?').slice(0, 1).toUpperCase();
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div ref={containerRef} className="relative">
       <button
         ref={triggerRef}
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen((shown) => !shown)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="border-line bg-surface-subtle text-ink hover:border-line-strong focus-visible:ring-brand flex h-9 w-9 items-center justify-center rounded-full border text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+        className="border-line bg-surface-subtle text-ink hover:border-line-strong focus-visible:ring-brand flex h-9 items-center gap-2 rounded-full border pr-3 pl-1 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
       >
-        <span aria-hidden="true">{initial}</span>
-        <span className="sr-only">Account menu</span>
+        <span
+          aria-hidden="true"
+          className="bg-brand text-ink-inverse flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-semibold"
+        >
+          {initial}
+        </span>
+        {/* The balance sits in the trigger so it survives to the narrowest
+            viewport, where a separate chip would have been hidden. */}
+        {balance && (
+          <span className="text-[13px] font-medium tabular-nums">
+            {formatTokens(balance.available)}
+          </span>
+        )}
+        <span className="sr-only">
+          Account menu
+          {email ? ` for ${email}` : ''}
+          {balance
+            ? `. ${formatTokens(balance.available)} ${BRAND.currency.plural} available`
+            : ''}
+        </span>
       </button>
 
       {open && (
         <div
           role="menu"
           aria-label="Account"
-          className="border-line bg-surface absolute right-0 mt-2 w-64 rounded-[var(--radius-card)] border p-1.5 shadow-[var(--shadow-raised)]"
+          className="border-line bg-surface absolute right-0 z-50 mt-2 w-64 rounded-[var(--radius-card)] border p-1.5 shadow-[var(--shadow-raised)]"
         >
-          <p className="text-ink-subtle truncate px-3 py-2 text-xs" title={email ?? ''}>
-            {email ?? 'Signed in'}
-          </p>
-          <div className="bg-line my-1 h-px" role="none" />
+          <div className="px-3 py-2.5">
+            <p className="text-ink truncate text-sm font-medium">
+              {email ?? 'Signed in'}
+            </p>
+            {balance && (
+              <p className="text-ink-subtle mt-0.5 text-xs tabular-nums">
+                {formatTokens(balance.available)} {BRAND.currency.plural}
+                {balance.reserved > 0 && ` · ${formatTokens(balance.reserved)} held`}
+              </p>
+            )}
+          </div>
+
+          <div role="none" className="border-line my-1 border-t" />
+
           <MenuLink href="/dashboard" onNavigate={() => setOpen(false)}>
             Dashboard
           </MenuLink>
+          <MenuLink href="/dashboard#reports" onNavigate={() => setOpen(false)}>
+            My reports
+          </MenuLink>
           <MenuLink href="/wallet" onNavigate={() => setOpen(false)}>
-            Wallet
+            {BRAND.currency.name}
           </MenuLink>
           <MenuLink href="/account" onNavigate={() => setOpen(false)}>
             Account
           </MenuLink>
-          <div className="bg-line my-1 h-px" role="none" />
-          <button
-            type="button"
-            role="menuitem"
-            onClick={signOut}
-            className="text-ink-muted hover:bg-surface-sunken hover:text-ink focus-visible:ring-brand w-full rounded-[var(--radius-control)] px-3 py-2 text-left text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
-          >
-            Sign out
-          </button>
+
+          <div role="none" className="border-line my-1 border-t" />
+
+          <SignOutMenuItem />
         </div>
       )}
     </div>
@@ -119,5 +144,20 @@ function MenuLink({
     >
       {children}
     </Link>
+  );
+}
+
+/** A real form, so signing out does not depend on JavaScript having loaded. */
+export function SignOutMenuItem() {
+  return (
+    <form action="/auth/sign-out" method="post">
+      <button
+        type="submit"
+        role="menuitem"
+        className="text-ink-muted hover:bg-surface-sunken hover:text-ink focus-visible:ring-brand block w-full rounded-[var(--radius-control)] px-3 py-2 text-left text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+      >
+        Sign out
+      </button>
+    </form>
   );
 }

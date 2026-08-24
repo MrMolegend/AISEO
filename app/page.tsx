@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/layout/site-header';
+import { FlashNotice } from '@/components/layout/flash-notice';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { PackageCard } from '@/components/marketing/package-card';
 import { Card, CardBody } from '@/components/ui/card';
@@ -21,7 +22,12 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
 };
 
-export default async function LandingPage() {
+export default async function LandingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ 'signed-out'?: string }>;
+}) {
+  const signedOut = Boolean((await searchParams)['signed-out']);
   const user = await getCurrentUser();
   const startHref = user ? '/research/new' : '/sign-in?next=%2Fresearch%2Fnew';
 
@@ -30,6 +36,12 @@ export default async function LandingPage() {
       <SiteHeader />
 
       <main id="main">
+        {signedOut && (
+          <div className="mx-auto max-w-[1240px] px-5 pt-8 md:px-8">
+            <FlashNotice kind="signed-out" />
+          </div>
+        )}
+
         {/* ── Hero ──────────────────────────────────────────────────────── */}
         <section className="mx-auto max-w-[1240px] px-5 pt-16 pb-4 md:px-8 md:pt-24">
           <div className="max-w-[720px]">
