@@ -9,14 +9,16 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: '*',
         allow: '/',
         /*
-         * Individual audits are deliberately excluded from search.
+         * Only the marketing surface is indexable.
          *
-         * Two reasons, both real: publishing a critique of someone else's site
-         * under our domain is a privacy problem, and thousands of near-identical
-         * generated report pages is exactly the thin-content pattern we would
-         * flag in an audit of our own site. Only the curated /sample is indexed.
+         * Reports are excluded for two independent reasons: they concern real
+         * businesses and are shared by unguessable link rather than published,
+         * and thousands of near-identical generated pages is precisely the
+         * thin-content pattern that earns a site a manual action. Everything
+         * behind sign-in is excluded because it is per-account and would only
+         * ever return a redirect to a crawler anyway.
          */
-        disallow: ['/audit/', '/api/'],
+        disallow: ['/research/', '/dashboard', '/wallet', '/account', '/auth/', '/api/'],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

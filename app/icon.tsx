@@ -1,8 +1,15 @@
 import { ImageResponse } from 'next/og';
+import { BRAND } from '@/config/brand';
 
 export const size = { width: 32, height: 32 };
 export const contentType = 'image/png';
 
+/**
+ * Favicon — the monogram from config/brand.ts on the brand square.
+ *
+ * Generated rather than checked in as a PNG so that renaming the product does
+ * not leave a stale asset behind that nobody remembers to replace.
+ */
 export default function Icon() {
   return new ImageResponse(
     <div
@@ -10,31 +17,17 @@ export default function Icon() {
         width: '100%',
         height: '100%',
         display: 'flex',
-        alignItems: 'flex-end',
+        alignItems: 'center',
         justifyContent: 'center',
-        gap: 3,
         background: '#3538cd',
         borderRadius: 7,
-        paddingBottom: 8,
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: 600,
+        letterSpacing: '-0.02em',
       }}
     >
-      <div
-        style={{
-          width: 4,
-          height: 7,
-          background: 'rgba(255,255,255,0.55)',
-          borderRadius: 1.5,
-        }}
-      />
-      <div
-        style={{
-          width: 4,
-          height: 12,
-          background: 'rgba(255,255,255,0.78)',
-          borderRadius: 1.5,
-        }}
-      />
-      <div style={{ width: 4, height: 17, background: '#fff', borderRadius: 1.5 }} />
+      {BRAND.monogram}
     </div>,
     size,
   );

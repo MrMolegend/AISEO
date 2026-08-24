@@ -174,12 +174,315 @@ export type Database = {
           },
         ]
       }
+      research_jobs: {
+        Row: {
+          cached_from_job_id: string | null
+          completed_at: string | null
+          created_at: string
+          error_code: string | null
+          id: string
+          input: Json
+          input_hash: string
+          package_id: string
+          public_id: string
+          result: Json | null
+          schema_version: number | null
+          stage: string
+          stage_index: number
+          started_at: string | null
+          status: string
+          subject_domain: string | null
+          subject_name: string
+          token_cost: number
+          user_id: string
+        }
+        Insert: {
+          cached_from_job_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          input: Json
+          input_hash: string
+          package_id: string
+          public_id: string
+          result?: Json | null
+          schema_version?: number | null
+          stage?: string
+          stage_index?: number
+          started_at?: string | null
+          status?: string
+          subject_domain?: string | null
+          subject_name: string
+          token_cost: number
+          user_id: string
+        }
+        Update: {
+          cached_from_job_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          input?: Json
+          input_hash?: string
+          package_id?: string
+          public_id?: string
+          result?: Json | null
+          schema_version?: number | null
+          stage?: string
+          stage_index?: number
+          started_at?: string | null
+          status?: string
+          subject_domain?: string | null
+          subject_name?: string
+          token_cost?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "research_jobs_cached_from_job_id_fkey"
+            columns: ["cached_from_job_id"]
+            isOneToOne: false
+            referencedRelation: "research_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      research_sources: {
+        Row: {
+          canonical_url: string
+          content_hash: string | null
+          excerpt: string | null
+          http_status: number | null
+          id: number
+          job_id: string
+          position: number
+          publisher_domain: string | null
+          retrieved_at: string
+          source_type: string
+          title: string | null
+        }
+        Insert: {
+          canonical_url: string
+          content_hash?: string | null
+          excerpt?: string | null
+          http_status?: number | null
+          id?: number
+          job_id: string
+          position: number
+          publisher_domain?: string | null
+          retrieved_at?: string
+          source_type?: string
+          title?: string | null
+        }
+        Update: {
+          canonical_url?: string
+          content_hash?: string | null
+          excerpt?: string | null
+          http_status?: number | null
+          id?: number
+          job_id?: string
+          position?: number
+          publisher_domain?: string | null
+          retrieved_at?: string
+          source_type?: string
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "research_sources_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "research_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      token_ledger: {
+        Row: {
+          amount: number
+          balance_after: number
+          created_at: string
+          description: string
+          id: string
+          idempotency_key: string
+          metadata: Json
+          research_job_id: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          created_at?: string
+          description: string
+          id?: string
+          idempotency_key: string
+          metadata?: Json
+          research_job_id?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          created_at?: string
+          description?: string
+          id?: string
+          idempotency_key?: string
+          metadata?: Json
+          research_job_id?: string | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "token_ledger_research_job_id_fkey"
+            columns: ["research_job_id"]
+            isOneToOne: false
+            referencedRelation: "research_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      token_wallets: {
+        Row: {
+          available_balance: number
+          created_at: string
+          reserved_balance: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          available_balance?: number
+          created_at?: string
+          reserved_balance?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          available_balance?: number
+          created_at?: string
+          reserved_balance?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      rs_bootstrap_account: {
+        Args: {
+          p_display_name?: string
+          p_idempotency_key?: string
+          p_user_id: string
+          p_welcome_tokens?: number
+        }
+        Returns: {
+          out_available: number
+          out_reserved: number
+        }[]
+      }
+      rs_finalize_tokens: {
+        Args: { p_idempotency_key: string; p_job_id: string; p_user_id: string }
+        Returns: {
+          out_available: number
+          out_ledger_id: string
+          out_replayed: boolean
+          out_reserved: number
+        }[]
+      }
+      rs_grant_tokens: {
+        Args: {
+          p_amount: number
+          p_description: string
+          p_idempotency_key: string
+          p_metadata?: Json
+          p_transaction_type: string
+          p_user_id: string
+        }
+        Returns: {
+          out_available: number
+          out_ledger_id: string
+          out_replayed: boolean
+          out_reserved: number
+        }[]
+      }
+      rs_outstanding_reservation: {
+        Args: { p_job_id: string; p_user_id: string }
+        Returns: {
+          amount: number
+          balance_after: number
+          created_at: string
+          description: string
+          id: string
+          idempotency_key: string
+          metadata: Json
+          research_job_id: string | null
+          transaction_type: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "token_ledger"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      rs_refund_tokens: {
+        Args: {
+          p_idempotency_key: string
+          p_job_id: string
+          p_reason?: string
+          p_user_id: string
+        }
+        Returns: {
+          out_available: number
+          out_ledger_id: string
+          out_replayed: boolean
+          out_reserved: number
+        }[]
+      }
+      rs_reserve_tokens: {
+        Args: {
+          p_amount: number
+          p_description: string
+          p_idempotency_key: string
+          p_job_id: string
+          p_metadata?: Json
+          p_user_id: string
+        }
+        Returns: {
+          out_available: number
+          out_ledger_id: string
+          out_replayed: boolean
+          out_reserved: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

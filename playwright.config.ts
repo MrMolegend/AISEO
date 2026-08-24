@@ -10,10 +10,11 @@ const baseURL = `http://127.0.0.1:${PORT}`;
  * no API key, no external accounts, no network egress and no cost. That is what
  * makes it safe to run on every CI push.
  *
- * The audit target is the application's own landing page. It is a real,
- * content-rich HTML document served over real HTTP, so the whole pipeline —
- * robots.txt, fetch, extraction, checks — runs for real, with no second fixture
- * server to coordinate.
+ * Scope is the signed-out surface. Signing in needs a real Supabase project,
+ * and standing one up per CI run would trade a fast, free, deterministic suite
+ * for a slow, credentialed, flaky one. The signed-in paths — the wallet, the
+ * job lifecycle, refunds, access control — are covered in tests/integration
+ * against the same server code, without a browser.
  */
 const chromiumPath = process.env.PLAYWRIGHT_CHROMIUM_PATH;
 
@@ -55,15 +56,14 @@ export default defineConfig({
       AI_PROVIDER: 'mock',
       NEXT_PUBLIC_SITE_URL: baseURL,
       IP_HASH_SALT: 'e2e-salt-not-a-real-secret',
-      // Lets the suite audit its own loopback origin.
+      // Lets the suite reach its own loopback origin.
       E2E_ALLOW_LOCAL_FETCH: '1',
       // Generous, so rate limiting never makes the suite flaky. Limit behaviour
       // is asserted directly in tests/unit and tests/integration.
-      AUDIT_RATE_LIMIT_PER_HOUR: '500',
-      AUDIT_RATE_LIMIT_PER_DAY: '2000',
-      AUDIT_DAILY_GLOBAL_CAP: '5000',
-      // Disable the cache so each test starts a genuinely new audit.
-      AUDIT_CACHE_TTL_HOURS: '1',
+      RESEARCH_RATE_LIMIT_PER_HOUR: '500',
+      RESEARCH_RATE_LIMIT_PER_DAY: '2000',
+      RESEARCH_DAILY_GLOBAL_CAP: '5000',
+      RESEARCH_CACHE_TTL_HOURS: '1',
       LOG_LEVEL: 'warn',
     },
   },

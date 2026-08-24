@@ -40,8 +40,8 @@ export default tseslint.config(
       // content is a build failure rather than a code-review catch.
       'react/no-danger': 'error',
 
-      // The Anthropic SDK must stay behind the AIProvider interface so a second
-      // provider is a one-file change. Only lib/ai/anthropic-provider.ts may
+      // The Anthropic SDK must stay behind the synthesis interface so a second
+      // provider is a one-file change. Only lib/ai/research-provider.ts may
       // import it directly.
       'no-restricted-imports': [
         'error',
@@ -50,7 +50,7 @@ export default tseslint.config(
             {
               name: '@anthropic-ai/sdk',
               message:
-                'Import the AIProvider interface from @/lib/ai instead. Only lib/ai/anthropic-provider.ts may use the SDK directly.',
+                'Use lib/ai/research-provider.ts. It is the only file permitted to touch the SDK directly.',
             },
           ],
         },
@@ -73,7 +73,7 @@ export default tseslint.config(
 
   // The one file permitted to touch the Anthropic SDK.
   {
-    files: ['lib/ai/anthropic-provider.ts'],
+    files: ['lib/ai/research-provider.ts'],
     rules: { 'no-restricted-imports': 'off' },
   },
 

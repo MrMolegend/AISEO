@@ -1,4 +1,4 @@
-import { AuditError, type AuditErrorCode } from '@/lib/errors';
+import { PlatformError, type ErrorCode } from '@/lib/errors';
 
 /**
  * Maps provider failures onto the audit error taxonomy.
@@ -6,8 +6,8 @@ import { AuditError, type AuditErrorCode } from '@/lib/errors';
  * Kept separate from the provider so a second provider inherits the same
  * classification rather than inventing its own.
  */
-export function classifyProviderError(error: unknown): AuditError {
-  if (error instanceof AuditError) return error;
+export function classifyProviderError(error: unknown): PlatformError {
+  if (error instanceof PlatformError) return error;
 
   const status =
     error && typeof error === 'object' && 'status' in error
@@ -16,7 +16,7 @@ export function classifyProviderError(error: unknown): AuditError {
 
   const message = error instanceof Error ? error.message : String(error);
 
-  let code: AuditErrorCode = 'AI_UNAVAILABLE';
+  let code: ErrorCode = 'AI_UNAVAILABLE';
 
   if (status === 429) code = 'AI_RATE_LIMITED';
   else if (status === 401 || status === 403) code = 'AI_UNAVAILABLE';
@@ -24,10 +24,10 @@ export function classifyProviderError(error: unknown): AuditError {
   else if (status !== null && status >= 500) code = 'AI_UNAVAILABLE';
   else if (/abort|timeout|timed out/i.test(message)) code = 'AI_TIMEOUT';
 
-  return new AuditError(code, message, { cause: error, context: { status } });
+  return new PlatformError(code, message, { cause: error, context: { status } });
 }
 
 /** Whether a failure is worth another attempt. */
-export function isRetryable(error: AuditError): boolean {
+export function isRetryable(error: PlatformError): boolean {
   return error.code === 'AI_UNAVAILABLE' || error.code === 'AI_RATE_LIMITED';
 }

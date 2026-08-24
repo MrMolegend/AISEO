@@ -1,6 +1,6 @@
 import type { CheerioAPI } from 'cheerio';
 import { capText, normalizeText, resolveUrl } from '../parse-html';
-import { FACT_LIMITS, type PageImage, type PageLink } from '@/schemas/facts';
+import { FACT_LIMITS, type PageImage, type PageLink } from '@/schemas/page-facts';
 
 export function extractHeadings($: CheerioAPI) {
   const level = (selector: string) => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isPathAllowed, parseRobotsTxt, OUR_AGENT_TOKEN } from '@/lib/retrieval/robots';
+import { isPathAllowed, parseRobotsTxt, OUR_AGENT_TOKEN } from '@/lib/crawl/robots';
 
 describe('parseRobotsTxt', () => {
   it('collects sitemap declarations', () => {

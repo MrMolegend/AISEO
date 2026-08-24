@@ -1,7 +1,7 @@
 import 'server-only';
 import { lookup } from 'node:dns/promises';
 import ipaddr from 'ipaddr.js';
-import { AuditError } from '@/lib/errors';
+import { PlatformError } from '@/lib/errors';
 import { localTestingEnabled } from './local-testing';
 
 /**
@@ -130,9 +130,13 @@ export function assertAddressIsPublic(address: string, context: string): void {
 
   const result = checkAddress(address);
   if (!result.allowed) {
-    throw new AuditError('BLOCKED_URL', `Address ${address} is not publicly routable`, {
-      context: { address, reason: result.reason, at: context },
-    });
+    throw new PlatformError(
+      'BLOCKED_URL',
+      `Address ${address} is not publicly routable`,
+      {
+        context: { address, reason: result.reason, at: context },
+      },
+    );
   }
 }
 
@@ -156,14 +160,14 @@ export async function assertHostnameResolvesPublicly(
   try {
     records = await lookup(hostname, { all: true, verbatim: true });
   } catch (cause) {
-    throw new AuditError('SITE_UNREACHABLE', `Could not resolve ${hostname}`, {
+    throw new PlatformError('SITE_UNREACHABLE', `Could not resolve ${hostname}`, {
       cause,
       context: { hostname },
     });
   }
 
   if (records.length === 0) {
-    throw new AuditError('SITE_UNREACHABLE', `No DNS records for ${hostname}`, {
+    throw new PlatformError('SITE_UNREACHABLE', `No DNS records for ${hostname}`, {
       context: { hostname },
     });
   }

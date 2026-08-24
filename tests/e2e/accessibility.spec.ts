@@ -9,7 +9,15 @@ import { AxeBuilder } from '@axe-core/playwright';
  * easy to break by adjusting a single token, and impossible to notice by eye.
  */
 
-const PAGES = ['/', '/sample', '/privacy', '/terms'] as const;
+/*
+ * The signed-out surface.
+ *
+ * Everything behind sign-in needs a real Supabase project, which this suite
+ * deliberately does not have — it runs with no credentials, no network egress
+ * and no cost. The signed-in pages are covered by the integration suite, which
+ * exercises the same server code without a browser.
+ */
+const PAGES = ['/', '/pricing', '/privacy', '/terms', '/sign-in'] as const;
 
 async function scan(page: Page) {
   const { violations } = await new AxeBuilder({ page })
@@ -44,25 +52,66 @@ test.describe('accessibility — dark theme', () => {
   }
 });
 
-test.describe('accessibility — a live report', () => {
-  test('a generated report is accessible in both themes', async ({ page, request }) => {
-    const response = await request.post('/api/audits', {
-      data: { url: 'http://127.0.0.1:3100/' },
-    });
-    const { publicId } = (await response.json()) as { publicId: string };
-
+test.describe('accessibility — designed error states', () => {
+  test('the 404 page is accessible in both themes', async ({ page }) => {
     for (const scheme of ['light', 'dark'] as const) {
       await page.emulateMedia({ colorScheme: scheme });
-      await page.goto(`/audit/${publicId}`);
-      await expect(page.getByRole('heading', { name: 'Executive summary' })).toBeVisible({
-        timeout: 60_000,
-      });
+      await page.goto('/no-such-page-exists');
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
       const violations = await scan(page);
       expect(
         violations,
         `${scheme}: ${violations.map((v) => `${v.id}: ${v.help}`).join('\n')}`,
       ).toEqual([]);
     }
+  });
+});
+
+test.describe('the signed-out surface', () => {
+  test('sends an anonymous visitor to sign-in rather than showing an empty dashboard', async ({
+    page,
+  }) => {
+    for (const path of ['/dashboard', '/wallet', '/account', '/research/new']) {
+      await page.goto(path);
+      await expect(page).toHaveURL(/\/sign-in/);
+    }
+  });
+
+  test('the pricing table can be scrolled without a mouse', async ({ page }) => {
+    /*
+     * The table is wider than a phone viewport, so its wrapper scrolls. Nothing
+     * inside it is focusable — it is plain text — so without an explicit focus
+     * stop a keyboard user cannot reach the scroll at all and the right-hand
+     * columns are simply unavailable to them.
+     *
+     * axe catches the absence of the focus stop. This asserts the presence of a
+     * working one: that it is reachable, that it is announced with the heading
+     * it belongs to, and that arrowing actually moves it.
+     */
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/pricing');
+
+    const region = page.getByRole('region', {
+      name: 'Research packages, their token costs and what they include',
+    });
+    await expect(region).toBeVisible();
+
+    await region.focus();
+    await expect(region).toBeFocused();
+
+    const scrolled = await region.evaluate((element) => {
+      const before = element.scrollLeft;
+      element.scrollLeft = 200;
+      return { before, after: element.scrollLeft };
+    });
+    expect(scrolled.before).toBe(0);
+    expect(scrolled.after).toBeGreaterThan(0);
+  });
+
+  test('keyboard focus reaches the skip link first', async ({ page }) => {
+    await page.goto('/');
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused();
   });
 });
 
@@ -76,7 +125,7 @@ test.describe('layout', () => {
     test(`no horizontal overflow at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
 
-      for (const path of ['/', '/sample', '/privacy']) {
+      for (const path of ['/', '/pricing', '/privacy', '/sign-in']) {
         await page.goto(path);
         await page.waitForTimeout(300);
 

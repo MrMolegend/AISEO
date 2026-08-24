@@ -24,7 +24,10 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <main className="mx-auto flex max-w-lg flex-col items-center px-5 py-28 text-center md:py-36">
+    <main
+      id="main"
+      className="mx-auto flex max-w-lg flex-col items-center px-5 py-28 text-center md:py-36"
+    >
       <span className="flex size-11 items-center justify-center rounded-full bg-[var(--color-severity-critical-bg)]">
         <TriangleAlert
           className="size-5 text-[var(--color-severity-critical)]"
