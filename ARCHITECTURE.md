@@ -175,6 +175,151 @@ any kind.
 Nothing is listed for Anthropic, Tavily or Upstash. Those are called from route
 handlers and the job runner, where CSP does not apply.
 
+## Authentication
+
+One flow, `token_hash` + `verifyOtp()`, at `/auth/confirm`.
+
+```
+/sign-up      signInWithOtp({shouldCreateUser:true})  → Confirm-signup email
+/auth/confirm verifyOtp({type, token_hash})           → session cookies
+/auth/set-password  updateUser({password})            → /dashboard?welcome=1
+/sign-in      signInWithPassword()                    → /dashboard
+              signInWithOtp({shouldCreateUser:false}) → fallback link
+/forgot-password    resetPasswordForEmail()           → /auth/reset-password
+POST /auth/sign-out signOut()                         → /?signed-out=1
+```
+
+**Why not PKCE.** `createBrowserClient` writes the code verifier into
+`document.cookie` in the browser that requested the link. Mail apps open links
+in their own in-app webview, which has no access to it, so
+`exchangeCodeForSession` failed _after_ Supabase had already recorded a
+successful login — the exact split the production logs showed. `verifyOtp`
+needs nothing from that browser, so it works from any client or device. The
+cost is that the email templates must be edited; see the checklist below.
+
+**Why the route owns its response.** `/auth/confirm` constructs its redirect
+first and the Supabase cookie adapter writes onto _that object_ — not onto a
+request-scoped store that something downstream has to merge. The session
+cookies and the anti-cache headers are on what the function returns, by
+construction, and the route is testable without a Next request store. The
+previous version relied on the merge and swallowed any write failure silently,
+which is why an outage produced no log line.
+
+**Why redirects use `NEXT_PUBLIC_SITE_URL`.** `request.nextUrl.origin` is
+derived from whatever `Host` arrived, and Next normalises a loopback address to
+`localhost`. In production that means redirecting to a host the session cookie
+was not set for.
+
+Identity always comes from `getClaims()`, which verifies the JWT signature.
+`getSession()` is never trusted server-side.
+
+### Supabase dashboard checklist
+
+Manual. None of this can be done in code, and **email links do not work until
+steps 1 and 2 are both complete**.
+
+**1. Authentication → URL Configuration**
+
+| Field         | Value                                                    |
+| ------------- | -------------------------------------------------------- |
+| Site URL      | `https://aiseo-three-omega.vercel.app`                   |
+| Redirect URLs | `https://aiseo-three-omega.vercel.app/auth/confirm`      |
+|               | `https://aiseo-three-omega.vercel.app/**`                |
+|               | `http://localhost:3000/**`                               |
+|               | `https://*-<your-vercel-scope>.vercel.app/**` (previews) |
+
+A `redirect_to` that is not on this list is ignored — Supabase falls back to the
+bare Site URL, dropping the path, which lands the user on a signed-out homepage
+with no error.
+
+**2. Authentication → Email Templates**
+
+All four must point at `/auth/confirm` with `token_hash`. The default templates
+use `{{ .ConfirmationURL }}`, which produces the PKCE flow this no longer uses.
+
+_Confirm signup_
+
+```html
+<h2>Confirm your email</h2>
+<p>
+  <a
+    href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/auth/set-password"
+    >Confirm and choose a password</a
+  >
+</p>
+<p>This link works once and expires in an hour.</p>
+```
+
+_Magic Link_
+
+```html
+<h2>Your sign-in link</h2>
+<p>
+  <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=magiclink"
+    >Sign in</a
+  >
+</p>
+<p>This link works once and expires in an hour.</p>
+```
+
+_Reset Password_
+
+```html
+<h2>Set a new password</h2>
+<p>
+  <a
+    href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/auth/reset-password"
+    >Choose a new password</a
+  >
+</p>
+<p>If you did not ask for this, you can ignore it.</p>
+```
+
+_Change Email Address_
+
+```html
+<h2>Confirm your new address</h2>
+<p>
+  <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email_change"
+    >Confirm</a
+  >
+</p>
+```
+
+**3. Authentication → Providers → Email**
+
+Email enabled · **Confirm email ON** · password sign-in enabled · minimum
+password length ≥ 8 (the UI states 8; a higher server value would reject
+passwords the form accepted).
+
+**4. SMTP**
+
+The built-in sender is capped at a few emails per hour — that cap is what
+produced the `429 over_email_send_rate_limit` errors. Configure a real SMTP
+provider before any real use.
+
+**5. Vercel environment variables**
+
+| Variable                               | Type           | Needed at             |
+| -------------------------------------- | -------------- | --------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`             | Config (plain) | **build** and runtime |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Config (plain) | **build** and runtime |
+| `NEXT_PUBLIC_SITE_URL`                 | Config (plain) | **build** and runtime |
+| `SUPABASE_SERVICE_ROLE_KEY`            | **Secret**     | runtime only          |
+
+The three `NEXT_PUBLIC_` values are browser-visible by design: they are inlined
+into the client bundle and sent to every visitor. They must be available at
+_build_ time — the CSP is baked during `next build`, and a build without them
+ships a policy that blocks Supabase.
+
+`SUPABASE_SERVICE_ROLE_KEY` bypasses row-level security. It is server-only, must
+never be renamed into a `NEXT_PUBLIC_` variable, and must not be set on preview
+deployments that untrusted people can reach.
+
+Never set `AUTH_TEST_DRIVER` on any deployment. It replaces authentication with
+an in-memory stub; `lib/env.ts` refuses to start if it is set alongside real
+credentials or on a production deployment.
+
 ## Database
 
 Additive migrations only. The audit-era tables are untouched and their data is
