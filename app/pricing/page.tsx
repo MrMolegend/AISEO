@@ -112,9 +112,30 @@ export default function PricingPage() {
             What each report costs
           </h2>
 
-          <div className="border-line mt-6 overflow-x-auto rounded-[var(--radius-card)] border">
+          {/*
+            A scrollable region needs to be reachable by keyboard.
+
+            The table is wider than a phone viewport, so this wrapper scrolls.
+            A mouse user drags it; a keyboard user could not reach it at all,
+            because nothing inside a table of plain text is focusable. Making
+            the container itself focusable gives the arrow keys something to
+            scroll, and role="region" plus a name is what tells a
+            screen-reader user what they have just landed in — an unlabelled
+            focus stop is its own kind of confusing.
+
+            It is labelled by the table's caption rather than by the section
+            heading above it. The <section> is already a region carrying that
+            heading, and two landmarks with one name is a landmark list that
+            says "What each report costs" twice and helps nobody.
+          */}
+          <div
+            role="region"
+            aria-labelledby="costs-table-caption"
+            tabIndex={0}
+            className="border-line focus-visible:ring-brand mt-6 overflow-x-auto rounded-[var(--radius-card)] border focus-visible:ring-2 focus-visible:outline-none"
+          >
             <table className="w-full min-w-[640px] border-collapse text-left">
-              <caption className="sr-only">
+              <caption id="costs-table-caption" className="sr-only">
                 Research packages, their token costs and what they include
               </caption>
               <thead>

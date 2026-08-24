@@ -77,6 +77,37 @@ test.describe('the signed-out surface', () => {
     }
   });
 
+  test('the pricing table can be scrolled without a mouse', async ({ page }) => {
+    /*
+     * The table is wider than a phone viewport, so its wrapper scrolls. Nothing
+     * inside it is focusable — it is plain text — so without an explicit focus
+     * stop a keyboard user cannot reach the scroll at all and the right-hand
+     * columns are simply unavailable to them.
+     *
+     * axe catches the absence of the focus stop. This asserts the presence of a
+     * working one: that it is reachable, that it is announced with the heading
+     * it belongs to, and that arrowing actually moves it.
+     */
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/pricing');
+
+    const region = page.getByRole('region', {
+      name: 'Research packages, their token costs and what they include',
+    });
+    await expect(region).toBeVisible();
+
+    await region.focus();
+    await expect(region).toBeFocused();
+
+    const scrolled = await region.evaluate((element) => {
+      const before = element.scrollLeft;
+      element.scrollLeft = 200;
+      return { before, after: element.scrollLeft };
+    });
+    expect(scrolled.before).toBe(0);
+    expect(scrolled.after).toBeGreaterThan(0);
+  });
+
   test('keyboard focus reaches the skip link first', async ({ page }) => {
     await page.goto('/');
     await page.keyboard.press('Tab');

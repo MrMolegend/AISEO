@@ -113,9 +113,15 @@ export default async function WalletPage() {
               </CardBody>
             </Card>
           ) : (
-            <div className="border-line mt-4 overflow-x-auto rounded-[var(--radius-card)] border">
+            <div
+              // Same reasoning as the pricing table: see app/pricing/page.tsx.
+              role="region"
+              aria-labelledby="history-table-caption"
+              tabIndex={0}
+              className="border-line focus-visible:ring-brand mt-4 overflow-x-auto rounded-[var(--radius-card)] border focus-visible:ring-2 focus-visible:outline-none"
+            >
               <table className="w-full min-w-[560px] border-collapse text-left">
-                <caption className="sr-only">
+                <caption id="history-table-caption" className="sr-only">
                   Every movement of {BRAND.currency.name} on this account
                 </caption>
                 <thead>
