@@ -64,6 +64,18 @@ export default defineConfig({
       RESEARCH_RATE_LIMIT_PER_DAY: '2000',
       RESEARCH_DAILY_GLOBAL_CAP: '5000',
       RESEARCH_CACHE_TTL_HOURS: '1',
+      /*
+       * Replaces Supabase Auth with an in-memory session driver, so the suite
+       * can open a browser on the signed-in surface — the header, the account
+       * menu, sign-out, the protected routes — which is the state users spend
+       * all their time in and the one CI could otherwise never reach.
+       *
+       * Safe here for a reason this suite guarantees rather than asserts: it
+       * sets no Supabase credentials at all, and lib/env.ts throws if this flag
+       * is ever set alongside them. There is no real authentication in this
+       * process for the stub to stand in front of.
+       */
+      AUTH_TEST_DRIVER: '1',
       LOG_LEVEL: 'warn',
     },
   },

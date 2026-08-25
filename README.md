@@ -121,9 +121,25 @@ that silently receives spendable credit is a cost leak.
   [`ARCHITECTURE.md`](ARCHITECTURE.md).
 - `tests/unit/ssrf-guard.test.ts`, `tests/integration/safe-fetch.test.ts` — the
   fetch guard, as a rule and as plumbing, against a real server.
-- `tests/e2e` — the signed-out surface, in both themes, at five viewport widths,
-  with axe. Signing in needs a real Supabase project; those paths are covered by
-  the integration suite against the same server code.
+- `tests/integration/auth-confirm.test.ts` — the callback, at the real HTTP
+  boundary: it calls the route handler and reads `Set-Cookie` off the Response,
+  with `@supabase/ssr` doubled at the library edge so the cookie adapter under
+  test is the genuine one. Removing the cookie writes fails it.
+- `tests/e2e` — both signed-out and signed-in, in both themes, across viewport
+  widths, with axe. The signed-in session comes from an in-memory driver that
+  the application refuses to load alongside real credentials.
+
+## Signing in
+
+Create an account with an email address, confirm it, choose a password, then use
+that password from then on. A magic link is available as a fallback, and there
+is a password-recovery path.
+
+The email link flow is `token_hash` + `verifyOtp()` at `/auth/confirm`, chosen
+because it needs nothing from the browser that requested the link — PKCE needs a
+verifier cookie that a mail app's in-app browser does not have, which is what
+broke sign-in in production. **The Supabase email templates must be edited to
+match**; the exact HTML is in [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## Deploying
 

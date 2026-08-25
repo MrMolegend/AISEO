@@ -5,6 +5,7 @@ import {
   hasUpstash,
   hasAnthropic,
   hasRealResearchProvider,
+  usingTestAuthDriver,
 } from '@/lib/env';
 
 /**
@@ -31,7 +32,11 @@ export async function GET() {
 
   const drivers = {
     storage: hasSupabase(env) ? 'supabase' : 'memory',
-    auth: hasSupabaseAuth(env) ? 'supabase' : 'disabled',
+    auth: usingTestAuthDriver(env)
+      ? 'test-stub'
+      : hasSupabaseAuth(env)
+        ? 'supabase'
+        : 'disabled',
     rateLimit: hasUpstash(env) ? 'upstash' : 'memory',
     ai: hasAnthropic(env) ? 'anthropic' : 'mock',
     research: hasRealResearchProvider(env) ? env.RESEARCH_PROVIDER : 'mock',
@@ -46,6 +51,12 @@ export async function GET() {
   const problems: string[] = [];
   if (env.NODE_ENV === 'production') {
     if (drivers.storage !== 'supabase') problems.push('storage is not Supabase');
+    if (drivers.auth === 'test-stub') {
+      // Unreachable: usingTestAuthDriver() throws under NODE_ENV=production
+      // before this line can run. Listed anyway so the check reads completely,
+      // and so it stays correct if that guard is ever relaxed.
+      problems.push('authentication is served by the test stub');
+    }
     if (drivers.auth !== 'supabase') problems.push('authentication is not configured');
     if (drivers.rateLimit !== 'upstash') {
       // In-process limits are per-instance, so on more than one instance they

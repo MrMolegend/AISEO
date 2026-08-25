@@ -1,7 +1,12 @@
 import 'server-only';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
-import { getEnv, hasSupabaseAuth, supabasePublishableKey } from '@/lib/env';
+import {
+  getEnv,
+  hasSupabaseAuth,
+  supabasePublishableKey,
+  usingTestAuthDriver,
+} from '@/lib/env';
 import { PlatformError } from '@/lib/errors';
 
 /**
@@ -31,7 +36,7 @@ export interface AuthenticatedUser {
  * essentially a configured fetch, and the configuration is this request's
  * cookies. Reusing one across requests would mean reusing one user's session.
  */
-export async function createServerAuthClient() {
+export async function createServerAuthClient(responseHeaders?: Headers) {
   const env = getEnv();
   const key = supabasePublishableKey(env);
 
@@ -46,14 +51,28 @@ export async function createServerAuthClient() {
       getAll() {
         return cookieStore.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet, headers) {
         try {
           for (const { name, value, options } of cookiesToSet) {
             cookieStore.set(name, value, options);
           }
+          // @supabase/ssr hands us Cache-Control/Expires/Pragma alongside any
+          // auth cookie. They are not decoration: without them a CDN can cache
+          // a response carrying one user's session and serve it to the next
+          // visitor. Server Components cannot set headers either, so this is
+          // best-effort in the same way the cookie write is.
+          for (const [header, value] of Object.entries(headers)) {
+            responseHeaders?.set(header, value);
+          }
         } catch {
-          // Server Components cannot write cookies. The proxy refreshes the
-          // session on every request, so there is nothing to recover here.
+          // Server Components cannot write cookies, and this is the expected
+          // path for every RSC render: the proxy refreshes the session on the
+          // request before it, so the write has already happened elsewhere.
+          //
+          // Route handlers CAN write, so a failure there would be real — but it
+          // is also unreachable, because the routes that must persist a session
+          // build their own response instead of relying on this client. See
+          // app/auth/confirm/route.ts.
         }
       },
     },
@@ -68,6 +87,14 @@ export async function createServerAuthClient() {
  * instead of a crash on every page.
  */
 export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
+  // Tests only, and unreachable in production: usingTestAuthDriver() throws
+  // rather than returning false if the flag is set under NODE_ENV=production.
+  // See lib/auth/test-driver.ts.
+  if (usingTestAuthDriver()) {
+    const { getTestSessionUser } = await import('./test-driver');
+    return getTestSessionUser();
+  }
+
   if (!hasSupabaseAuth()) return null;
 
   try {
@@ -105,18 +132,78 @@ export async function requireUser(): Promise<AuthenticatedUser> {
 /**
  * Builds the sign-in URL that returns to where the user was going.
  *
- * `next` is validated on the way back in (see app/auth/callback/route.ts): an
- * open redirect through a sign-in flow is a phishing primitive, and the fix is
- * to only ever accept a same-site path.
+ * `next` is validated again on the way back in (see app/auth/confirm/route.ts):
+ * an open redirect through a sign-in flow is a phishing primitive — the victim
+ * genuinely signs in to the real site, then lands on the attacker's.
  */
 export function signInPath(returnTo?: string): string {
-  if (!returnTo || !returnTo.startsWith('/') || returnTo.startsWith('//')) {
-    return '/sign-in';
-  }
+  if (!isSafeReturnPath(returnTo)) return '/sign-in';
   return `/sign-in?next=${encodeURIComponent(returnTo)}`;
 }
 
-/** Whether a redirect target is a safe same-site path. */
+/**
+ * Whether the sign-in forms should render at all.
+ *
+ * True when a real Supabase project is configured, and also when the test
+ * driver is serving — otherwise the end-to-end suite would meet a "sign-in is
+ * not available" panel on every auth page and never exercise the forms.
+ * Resolved on the server so the browser bundle does not have to reason about
+ * which driver is live.
+ */
+export function authAvailable(): boolean {
+  return hasSupabaseAuth() || usingTestAuthDriver();
+}
+
+/**
+ * The origin auth redirects are built against.
+ *
+ * Not `request.nextUrl.origin`. That is derived from the request's own headers,
+ * and it is wrong in exactly the situations that matter: behind a proxy it
+ * reflects whatever `Host` arrived, and Next normalises a loopback address to
+ * `localhost` — which sent the end-to-end suite's sign-out redirect to a
+ * different origin than the browser was on, so the browser simply did not
+ * follow it. In production the same class of mismatch means a redirect to a
+ * host the session cookie was not set for.
+ *
+ * NEXT_PUBLIC_SITE_URL is the canonical answer: it is configuration rather than
+ * an attacker-influenced header, and it is the same value that has to be
+ * registered as Supabase's Site URL for any of this to work at all. The request
+ * origin is kept only as a fallback for a deployment that has not set it.
+ */
+export function siteOrigin(request: { nextUrl: { origin: string } }): string {
+  const configured = getEnv().NEXT_PUBLIC_SITE_URL;
+  return configured ? new URL(configured).origin : request.nextUrl.origin;
+}
+
+/** Longer than any route this application has, and short enough to log. */
+const MAX_RETURN_PATH = 512;
+
+/**
+ * Whether a redirect target is a safe same-site path.
+ *
+ * The rules, and why each one is here:
+ *
+ *   · Must start with a single `/`. `//evil.com` and `/\evil.com` are both
+ *     protocol-relative once a browser normalises them — the backslash form is
+ *     the one that gets missed, and it is why this checks the second character
+ *     rather than just the prefix.
+ *   · No control characters. A newline in a Location header splits the
+ *     response.
+ *   · Not inside `/auth/`. Bouncing a freshly authenticated user back through
+ *     the auth flow is at best a loop and at worst a way to replay a link.
+ *   · Bounded length, so a hostile value cannot be used to bloat a redirect.
+ */
 export function isSafeReturnPath(value: string | null | undefined): value is string {
-  return typeof value === 'string' && value.startsWith('/') && !value.startsWith('//');
+  if (typeof value !== 'string') return false;
+  if (value.length === 0 || value.length > MAX_RETURN_PATH) return false;
+  if (value[0] !== '/') return false;
+  if (value[1] === '/' || value[1] === String.fromCharCode(92)) return false;
+  if (value.startsWith('/auth/')) return false;
+
+  for (const character of value) {
+    const code = character.codePointAt(0) ?? 0;
+    if (code <= 0x1f || code === 0x7f) return false;
+  }
+
+  return true;
 }
