@@ -360,7 +360,11 @@ Steps:
 
 1. Apply `supabase/migrations/0004`–`0009` in order.
 2. Enable email sign-in in Supabase Auth and add
-   `${NEXT_PUBLIC_SITE_URL}/auth/callback` to the allowed redirect URLs.
+   `${NEXT_PUBLIC_SITE_URL}/auth/confirm` to the allowed redirect URLs — then
+   follow **Supabase dashboard checklist** above for the rest of it. That step
+   is not optional detail: the email templates have to be rewritten to emit
+   `token_hash`, and until they are, the links Supabase sends do not work no
+   matter how the redirect URLs are configured.
 3. Set the variables above. `maxDuration` is 300s on the research route, which
    needs Vercel Pro or Fluid Compute — the Hobby 60s ceiling cannot fit the
    pipeline.
