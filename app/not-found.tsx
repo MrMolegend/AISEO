@@ -1,30 +1,34 @@
 import Link from 'next/link';
-import { SiteHeader } from '@/components/layout/site-header';
-import { SiteFooter } from '@/components/layout/site-footer';
-import { Button } from '@/components/ui/button';
+import { LogoMark } from '@/components/brand/logo';
+import { ButtonLink } from '@/components/ui/button';
 
 export default function NotFound() {
   return (
-    <>
-      <SiteHeader />
-      <main
-        id="main"
-        className="mx-auto flex max-w-lg flex-col items-center px-5 py-28 text-center md:py-36"
-      >
-        <p className="text-ink-faint font-mono text-sm">404</p>
-        <h1 className="mt-4 text-3xl font-semibold md:text-4xl">
-          We could not find that page
-        </h1>
-        <p className="text-ink-muted mt-4 text-[17px] leading-relaxed">
-          The link may be wrong, or the page may have moved. If you were looking for a
-          research report, check the link you were sent — report links are long and easy
-          to truncate.
-        </p>
-        <Link href="/dashboard" className="mt-8">
-          <Button size="lg">Go to your dashboard</Button>
+    <div className="container-narrow flex min-h-dvh flex-col items-center justify-center py-16 text-center">
+      <LogoMark className="size-10" />
+      <p className="text-ink-subtle mt-6 text-sm font-medium">Page not found</p>
+      <h1 className="mt-2 text-[1.75rem] tracking-[var(--tracking-tight)]">
+        We could not find that page
+      </h1>
+      <p className="text-ink-muted mt-3 max-w-md leading-relaxed">
+        The link may be out of date, or the tutor profile may no longer be published.
+        Searching the marketplace is usually the quickest way back.
+      </p>
+      <div className="mt-7 flex flex-wrap justify-center gap-2.5">
+        <ButtonLink href="/tutors" size="lg">
+          Find a tutor
+        </ButtonLink>
+        <ButtonLink href="/" variant="secondary" size="lg">
+          Back to the homepage
+        </ButtonLink>
+      </div>
+      <p className="text-ink-subtle mt-8 text-sm">
+        Still stuck?{' '}
+        <Link href="/contact" className="text-brand hover:underline">
+          Tell us what you were looking for
         </Link>
-      </main>
-      <SiteFooter />
-    </>
+        .
+      </p>
+    </div>
   );
 }

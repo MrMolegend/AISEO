@@ -1,82 +1,50 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = Number(process.env.E2E_PORT ?? 3100);
+const PORT = 3100;
 const baseURL = `http://127.0.0.1:${PORT}`;
-
-/**
- * End-to-end configuration.
- *
- * The suite runs against the mock AI provider and the in-memory storage driver:
- * no API key, no external accounts, no network egress and no cost. That is what
- * makes it safe to run on every CI push.
- *
- * Scope is the signed-out surface. Signing in needs a real Supabase project,
- * and standing one up per CI run would trade a fast, free, deterministic suite
- * for a slow, credentialed, flaky one. The signed-in paths — the wallet, the
- * job lifecycle, refunds, access control — are covered in tests/integration
- * against the same server code, without a browser.
- */
-const chromiumPath = process.env.PLAYWRIGHT_CHROMIUM_PATH;
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: false,
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: 1,
-  reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
-  timeout: 90_000,
-  expect: { timeout: 15_000 },
-
+  retries: process.env.CI ? 1 : 0,
+  workers: process.env.CI ? 2 : undefined,
+  reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : [['list']],
+  timeout: 45_000,
   use: {
     baseURL,
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    ...(chromiumPath ? { launchOptions: { executablePath: chromiumPath } } : {}),
+    // Lets a sandboxed environment point at a Chromium it already has, rather
+    // than downloading one. CI leaves it unset and uses the managed browser.
+    ...(process.env.PLAYWRIGHT_CHROMIUM_PATH
+      ? {
+          launchOptions: {
+            executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH,
+            args: ['--no-sandbox'],
+          },
+        }
+      : {}),
   },
-
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile', use: { ...devices['Pixel 7'] } },
+    {
+      name: 'desktop',
+      testMatch: /journeys\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      // The mobile layouts are different screens, not a narrower desktop, so
+      // they get their own journeys rather than the desktop ones re-run.
+      name: 'mobile',
+      testMatch: /mobile\.spec\.ts/,
+      // The iPhone 13 profile is the target size (390×844); the engine is
+      // pinned to Chromium so the suite needs one browser rather than two.
+      use: { ...devices['iPhone 13'], browserName: 'chromium' },
+    },
   ],
-
   webServer: {
-    command: `npm run build && npm run start -- --port ${PORT}`,
-    /*
-     * Readiness is probed on the landing page, not /api/health. The health
-     * endpoint deliberately returns 503 when the app is running on development
-     * drivers — which is exactly the configuration this suite uses — so it would
-     * never report ready. Serving the landing page is the honest signal that the
-     * server is up.
-     */
+    command: `npx next start --port ${PORT}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-    timeout: 240_000,
-    env: {
-      AI_PROVIDER: 'mock',
-      NEXT_PUBLIC_SITE_URL: baseURL,
-      IP_HASH_SALT: 'e2e-salt-not-a-real-secret',
-      // Lets the suite reach its own loopback origin.
-      E2E_ALLOW_LOCAL_FETCH: '1',
-      // Generous, so rate limiting never makes the suite flaky. Limit behaviour
-      // is asserted directly in tests/unit and tests/integration.
-      RESEARCH_RATE_LIMIT_PER_HOUR: '500',
-      RESEARCH_RATE_LIMIT_PER_DAY: '2000',
-      RESEARCH_DAILY_GLOBAL_CAP: '5000',
-      RESEARCH_CACHE_TTL_HOURS: '1',
-      /*
-       * Replaces Supabase Auth with an in-memory session driver, so the suite
-       * can open a browser on the signed-in surface — the header, the account
-       * menu, sign-out, the protected routes — which is the state users spend
-       * all their time in and the one CI could otherwise never reach.
-       *
-       * Safe here for a reason this suite guarantees rather than asserts: it
-       * sets no Supabase credentials at all, and lib/env.ts throws if this flag
-       * is ever set alongside them. There is no real authentication in this
-       * process for the stub to stand in front of.
-       */
-      AUTH_TEST_DRIVER: '1',
-      LOG_LEVEL: 'warn',
-    },
+    timeout: 120_000,
   },
 });

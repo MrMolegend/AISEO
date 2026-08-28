@@ -18,8 +18,6 @@ export default tseslint.config(
       'test-results/**',
       'next-env.d.ts',
       'coverage/**',
-      // Local visual/a11y probes; these become Playwright specs in tests/e2e.
-      '.shots/**',
     ],
   },
 
@@ -33,30 +31,8 @@ export default tseslint.config(
       globals: { ...globals.browser, ...globals.node },
     },
     rules: {
-      // ── Security-critical rules ─────────────────────────────────────────
-      //
-      // AI- and website-derived text is rendered throughout the report. Banning
-      // dangerouslySetInnerHTML at the lint level means an XSS via injected page
-      // content is a build failure rather than a code-review catch.
       'react/no-danger': 'error',
 
-      // The Anthropic SDK must stay behind the synthesis interface so a second
-      // provider is a one-file change. Only lib/ai/research-provider.ts may
-      // import it directly.
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: [
-            {
-              name: '@anthropic-ai/sdk',
-              message:
-                'Use lib/ai/research-provider.ts. It is the only file permitted to touch the SDK directly.',
-            },
-          ],
-        },
-      ],
-
-      // ── General strictness ──────────────────────────────────────────────
       '@typescript-eslint/no-unused-vars': [
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
@@ -69,18 +45,6 @@ export default tseslint.config(
       eqeqeq: ['error', 'always', { null: 'ignore' }],
       'no-console': ['error', { allow: ['warn', 'error'] }],
     },
-  },
-
-  // The one file permitted to touch the Anthropic SDK.
-  {
-    files: ['lib/ai/research-provider.ts'],
-    rules: { 'no-restricted-imports': 'off' },
-  },
-
-  // The logger is the sanctioned console boundary.
-  {
-    files: ['lib/observability/logger.ts'],
-    rules: { 'no-console': 'off' },
   },
 
   {

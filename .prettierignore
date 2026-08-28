@@ -4,13 +4,3 @@ playwright-report
 test-results
 coverage
 package-lock.json
-.shots
-
-# HTML fixtures are deliberately malformed test data: unclosed tags, forged
-# closing delimiters, broken JSON-LD. Prettier cannot parse them, and
-# reformatting them would destroy exactly what they exist to test.
-fixtures/html
-
-# Generated from the live database; reformatting produces a diff on every
-# regeneration.
-supabase/database.types.ts

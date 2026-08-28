@@ -1,163 +1,151 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+
 import Link from 'next/link';
-import { BRAND } from '@/config/brand';
-import { formatTokens } from '@/config/tokens';
+import { useRouter } from 'next/navigation';
+import { ChevronDown, LogOut, RefreshCw, Repeat, Settings } from 'lucide-react';
+import { Menu, MenuItem, MenuSection } from '@/components/ui/menu';
+import { Avatar } from '@/components/ui/avatar';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { useDemo } from '@/lib/store/demo-store';
+import { useToast } from '@/lib/store/toast';
+import { DASHBOARD_HOME, ROLE_LABELS } from '@/lib/nav';
+import type { Role } from '@/lib/types';
+import { cn } from '@/lib/utils';
+
+const ROLES: Role[] = ['student', 'parent', 'tutor', 'admin'];
 
 /**
- * The signed-in control.
- *
- * Carries the account's identity and its balance, so that on any page — and at
- * any width — there is one obvious place that answers "am I signed in, as whom,
- * and with how many tokens". Previously the balance lived in a chip that
- * disappeared below `sm` and the navigation disappeared below `md`, which left
- * a phone user with a logo and an unlabelled circle.
- *
- * Sign-out is a form posting to /auth/sign-out rather than a click handler. It
- * works before hydration, it cannot be triggered by a stray GET, and the
- * session is revoked at Supabase rather than merely forgotten by this browser.
+ * The signed-in menu. The role switcher is a demonstration convenience — it
+ * exists so every dashboard can be reviewed without four sign-ins, and it is
+ * labelled as such rather than pretending to be a product feature.
  */
+export function AccountMenu({ tone = 'default' }: { tone?: 'default' | 'inverse' }) {
+  const { account, signOut, signInAsRole, resetDemo } = useDemo();
+  const { toast } = useToast();
+  const router = useRouter();
 
-export function AccountMenu({
-  email,
-  balance,
-}: {
-  email: string | null;
-  balance: { available: number; reserved: number } | null;
-}) {
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key !== 'Escape') return;
-      setOpen(false);
-      // Focus goes back where it came from, or it lands at the top of the page.
-      triggerRef.current?.focus();
-    }
-    function onPointerDown(event: PointerEvent) {
-      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
-    }
-
-    document.addEventListener('keydown', onKeyDown);
-    document.addEventListener('pointerdown', onPointerDown);
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      document.removeEventListener('pointerdown', onPointerDown);
-    };
-  }, [open]);
-
-  const initial = (email ?? '?').slice(0, 1).toUpperCase();
+  if (!account) return null;
 
   return (
-    <div ref={containerRef} className="relative">
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={() => setOpen((shown) => !shown)}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        className="border-line bg-surface-subtle text-ink hover:border-line-strong focus-visible:ring-brand flex h-9 items-center gap-2 rounded-full border pr-3 pl-1 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-      >
-        <span
-          aria-hidden="true"
-          className="bg-brand text-ink-inverse flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-semibold"
+    <Menu
+      label="Account"
+      trigger={({ open, toggle }) => (
+        <button
+          type="button"
+          onClick={toggle}
+          aria-expanded={open}
+          aria-haspopup="menu"
+          className={cn(
+            'flex h-11 items-center gap-2 rounded-[var(--radius-control)] pr-2 pl-1.5 transition-colors duration-[var(--duration-fast)]',
+            tone === 'inverse'
+              ? 'text-white hover:bg-white/10'
+              : 'text-ink hover:bg-surface-sunken',
+          )}
         >
-          {initial}
-        </span>
-        {/* The balance sits in the trigger so it survives to the narrowest
-            viewport, where a separate chip would have been hidden. */}
-        {balance && (
-          <span className="text-[13px] font-medium tabular-nums">
-            {formatTokens(balance.available)}
+          <Avatar
+            firstName={account.firstName}
+            lastName={account.lastName}
+            tone={account.avatarTone}
+            size="sm"
+          />
+          <span className="hidden text-sm font-medium sm:inline">
+            {account.firstName}
           </span>
-        )}
-        <span className="sr-only">
-          Account menu
-          {email ? ` for ${email}` : ''}
-          {balance
-            ? `. ${formatTokens(balance.available)} ${BRAND.currency.plural} available`
-            : ''}
-        </span>
-      </button>
-
-      {open && (
-        <div
-          role="menu"
-          aria-label="Account"
-          className="border-line bg-surface absolute right-0 z-50 mt-2 w-64 rounded-[var(--radius-card)] border p-1.5 shadow-[var(--shadow-raised)]"
-        >
-          <div className="px-3 py-2.5">
-            <p className="text-ink truncate text-sm font-medium">
-              {email ?? 'Signed in'}
-            </p>
-            {balance && (
-              <p className="text-ink-subtle mt-0.5 text-xs tabular-nums">
-                {formatTokens(balance.available)} {BRAND.currency.plural}
-                {balance.reserved > 0 && ` · ${formatTokens(balance.reserved)} held`}
-              </p>
+          <ChevronDown
+            className={cn(
+              'size-4 transition-transform duration-[var(--duration-fast)]',
+              open && 'rotate-180',
             )}
+            aria-hidden
+          />
+          <span className="sr-only">Open account menu</span>
+        </button>
+      )}
+    >
+      {(close) => (
+        <div>
+          <div className="border-line border-b px-3.5 py-3">
+            <p className="text-ink text-sm font-semibold">
+              {account.firstName} {account.lastName}
+            </p>
+            <p className="text-ink-subtle truncate text-xs">{account.email}</p>
+            <p className="text-brand-ink bg-brand-subtle mt-2 inline-block rounded px-1.5 py-0.5 text-[0.6875rem] font-medium">
+              {ROLE_LABELS[account.role]}
+            </p>
           </div>
 
-          <div role="none" className="border-line my-1 border-t" />
+          <div className="py-1">
+            <Link
+              href={DASHBOARD_HOME[account.role]}
+              onClick={close}
+              role="menuitem"
+              className="text-ink hover:bg-surface-sunken flex items-center gap-2.5 px-3.5 py-2.5 text-sm"
+            >
+              <Settings className="size-4" aria-hidden />
+              Go to dashboard
+            </Link>
+          </div>
 
-          <MenuLink href="/dashboard" onNavigate={() => setOpen(false)}>
-            Dashboard
-          </MenuLink>
-          <MenuLink href="/dashboard#reports" onNavigate={() => setOpen(false)}>
-            My reports
-          </MenuLink>
-          <MenuLink href="/wallet" onNavigate={() => setOpen(false)}>
-            {BRAND.currency.name}
-          </MenuLink>
-          <MenuLink href="/account" onNavigate={() => setOpen(false)}>
-            Account
-          </MenuLink>
+          <MenuSection label="Demo role switcher">
+            {ROLES.map((role) => (
+              <MenuItem
+                key={role}
+                onClick={() => {
+                  const next = signInAsRole(role);
+                  close();
+                  if (next) {
+                    router.push(DASHBOARD_HOME[role]);
+                    toast({
+                      title: `Now viewing as ${next.firstName}`,
+                      description: `${ROLE_LABELS[role]} dashboard`,
+                    });
+                  }
+                }}
+                className={cn(account.role === role && 'text-brand font-medium')}
+              >
+                <Repeat className="size-4" aria-hidden />
+                {ROLE_LABELS[role]}
+              </MenuItem>
+            ))}
+          </MenuSection>
 
-          <div role="none" className="border-line my-1 border-t" />
+          <MenuSection label="Appearance">
+            <div className="px-3.5 pt-1 pb-2.5">
+              <ThemeToggle />
+            </div>
+          </MenuSection>
 
-          <SignOutMenuItem />
+          <MenuSection label="Session">
+            <MenuItem
+              onClick={() => {
+                resetDemo();
+                close();
+                toast({
+                  title: 'Demo data reset',
+                  description:
+                    'Bookings, messages and favourites are back to the seed set.',
+                  tone: 'info',
+                });
+                router.push('/');
+              }}
+            >
+              <RefreshCw className="size-4" aria-hidden />
+              Reset demo data
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                signOut();
+                close();
+                toast({ title: 'Signed out', tone: 'info' });
+                router.push('/');
+              }}
+            >
+              <LogOut className="size-4" aria-hidden />
+              Sign out
+            </MenuItem>
+          </MenuSection>
         </div>
       )}
-    </div>
-  );
-}
-
-function MenuLink({
-  href,
-  children,
-  onNavigate,
-}: {
-  href: string;
-  children: React.ReactNode;
-  onNavigate: () => void;
-}) {
-  return (
-    <Link
-      href={href}
-      role="menuitem"
-      onClick={onNavigate}
-      className="text-ink-muted hover:bg-surface-sunken hover:text-ink focus-visible:ring-brand block rounded-[var(--radius-control)] px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
-    >
-      {children}
-    </Link>
-  );
-}
-
-/** A real form, so signing out does not depend on JavaScript having loaded. */
-export function SignOutMenuItem() {
-  return (
-    <form action="/auth/sign-out" method="post">
-      <button
-        type="submit"
-        role="menuitem"
-        className="text-ink-muted hover:bg-surface-sunken hover:text-ink focus-visible:ring-brand block w-full rounded-[var(--radius-control)] px-3 py-2 text-left text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
-      >
-        Sign out
-      </button>
-    </form>
+    </Menu>
   );
 }

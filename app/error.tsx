@@ -1,15 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
-import Link from 'next/link';
-import { TriangleAlert } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { LogoMark } from '@/components/brand/logo';
+import { Button, ButtonLink } from '@/components/ui/button';
 
 /**
- * Root error boundary.
- *
- * The user never sees the underlying message — it may contain internal detail —
- * only the digest, which is what support would ask for.
+ * The last line of defence. It never shows the raw error to the visitor — the
+ * digest is enough for support to find it in the logs.
  */
 export default function GlobalError({
   error,
@@ -19,40 +16,31 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Client-side surface: the server has already logged this with full context.
-    console.error('Unhandled application error', error.digest ?? error.message);
+    console.error('Unhandled error', error);
   }, [error]);
 
   return (
-    <main
-      id="main"
-      className="mx-auto flex max-w-lg flex-col items-center px-5 py-28 text-center md:py-36"
-    >
-      <span className="flex size-11 items-center justify-center rounded-full bg-[var(--color-severity-critical-bg)]">
-        <TriangleAlert
-          className="size-5 text-[var(--color-severity-critical)]"
-          aria-hidden
-        />
-      </span>
-      <h1 className="mt-5 text-3xl font-semibold md:text-4xl">
-        Something unexpected went wrong
+    <div className="container-narrow flex min-h-dvh flex-col items-center justify-center py-16 text-center">
+      <LogoMark className="size-10" />
+      <p className="text-ink-subtle mt-6 text-sm font-medium">Something went wrong</p>
+      <h1 className="mt-2 text-[1.75rem] tracking-[var(--tracking-tight)]">
+        This page did not load properly
       </h1>
-      <p className="text-ink-muted mt-4 text-[17px] leading-relaxed">
-        We have been notified and will look into it. Trying again often works.
+      <p className="text-ink-muted mt-3 max-w-md leading-relaxed">
+        Nothing you have done has been lost. Try again, and if it keeps happening let us
+        know what you were doing at the time.
       </p>
-      {error.digest ? (
-        <p className="text-ink-faint mt-4 font-mono text-xs">Reference: {error.digest}</p>
-      ) : null}
-      <div className="mt-8 flex gap-3">
+      {error.digest && (
+        <p className="text-ink-subtle mt-3 font-mono text-xs">Reference {error.digest}</p>
+      )}
+      <div className="mt-7 flex flex-wrap justify-center gap-2.5">
         <Button size="lg" onClick={reset}>
           Try again
         </Button>
-        <Link href="/">
-          <Button size="lg" variant="secondary">
-            Back to home
-          </Button>
-        </Link>
+        <ButtonLink href="/" variant="secondary" size="lg">
+          Back to the homepage
+        </ButtonLink>
       </div>
-    </main>
+    </div>
   );
 }

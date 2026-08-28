@@ -1,19 +1,18 @@
 import { cn } from '@/lib/utils';
 
 /**
- * One hairline border plus one soft shadow. Two elevation levels exist in the
- * whole product; `raised` is the second and is used sparingly.
+ * A bordered surface. Elevation is opt-in: most cards separate with a border
+ * and a background step, and only things that genuinely float get a shadow.
  */
 export function Card({
   className,
-  raised = false,
+  as: Component = 'div',
   ...props
-}: React.HTMLAttributes<HTMLDivElement> & { raised?: boolean }) {
+}: React.HTMLAttributes<HTMLDivElement> & { as?: React.ElementType }) {
   return (
-    <div
+    <Component
       className={cn(
         'border-line bg-surface rounded-[var(--radius-card)] border',
-        raised ? 'shadow-[var(--shadow-raised)]' : 'shadow-[var(--shadow-card)]',
         className,
       )}
       {...props}
@@ -21,6 +20,29 @@ export function Card({
   );
 }
 
+export function CardHeader({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn(
+        'border-line flex items-center justify-between gap-3 border-b px-5 py-4',
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export function CardTitle({
+  className,
+  as: Component = 'h2',
+  ...props
+}: React.HTMLAttributes<HTMLHeadingElement> & { as?: React.ElementType }) {
+  return <Component className={cn('text-base font-semibold', className)} {...props} />;
+}
+
 export function CardBody({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('p-5 md:p-6', className)} {...props} />;
+  return <div className={cn('p-5', className)} {...props} />;
 }

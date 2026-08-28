@@ -1,158 +1,183 @@
-# Research Suite
+# Tutor Hub
 
-A token-based business research platform. You create an account, hold research
-tokens, choose a package, describe your business, and spend tokens to generate a
-detailed report built from public sources — with a citation behind every factual
-claim.
+An online tutoring marketplace for GCSE, A-Level, university and adult learners in the
+UK. Students and parents compare tutors, book lessons from real availability, message
+between sessions and meet in Tutor Hub's own lesson room. Tutors apply, set their rate
+and hours, and manage their teaching in one place. Administrators review applications and
+oversee the marketplace.
 
-The product name is a working title. It lives in exactly one file,
-[`config/brand.ts`](config/brand.ts), and a unit test fails if it appears as a
-string literal anywhere else.
+**This repository is a complete frontend build.** Every screen is finished and every
+control does something, but nothing leaves the browser: there is no database, no payment
+processor and no video service connected. Where a real integration would sit, the
+interface says so rather than pretending.
 
-## The ideas that shape everything
+---
 
-**The crawler owns facts. The model owns interpretation.** The model is never
-asked what a page says — it is given the page's actual text, headings and
-published contact routes, and asked what they imply. There is no AI call per
-crawled page: pages are read deterministically, summarised into a bounded
-context, and analysed once.
-
-**Every claim carries its evidence.** Sources are registered as they are found
-and given stable references — `S1`, `S2`, `S3` — before the model sees them. A
-claim that cites a reference which does not exist is rejected in validation, not
-rendered with a broken footnote. Every claim also carries a basis and a
-confidence, and every report states what it could not determine.
-
-**The model produces data, never presentation.** It returns a strictly typed
-object; React components own all rendering. That is what makes reports look
-identical for every subject, safe against content injected into a crawled page,
-storable, diffable and exportable.
-
-**A balance is only ever the result of an operation with a reason attached.**
-There is no `setBalance` anywhere in the system. Tokens are reserved, then either
-finalised or refunded, by database functions that take a row lock and an
-idempotency key. The ledger is append-only and application code cannot edit it.
-
-## Running it locally
+## Running it
 
 ```bash
 npm install
-npm run dev
+npm run dev          # http://localhost:3000
 ```
 
-That is the whole setup. With no `.env` at all the application runs end to end on
-in-memory drivers and fixture data: no API key, no accounts, no cost, no network
-egress. `/api/health` reports which driver is serving each subsystem.
+Other scripts:
 
-To use real services, copy `.env.example` to `.env.local`. Every variable is
-documented there, and every one is validated at boot, so a typo fails immediately
-with the variable's name rather than surfacing later as an undefined-property
-crash.
+| Command                           | What it does                                   |
+| --------------------------------- | ---------------------------------------------- |
+| `npm run dev`                     | Development server                             |
+| `npm run build` / `npm start`     | Production build and server                    |
+| `npm run typecheck`               | `tsc --noEmit`                                 |
+| `npm run lint`                    | ESLint                                         |
+| `npm run format` / `format:check` | Prettier                                       |
+| `npm run test`                    | Unit tests (Vitest)                            |
+| `npm run test:e2e`                | End-to-end journeys (Playwright) — build first |
+| `npm run verify`                  | Typecheck, lint, format check and unit tests   |
 
-## Commands
+Requires Node 20.9 or later. `npm run test:e2e` builds against `next start` on port 3100;
+in a sandbox with a pre-installed browser, set `PLAYWRIGHT_CHROMIUM_PATH` to its
+executable.
 
-| Command            | What it does                                      |
-| ------------------ | ------------------------------------------------- |
-| `npm run dev`      | Development server                                |
-| `npm run verify`   | Typecheck, lint, format check, unit + integration |
-| `npm test`         | Unit and integration tests                        |
-| `npm run test:e2e` | Playwright, against a real production build       |
-| `npm run build`    | Production build                                  |
+## Demo roles
 
-`npm run verify` is exactly what CI runs before the build step, so a green local
-run means a green CI run.
+There are no credentials. `/sign-in` offers four accounts, and the account menu has a
+role switcher so every dashboard can be reviewed without signing out.
 
-No test makes a paid API call. The AI provider and the research provider both
-fall back to deterministic fixtures when no key is configured, and the test setup
-pins them there.
+| Role          | Demo account   | What they see                                                                           |
+| ------------- | -------------- | --------------------------------------------------------------------------------------- |
+| Student       | Maya Bennett   | A-Level Maths and Physics, two tutors, a lesson today, saved tutors and progress        |
+| Parent        | Sarah Kaur     | Two linked learners in Years 11 and 13, their lessons, feedback and spend               |
+| Tutor         | Priya Raghavan | Chemistry and Biology profile, 158 reviews, booking requests, availability and earnings |
+| Administrator | Dan Foster     | Application queue, tutor management, bookings, users and reports                        |
 
-## Packages and pricing
+The account menu also has **Reset demo data**, which clears everything you have created
+and returns the seed data.
 
-Both catalogues are typed configuration, not database rows, and neither is
-reachable from a request body. A client names a package; the server names the
-price.
+## Main routes
 
-| Package                       | Tokens | What it produces                                      |
-| ----------------------------- | -----: | ----------------------------------------------------- |
-| Competitor Intelligence       |    100 | Ranked competitors, positioning, pricing signals      |
-| Target Customer & Lead Finder |    150 | Ideal customer profile, segments, named company leads |
-| Influencer Outreach List      |    180 | Relevant creators with published contact routes       |
-| Complete Market Pack          |    350 | All three, plus positioning and a 90-day plan         |
+**Public**
 
-| Bundle  | Tokens | Price |
-| ------- | -----: | ----: |
-| Starter |    100 |    £9 |
-| Builder |    300 |   £24 |
-| Growth  |    700 |   £49 |
-| Agency  |   1500 |   £89 |
+`/` · `/tutors` · `/tutors/[slug]` · `/how-it-works` · `/become-a-tutor` · `/about` ·
+`/contact` · `/sign-in` · `/sign-up` · `/privacy` · `/terms` · `/safeguarding`
 
-**Purchasing is not implemented.** There is no payment integration and no
-simulated one: `PURCHASING_ENABLED` is `false`, the pricing page labels bundles
-"Coming soon", and the only way tokens enter a wallet is the operator grant route
-below. Wiring a payment provider means crediting a wallet through the existing
-`grant()` path — the accounting is already there.
+**Booking, messaging and lessons**
 
-## Granting tokens
+`/book/[slug]` · `/booking/confirmed` · `/messages` · `/messages/[conversationId]` ·
+`/lesson/[bookingId]`
 
-The one operation that creates spendable value from nothing, so its reachability
-matters more than its implementation.
+**Student** `/student` · `/student/lessons` · `/student/saved` · `/student/progress` ·
+`/student/settings`
 
-`POST /api/admin/grant-tokens` requires `ADMIN_GRANT_SECRET`. If that variable is
-absent the route is **disabled outright** — not open, not warning — and a wrong
-secret returns 404 rather than 403, because an endpoint that admits it exists is
-an endpoint worth attacking. The secret must be at least 24 characters or the
-application refuses to boot. Every grant carries an operator reference that
-becomes its idempotency key, so re-running a command does not stack credits.
+**Tutor** `/tutor` · `/tutor/lessons` · `/tutor/availability` · `/tutor/students` ·
+`/tutor/messages` · `/tutor/earnings` · `/tutor/profile` · `/tutor/settings`
 
-`WELCOME_TOKEN_GRANT` defaults to `0`. Leave it there in production: an account
-that silently receives spendable credit is a cost leak.
+**Parent** `/parent` · `/parent/learners` · `/parent/lessons` · `/parent/progress` ·
+`/parent/messages` · `/parent/settings`
 
-## Testing what matters
+**Admin** `/admin` · `/admin/applications` · `/admin/tutors` · `/admin/users` ·
+`/admin/bookings` · `/admin/reports` · `/admin/settings`
 
-- `tests/integration/job-lifecycle.test.ts` — the money path. Charged once,
-  refunded on our faults, never charged without delivery, never charged twice for
-  one click, free on a cached repeat, and never readable across accounts. Each
-  asserts the balance _and_ the ledger, because a job can look correct and still
-  have stranded a hold.
-- `tests/integration/token-grants.test.ts` — the grant route's closed states,
-  asserted as hard as its open one.
-- `tests/unit/research-provider.test.ts` — the Anthropic request shape, against
-  the real serialised HTTP body. See "The 400 that shaped the AI layer" in
-  [`ARCHITECTURE.md`](ARCHITECTURE.md).
-- `tests/unit/ssrf-guard.test.ts`, `tests/integration/safe-fetch.test.ts` — the
-  fetch guard, as a rule and as plumbing, against a real server.
-- `tests/integration/auth-confirm.test.ts` — the callback, at the real HTTP
-  boundary: it calls the route handler and reads `Set-Cookie` off the Response,
-  with `@supabase/ssr` doubled at the library edge so the cookie adapter under
-  test is the genuine one. Removing the cookie writes fails it.
-- `tests/e2e` — both signed-out and signed-in, in both themes, across viewport
-  widths, with axe. The signed-in session comes from an in-memory driver that
-  the application refuses to load alongside real credentials.
+## Where the data lives
 
-## Signing in
+All demo data is typed TypeScript in `lib/data/`:
 
-Create an account with an email address, confirm it, choose a password, then use
-that password from then on. A magic link is available as a fallback, and there
-is a password-recovery path.
+| File               | Contents                                                                   |
+| ------------------ | -------------------------------------------------------------------------- |
+| `subjects.ts`      | Twelve subjects and the levels each is taught at                           |
+| `tutors.ts`        | Twelve tutor profiles — varied rates, ratings, experience and availability |
+| `reviews.ts`       | Reviews written after completed lessons                                    |
+| `people.ts`        | Demo accounts and the two learners linked to the parent account            |
+| `bookings.ts`      | Bookings across every status                                               |
+| `conversations.ts` | Message threads between tutors and students or parents                     |
+| `applications.ts`  | Tutor applications waiting in the admin queue                              |
+| `reports.ts`       | Platform reports for triage                                                |
+| `notifications.ts` | Per-role notifications                                                     |
+| `progress.ts`      | Progress entries and tutor feedback                                        |
 
-The email link flow is `token_hash` + `verifyOtp()` at `/auth/confirm`, chosen
-because it needs nothing from the browser that requested the link — PKCE needs a
-verifier cookie that a mail app's in-app browser does not have, which is what
-broke sign-in in production. **The Supabase email templates must be edited to
-match**; the exact HTML is in [`ARCHITECTURE.md`](ARCHITECTURE.md).
+Nothing in `app/` or `components/` imports those arrays directly. Reads go through
+**`lib/queries.ts`** — `getTutors`, `getTutorBySlug`, `filterTutors`, `getSeedBookings`
+and so on. That file is the seam: replace its bodies with Supabase queries and no
+component changes shape.
 
-## Deploying
+## What persists locally
 
-See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the deployment checklist, the
-database migration list, and what to verify after a deploy.
+Anything you change is written to `localStorage` under `tutorhub.demo.v1` (theme lives
+separately under `tutorhub.theme.v1`) and is layered on top of the seed data by
+`lib/store/demo-store.tsx`:
 
-## What this will not do
+- the demo role you signed in as
+- saved tutors
+- bookings you create, and status changes (cancel, reschedule, accept)
+- messages you send and conversations you start
+- tutor availability edits, blocked dates and public-profile changes
+- tutor applications you submit, and the admin decisions on them
+- admin tutor flags (verified, featured, suspended), report statuses and platform settings
+- notifications you have opened
+- theme choice
 
-It does not scrape Google Search, Google Maps, Instagram, TikTok or LinkedIn.
-Those platforms forbid it, and a product built on a terms violation is a product
-with a deadline. Where a source can be cited but not fetched, it is cited without
-being fetched and marked as such.
+The store is an external store read through `useSyncExternalStore`, which is what keeps
+server-rendered HTML and the first client render identical while still picking up what
+was saved.
 
-It does not guess contact details. An email address appears in a report only
-where the business published it. Constructing `firstname@company.com` is both
-useless and the kind of thing that gets a sender blocked.
+## Future integration points
+
+Nothing below is connected. Each has one clearly marked place to connect it.
+
+**Supabase Auth** — `components/auth/demo-role-picker.tsx` and `sign-in-form.tsx` select
+a demo account; `lib/use-require-account.ts` is the guard that currently redirects to
+`/sign-in?next=…`. Replace the selection with a session; the rest of the app reads
+`useDemo().account`.
+
+**Supabase database** — `lib/queries.ts`. Its functions become async queries against
+tables shaped like `lib/types.ts`. Writes currently in `lib/store/demo-store.tsx`
+(`createBooking`, `sendMessage`, `submitApplication`, `decideApplication`,
+`setAvailability`, `saveTutorProfile`, `setTutorFlags`, `setReportStatus`) become
+mutations.
+
+**Supabase Storage** — tutor photographs (`components/ui/avatar.tsx` renders initials
+today, and `/tutor/profile` has the upload button), plus application documents and
+message attachments (`components/messages/messenger.tsx`).
+
+**Supabase Realtime** — `components/messages/messenger.tsx` reads and appends through the
+store; a realtime channel replaces the local append.
+
+**Stripe / Stripe Connect** — the checkout step in `components/booking/booking-flow.tsx`
+is a labelled placeholder that collects no card details. Tutor payouts are stubbed at
+`/tutor/earnings`. Fee arithmetic is in `lib/booking-utils.ts`.
+
+**Daily (or LiveKit)** — `lib/lesson/provider.ts` defines `LessonRoomProvider`, and
+`demoLessonProvider` implements it locally. `components/lesson/lesson-room.tsx` talks only
+to that interface. A real provider needs a server-minted room token; the local camera
+preview in `lib/lesson/use-local-camera.ts` already handles permission being refused and
+stops its tracks on unmount.
+
+**Email and SMS** — `components/marketing/contact-form.tsx` validates and stops; booking,
+message and application notifications would be sent from the same mutations listed above.
+
+**Identity and qualification verification** — the admin decision flow at
+`/admin/applications` records the outcome; document upload and checking is the missing
+half.
+
+## How it is put together
+
+- **Next.js 16** (App Router) with **React 19** and **TypeScript** in strict mode.
+- **Tailwind CSS v4**, with the whole design system as tokens in `app/globals.css`. Dark
+  mode is a token swap on `html.dark`, applied before first paint by a small inline
+  script so there is no flash.
+- **Motion for React** for entrances, drawers, tabs and step transitions — short,
+  opacity-and-transform only, and switched off under `prefers-reduced-motion`.
+- **Lucide** icons.
+- Client components are kept to the parts that need state. The public pages are server
+  components; the marketplace, dashboards, messenger and lesson room are not.
+- Dates and money are formatted by hand in `lib/datetime.ts` and `lib/utils.ts` rather
+  than by `Intl`, because Node's and the browser's ICU disagree on the details and React
+  reports the difference as a hydration failure.
+
+### Tests
+
+- `tests/unit` — filtering and sorting, availability generation, formatting, tutor
+  metrics and the integrity of the demo data (80 tests).
+- `tests/e2e` — the journeys the product is judged on: searching, filtering, favouriting,
+  booking end to end, messaging, the tutor application through to admin approval,
+  suspension removing a tutor from search, the lesson room, and the theme toggle. Mobile
+  has its own spec for the drawer, the filter sheet, the sticky booking bar and the
+  bottom navigation.

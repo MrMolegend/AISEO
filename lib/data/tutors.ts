@@ -1,0 +1,675 @@
+import type { Tutor } from '@/lib/types';
+import { at } from '@/lib/datetime';
+
+/**
+ * Twelve marketplace profiles. They are deliberately uneven: two are unverified
+ * and newer, ratings run from 4.2 to 4.9, and prices span £22–£55 so the price
+ * and rating filters have something real to bite on.
+ */
+export const tutors: Tutor[] = [
+  {
+    id: 't-amara',
+    slug: 'amara-okonkwo',
+    firstName: 'Amara',
+    lastName: 'Okonkwo',
+    headline: 'A-Level Maths and Further Maths, with a focus on exam method',
+    about:
+      'I teach Mathematics and Further Mathematics up to first-year undergraduate level. Most of the students I work with are capable but lose marks on structure and timing rather than on the mathematics itself, so that is usually where we start.',
+    teachingApproach:
+      'Lessons follow a pattern: a short diagnostic question, one worked example where I think aloud, then you work through problems while I stay quiet. I mark past-paper questions between lessons and bring the two or three that matter back to the next session.',
+    subjects: ['maths', 'further-maths'],
+    levels: ['GCSE', 'A-Level', 'University'],
+    hourlyRate: 4800,
+    rating: 4.9,
+    reviewCount: 214,
+    verified: true,
+    featured: true,
+    lessonsCompleted: 1240,
+    responseTimeMins: 35,
+    yearsExperience: 9,
+    qualifications: [
+      {
+        title: 'MSc Mathematics, Distinction',
+        institution: 'Imperial College London',
+        year: 2016,
+      },
+      {
+        title: 'BSc Mathematics, First Class',
+        institution: 'University of Warwick',
+        year: 2015,
+      },
+      {
+        title: 'PGCE Secondary Mathematics',
+        institution: 'UCL Institute of Education',
+        year: 2017,
+      },
+    ],
+    experience: [
+      {
+        role: 'Head of Year 13 Mathematics',
+        organisation: 'Sixth-form college, north London',
+        period: '2019 – present',
+        detail:
+          'Teaches Further Maths sets and runs the STEP and MAT preparation programme.',
+      },
+      {
+        role: 'Classroom teacher',
+        organisation: 'Secondary school, Birmingham',
+        period: '2017 – 2019',
+        detail:
+          'GCSE and A-Level Mathematics, including intervention groups for grade 4/5 borderline students.',
+      },
+    ],
+    policies: [
+      'Free 15-minute introductory call before the first paid lesson.',
+      'Reschedule or cancel free of charge with more than 24 hours notice.',
+      'Homework is set after every lesson and marked before the next one.',
+    ],
+    availability: [
+      { id: 'a1', day: 1, start: '16:00', end: '20:00' },
+      { id: 'a2', day: 2, start: '16:00', end: '20:00' },
+      { id: 'a3', day: 4, start: '17:00', end: '21:00' },
+      { id: 'a4', day: 6, start: '09:00', end: '13:00' },
+    ],
+    nextAvailable: at(1, 16, 0),
+    joinedAt: at(-880, 9),
+    avatarTone: 0,
+  },
+  {
+    id: 't-tom',
+    slug: 'tom-whitfield',
+    firstName: 'Tom',
+    lastName: 'Whitfield',
+    headline: 'Physics and Maths for GCSE and A-Level, taught from first principles',
+    about:
+      'Former research engineer, now teaching full time. I work mainly with students who can do the algebra but freeze when a question is dressed up in an unfamiliar context — which is most of Paper 3.',
+    teachingApproach:
+      'I sketch everything. Almost every physics question becomes tractable once you have drawn the situation and labelled what you know, so we practise that habit until it happens without prompting.',
+    subjects: ['physics', 'maths'],
+    levels: ['GCSE', 'A-Level'],
+    hourlyRate: 3400,
+    rating: 4.7,
+    reviewCount: 96,
+    verified: true,
+    featured: true,
+    lessonsCompleted: 610,
+    responseTimeMins: 90,
+    yearsExperience: 5,
+    qualifications: [
+      {
+        title: 'MEng Mechanical Engineering',
+        institution: 'University of Bristol',
+        year: 2017,
+      },
+      {
+        title: 'A-Levels: Physics A*, Maths A*, Chemistry A',
+        institution: 'Runshaw College',
+        year: 2013,
+      },
+    ],
+    experience: [
+      {
+        role: 'Private tutor',
+        organisation: 'Self-employed',
+        period: '2020 – present',
+        detail: 'Around 600 lessons delivered online, mostly AQA and OCR A Physics.',
+      },
+      {
+        role: 'Design engineer',
+        organisation: 'Automotive supplier, Coventry',
+        period: '2017 – 2020',
+        detail: 'Brings worked industrial examples into mechanics and materials topics.',
+      },
+    ],
+    policies: [
+      'First lesson is half price if you are unsure we are a good match.',
+      '12 hours notice for a free reschedule.',
+      'Lesson notes and any diagrams are shared after each session.',
+    ],
+    availability: [
+      { id: 'a1', day: 1, start: '15:30', end: '19:30' },
+      { id: 'a2', day: 3, start: '15:30', end: '20:30' },
+      { id: 'a3', day: 5, start: '15:30', end: '18:30' },
+    ],
+    nextAvailable: at(0, 17, 30),
+    joinedAt: at(-540, 11),
+    avatarTone: 1,
+  },
+  {
+    id: 't-priya',
+    slug: 'priya-raghavan',
+    firstName: 'Priya',
+    lastName: 'Raghavan',
+    headline: 'Chemistry and Biology specialist — required practicals and long answers',
+    about:
+      'I have taught A-Level Chemistry for eleven years and examine for one of the major boards, so I spend a lot of time on the difference between an answer that is correct and an answer that scores.',
+    teachingApproach:
+      'We work backwards from the mark scheme. Students learn what the examiner is actually looking for in a six-marker, then build the recall and the practical understanding needed to supply it.',
+    subjects: ['chemistry', 'biology'],
+    levels: ['GCSE', 'A-Level'],
+    hourlyRate: 4200,
+    rating: 4.8,
+    reviewCount: 158,
+    verified: true,
+    featured: true,
+    lessonsCompleted: 980,
+    responseTimeMins: 45,
+    yearsExperience: 11,
+    qualifications: [
+      { title: 'MChem Chemistry', institution: 'University of Manchester', year: 2012 },
+      { title: 'PGCE Secondary Science', institution: 'University of Leeds', year: 2013 },
+    ],
+    experience: [
+      {
+        role: 'A-Level examiner',
+        organisation: 'Major awarding body',
+        period: '2018 – present',
+        detail: 'Marks A-Level Chemistry Paper 2 each summer series.',
+      },
+      {
+        role: 'Second in Science',
+        organisation: 'Academy trust, Greater Manchester',
+        period: '2016 – 2023',
+        detail: 'Led the Key Stage 5 Chemistry curriculum and practical endorsement.',
+      },
+    ],
+    policies: [
+      'Lessons are 60 or 90 minutes; 90 works better for practical-heavy topics.',
+      '24 hours notice to reschedule without charge.',
+      'A short recap sheet follows every lesson.',
+    ],
+    availability: [
+      { id: 'a1', day: 2, start: '16:00', end: '21:00' },
+      { id: 'a2', day: 4, start: '16:00', end: '21:00' },
+      { id: 'a3', day: 0, start: '10:00', end: '14:00' },
+    ],
+    nextAvailable: at(2, 16, 0),
+    joinedAt: at(-1010, 8),
+    avatarTone: 2,
+  },
+  {
+    id: 't-eleanor',
+    slug: 'eleanor-blythe',
+    firstName: 'Eleanor',
+    lastName: 'Blythe',
+    headline: 'English Literature — close reading, comparison and essay structure',
+    about:
+      'I teach the set texts properly rather than through revision-guide summaries. Students who arrive able to retell the plot usually leave able to argue about it, which is what the assessment objectives actually reward.',
+    teachingApproach:
+      'Each lesson takes one passage seriously for twenty minutes, then we build a paragraph from it together and you write the next one. Essays are returned with two comments, not twenty.',
+    subjects: ['english-lit'],
+    levels: ['GCSE', 'A-Level', 'University'],
+    hourlyRate: 3800,
+    rating: 4.6,
+    reviewCount: 71,
+    verified: true,
+    featured: false,
+    lessonsCompleted: 430,
+    responseTimeMins: 120,
+    yearsExperience: 7,
+    qualifications: [
+      {
+        title: 'MA English Literature',
+        institution: 'University of Edinburgh',
+        year: 2018,
+      },
+      { title: 'BA English, First Class', institution: 'University of York', year: 2016 },
+    ],
+    experience: [
+      {
+        role: 'Visiting lecturer',
+        organisation: 'Further education college, Edinburgh',
+        period: '2021 – present',
+        detail: 'Access to Humanities and A-Level Literature seminar groups.',
+      },
+      {
+        role: 'Tutor and academic mentor',
+        organisation: 'Self-employed',
+        period: '2018 – present',
+        detail: 'Specialises in Shakespeare, Gothic and unseen poetry papers.',
+      },
+    ],
+    policies: [
+      'One essay per fortnight is marked in detail as part of the lesson fee.',
+      '24 hours notice for a free reschedule.',
+      'Texts are read in advance — I will send the extract two days before.',
+    ],
+    availability: [
+      { id: 'a1', day: 1, start: '18:00', end: '21:00' },
+      { id: 'a2', day: 3, start: '18:00', end: '21:00' },
+      { id: 'a3', day: 6, start: '10:00', end: '15:00' },
+    ],
+    nextAvailable: at(3, 18, 0),
+    joinedAt: at(-620, 14),
+    avatarTone: 3,
+  },
+  {
+    id: 't-callum',
+    slug: 'callum-fraser',
+    firstName: 'Callum',
+    lastName: 'Fraser',
+    headline: 'A-Level Economics and Business, and applied economics for adult learners',
+    about:
+      'I spent six years as an economist at a policy institute before moving into teaching. Evaluation marks are where most Economics students lose their grade, so that is where most of my lessons end up.',
+    teachingApproach:
+      'Diagrams first, always drawn by you rather than copied from me. We then take a current story from the week and use it as the applied context, because that is how the exam questions are written.',
+    subjects: ['economics', 'business'],
+    levels: ['A-Level', 'University', 'Adult'],
+    hourlyRate: 4500,
+    rating: 4.5,
+    reviewCount: 63,
+    verified: true,
+    featured: true,
+    lessonsCompleted: 380,
+    responseTimeMins: 180,
+    yearsExperience: 6,
+    qualifications: [
+      { title: 'MSc Economics', institution: 'University of Glasgow', year: 2015 },
+      {
+        title: 'BA Economics and Politics',
+        institution: 'University of Sheffield',
+        year: 2014,
+      },
+    ],
+    experience: [
+      {
+        role: 'Economics tutor',
+        organisation: 'Self-employed',
+        period: '2021 – present',
+        detail:
+          'A-Level Edexcel A and AQA, plus first-year undergraduate micro and macro.',
+      },
+      {
+        role: 'Research economist',
+        organisation: 'Independent policy institute',
+        period: '2015 – 2021',
+        detail: 'Labour market and regional productivity research.',
+      },
+    ],
+    policies: [
+      'Lessons are recorded in shared notes rather than video.',
+      '24 hours notice for a free reschedule.',
+      'Block bookings of six lessons are arranged directly, not through the site.',
+    ],
+    availability: [
+      { id: 'a1', day: 2, start: '18:00', end: '21:00' },
+      { id: 'a2', day: 4, start: '18:00', end: '21:00' },
+      { id: 'a3', day: 5, start: '12:00', end: '16:00' },
+    ],
+    nextAvailable: at(2, 18, 0),
+    joinedAt: at(-410, 10),
+    avatarTone: 4,
+  },
+  {
+    id: 't-nadia',
+    slug: 'nadia-hussain',
+    firstName: 'Nadia',
+    lastName: 'Hussain',
+    headline: 'A-Level Psychology — studies, methods and 16-mark essays',
+    about:
+      'Psychology rewards precision: the right study, the right date, the right criticism. I help students build a compact, reliable bank of evidence and then use it flexibly across the paper.',
+    teachingApproach:
+      'Each topic gets a one-page evidence sheet built by you during the lesson. We then rehearse essay plans against past questions until the structure is automatic.',
+    subjects: ['psychology'],
+    levels: ['A-Level', 'University'],
+    hourlyRate: 3600,
+    rating: 4.8,
+    reviewCount: 112,
+    verified: true,
+    featured: true,
+    lessonsCompleted: 720,
+    responseTimeMins: 40,
+    yearsExperience: 8,
+    qualifications: [
+      {
+        title: 'MSc Research Methods in Psychology',
+        institution: "King's College London",
+        year: 2016,
+      },
+      {
+        title: 'BSc Psychology, First Class',
+        institution: 'University of Nottingham',
+        year: 2015,
+      },
+    ],
+    experience: [
+      {
+        role: 'Lead teacher, Psychology',
+        organisation: 'Sixth-form college, south London',
+        period: '2018 – present',
+        detail:
+          'AQA Psychology, with responsibility for research methods across both years.',
+      },
+    ],
+    policies: [
+      'Essay plans are reviewed between lessons at no extra cost.',
+      '24 hours notice for a free reschedule.',
+      'I teach AQA and Edexcel; other boards by arrangement.',
+    ],
+    availability: [
+      { id: 'a1', day: 1, start: '17:00', end: '20:00' },
+      { id: 'a2', day: 3, start: '17:00', end: '20:00' },
+      { id: 'a3', day: 0, start: '13:00', end: '17:00' },
+    ],
+    nextAvailable: at(1, 17, 0),
+    joinedAt: at(-700, 12),
+    avatarTone: 1,
+  },
+  {
+    id: 't-joseph',
+    slug: 'joseph-adeyemi',
+    firstName: 'Joseph',
+    lastName: 'Adeyemi',
+    headline: 'Computer Science from GCSE to second-year degree modules',
+    about:
+      'I work as a backend engineer and teach in the evenings. Most of my students are either fighting NEA coursework or trying to survive a first-year algorithms module, and both are mostly a matter of decomposition.',
+    teachingApproach:
+      'We write code together in a shared editor. I will not hand you a solution — you will describe what the program should do in English first, and then we translate that line by line.',
+    subjects: ['computer-science', 'maths'],
+    levels: ['GCSE', 'A-Level', 'University', 'Adult'],
+    hourlyRate: 5200,
+    rating: 4.9,
+    reviewCount: 88,
+    verified: true,
+    featured: true,
+    lessonsCompleted: 520,
+    responseTimeMins: 60,
+    yearsExperience: 6,
+    qualifications: [
+      {
+        title: 'BSc Computer Science, First Class',
+        institution: 'University of Southampton',
+        year: 2018,
+      },
+      {
+        title: 'AWS Certified Solutions Architect',
+        institution: 'Amazon Web Services',
+        year: 2022,
+      },
+    ],
+    experience: [
+      {
+        role: 'Senior software engineer',
+        organisation: 'Fintech company, London',
+        period: '2021 – present',
+        detail: 'Python and TypeScript; mentors two junior engineers.',
+      },
+      {
+        role: 'Computer Science tutor',
+        organisation: 'Self-employed',
+        period: '2019 – present',
+        detail:
+          'OCR and AQA A-Level, plus Python, Java and data structures at degree level.',
+      },
+    ],
+    policies: [
+      'I will guide NEA coursework but will not write any part of it.',
+      '24 hours notice for a free reschedule.',
+      'Code from each lesson is shared afterwards.',
+    ],
+    availability: [
+      { id: 'a1', day: 2, start: '19:00', end: '22:00' },
+      { id: 'a2', day: 4, start: '19:00', end: '22:00' },
+      { id: 'a3', day: 6, start: '09:00', end: '12:00' },
+    ],
+    nextAvailable: at(2, 19, 0),
+    joinedAt: at(-480, 20),
+    avatarTone: 0,
+  },
+  {
+    id: 't-rhian',
+    slug: 'rhian-davies',
+    firstName: 'Rhian',
+    lastName: 'Davies',
+    headline: 'GCSE and A-Level Geography, including fieldwork write-ups',
+    about:
+      'Geography is a memory subject pretending to be an essay subject. I help students build case studies they can actually recall under pressure, and then use them to answer the question that was asked.',
+    teachingApproach:
+      'Every case study becomes a single sheet: place, numbers, causes, responses, and one criticism. We revisit them in short bursts across the term rather than in a panic in May.',
+    subjects: ['geography'],
+    levels: ['GCSE', 'A-Level'],
+    hourlyRate: 2800,
+    rating: 4.4,
+    reviewCount: 39,
+    verified: true,
+    featured: false,
+    lessonsCompleted: 190,
+    responseTimeMins: 240,
+    yearsExperience: 4,
+    qualifications: [
+      { title: 'BSc Geography', institution: 'Cardiff University', year: 2019 },
+      {
+        title: 'PGCE Secondary Geography',
+        institution: 'Swansea University',
+        year: 2020,
+      },
+    ],
+    experience: [
+      {
+        role: 'Geography teacher',
+        organisation: 'Comprehensive school, Cardiff',
+        period: '2020 – present',
+        detail: 'Key Stage 4 and 5, WJEC and AQA specifications.',
+      },
+    ],
+    policies: [
+      'Lessons are 60 minutes; fieldwork reviews may run to 90 by agreement.',
+      '24 hours notice for a free reschedule.',
+      'Case-study sheets are shared as they are built.',
+    ],
+    availability: [
+      { id: 'a1', day: 3, start: '16:30', end: '19:30' },
+      { id: 'a2', day: 5, start: '16:30', end: '19:30' },
+    ],
+    nextAvailable: at(3, 16, 30),
+    joinedAt: at(-300, 15),
+    avatarTone: 2,
+  },
+  {
+    id: 't-marcus',
+    slug: 'marcus-bell',
+    firstName: 'Marcus',
+    lastName: 'Bell',
+    headline: 'GCSE Maths for students who have decided they are bad at it',
+    about:
+      'I am a maths graduate in my second year of tutoring. Almost every student I meet at grade 3 or 4 has a gap somewhere in Key Stage 3, and we find it before we do anything else.',
+    teachingApproach:
+      'Short lessons, lots of questions, no long explanations. We fix the foundation topic, prove it with a mixed set, then move up.',
+    subjects: ['maths'],
+    levels: ['GCSE'],
+    hourlyRate: 2200,
+    rating: 4.3,
+    reviewCount: 27,
+    verified: false,
+    featured: false,
+    lessonsCompleted: 96,
+    responseTimeMins: 300,
+    yearsExperience: 2,
+    qualifications: [
+      { title: 'BSc Mathematics', institution: 'University of Leeds', year: 2023 },
+    ],
+    experience: [
+      {
+        role: 'Maths tutor',
+        organisation: 'Self-employed',
+        period: '2023 – present',
+        detail: 'Foundation and Higher tier GCSE, Edexcel and AQA.',
+      },
+      {
+        role: 'Volunteer numeracy mentor',
+        organisation: 'Community learning centre, Leeds',
+        period: '2022 – 2023',
+        detail: 'Weekly numeracy support for adult returners.',
+      },
+    ],
+    policies: [
+      'Lessons are 45 or 60 minutes.',
+      '12 hours notice for a free reschedule.',
+      'Practice set sent after each lesson.',
+    ],
+    availability: [
+      { id: 'a1', day: 1, start: '17:00', end: '20:00' },
+      { id: 'a2', day: 2, start: '17:00', end: '20:00' },
+      { id: 'a3', day: 4, start: '17:00', end: '20:00' },
+    ],
+    nextAvailable: at(0, 19, 0),
+    joinedAt: at(-190, 16),
+    avatarTone: 3,
+  },
+  {
+    id: 't-sofia',
+    slug: 'sofia-marchetti',
+    firstName: 'Sofia',
+    lastName: 'Marchetti',
+    headline: 'University Biology and Biochemistry — essays, lab reports and vivas',
+    about:
+      'I supervise undergraduates and know exactly why a report that contains everything still scores a 2:2. Structure, signposting and a clear argument are worth more marks than another paragraph of results.',
+    teachingApproach:
+      'Bring the assignment brief and the marking rubric. We plan against the rubric explicitly, then work on the writing itself, which is usually the real problem.',
+    subjects: ['biology', 'chemistry'],
+    levels: ['University', 'A-Level'],
+    hourlyRate: 5500,
+    rating: 4.9,
+    reviewCount: 42,
+    verified: true,
+    featured: false,
+    lessonsCompleted: 260,
+    responseTimeMins: 150,
+    yearsExperience: 7,
+    qualifications: [
+      { title: 'PhD Biochemistry', institution: 'University of Cambridge', year: 2021 },
+      { title: 'MBiochem, First Class', institution: 'University of Oxford', year: 2017 },
+    ],
+    experience: [
+      {
+        role: 'Postdoctoral researcher and supervisor',
+        organisation: 'Russell Group university',
+        period: '2021 – present',
+        detail: 'Supervises second- and third-year undergraduates in molecular biology.',
+      },
+    ],
+    policies: [
+      'Assignments are discussed and planned, never written for you.',
+      '48 hours notice for a free reschedule.',
+      'Minimum lesson length is 60 minutes.',
+    ],
+    availability: [
+      { id: 'a1', day: 1, start: '13:00', end: '17:00' },
+      { id: 'a2', day: 3, start: '13:00', end: '17:00' },
+    ],
+    nextAvailable: at(1, 13, 0),
+    joinedAt: at(-350, 9),
+    avatarTone: 4,
+  },
+  {
+    id: 't-daniel',
+    slug: 'daniel-osei',
+    firstName: 'Daniel',
+    lastName: 'Osei',
+    headline: 'Business and Economics, with a bias towards real case studies',
+    about:
+      'I ran a small logistics business for nine years and now teach Business at GCSE and A-Level. The calculations are usually fine; it is the "justify your recommendation" part that costs marks.',
+    teachingApproach:
+      'Every topic is anchored to a real company decision. Students practise choosing a side and defending it in three sentences, which is what an evaluation paragraph is.',
+    subjects: ['business', 'economics'],
+    levels: ['GCSE', 'A-Level', 'Adult'],
+    hourlyRate: 3000,
+    rating: 4.2,
+    reviewCount: 18,
+    verified: false,
+    featured: false,
+    lessonsCompleted: 64,
+    responseTimeMins: 420,
+    yearsExperience: 3,
+    qualifications: [
+      { title: 'BA Business Management', institution: 'Aston University', year: 2011 },
+      {
+        title: 'Level 5 Certificate in Education and Training',
+        institution: 'City & Guilds',
+        year: 2022,
+      },
+    ],
+    experience: [
+      {
+        role: 'Business lecturer, part time',
+        organisation: 'Further education college, Birmingham',
+        period: '2022 – present',
+        detail: 'BTEC and A-Level Business groups.',
+      },
+      {
+        role: 'Founder and director',
+        organisation: 'Regional logistics firm',
+        period: '2012 – 2021',
+        detail: 'Brings first-hand cash-flow and staffing examples into lessons.',
+      },
+    ],
+    policies: [
+      'Lessons are 60 minutes.',
+      '24 hours notice for a free reschedule.',
+      'Happy to work to a school deadline schedule if you share it.',
+    ],
+    availability: [
+      { id: 'a1', day: 2, start: '17:30', end: '20:30' },
+      { id: 'a2', day: 6, start: '11:00', end: '15:00' },
+    ],
+    nextAvailable: at(4, 17, 30),
+    joinedAt: at(-140, 13),
+    avatarTone: 0,
+  },
+  {
+    id: 't-hannah',
+    slug: 'hannah-lockwood',
+    firstName: 'Hannah',
+    lastName: 'Lockwood',
+    headline: 'Statistics and quantitative methods for degree students and professionals',
+    about:
+      'I teach statistics to people who need to pass a module or finish a dissertation, and to working adults who have to interpret data at work. No prior confidence required.',
+    teachingApproach:
+      'We work on your own data or your own module problems wherever possible. I explain the test, you run it, and then you write the sentence that reports it properly.',
+    subjects: ['statistics', 'maths'],
+    levels: ['A-Level', 'University', 'Adult'],
+    hourlyRate: 4400,
+    rating: 4.7,
+    reviewCount: 55,
+    verified: true,
+    featured: false,
+    lessonsCompleted: 310,
+    responseTimeMins: 75,
+    yearsExperience: 5,
+    qualifications: [
+      { title: 'MSc Statistics', institution: 'University of Sheffield', year: 2019 },
+      {
+        title: 'BSc Mathematics and Statistics',
+        institution: 'Lancaster University',
+        year: 2018,
+      },
+    ],
+    experience: [
+      {
+        role: 'Statistical consultant',
+        organisation: 'NHS trust research office',
+        period: '2020 – present',
+        detail: 'Supports clinical teams with study design and analysis.',
+      },
+      {
+        role: 'Teaching assistant, quantitative methods',
+        organisation: 'University of Sheffield',
+        period: '2018 – 2020',
+        detail: 'Undergraduate seminars in R and SPSS.',
+      },
+    ],
+    policies: [
+      'Bring your dataset or module handbook to the first lesson.',
+      '24 hours notice for a free reschedule.',
+      'I teach R and SPSS; Stata by arrangement.',
+    ],
+    availability: [
+      { id: 'a1', day: 1, start: '12:00', end: '16:00' },
+      { id: 'a2', day: 3, start: '12:00', end: '16:00' },
+      { id: 'a3', day: 5, start: '09:00', end: '13:00' },
+    ],
+    nextAvailable: at(1, 12, 0),
+    joinedAt: at(-430, 11),
+    avatarTone: 1,
+  },
+];

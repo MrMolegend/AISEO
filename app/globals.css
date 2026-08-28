@@ -1,14 +1,17 @@
 @import 'tailwindcss';
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   DESIGN TOKENS
+   TUTOR HUB — DESIGN TOKENS
 
-   Restrained, editorial, data-forward. Confidence comes from typography,
-   spacing and precise alignment — never from glow or gradient.
+   Navy for authority, cobalt for action, mint for progress, warm neutral for
+   the page itself. Separation comes from borders, background steps and spacing;
+   shadows are used at two levels only, and never as decoration.
 
-   Every colour is defined as a CSS variable on :root so dark mode (Phase 7) is
-   a token swap rather than a refactor. Nothing in a component hard-codes a hex.
+   Every colour is a variable, so the dark theme below is a token swap rather
+   than a second stylesheet.
    ═══════════════════════════════════════════════════════════════════════════ */
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   /* ── Type ─────────────────────────────────────────────────────────────── */
@@ -16,184 +19,164 @@
     var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, 'SF Mono', Menlo, monospace;
 
-  /* Display sizes get negative tracking; body stays neutral. */
-  --tracking-display: -0.028em;
-  --tracking-tight: -0.015em;
+  --tracking-display: -0.025em;
+  --tracking-tight: -0.012em;
 
-  /* ── Surface & text ───────────────────────────────────────────────────── */
-  --color-canvas: oklch(100% 0 0);
-  --color-surface: oklch(100% 0 0);
-  --color-surface-subtle: oklch(98.4% 0.001 286);
-  --color-surface-sunken: oklch(96.7% 0.001 286);
+  /* ── Surfaces ─────────────────────────────────────────────────────────── */
+  --color-canvas: #f8f8f5;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #fbfbf9;
+  --color-surface-sunken: #f1f2f0;
 
-  /*
-   * Neutral text ramp. Every step clears WCAG AA (4.5:1) against the darkest
-   * surface it is used on — surface-sunken, not white — because muted labels
-   * sit inside tinted panels. Verified with axe; do not lighten without
-   * re-measuring.
-   */
-  --color-ink: oklch(21% 0.006 285);
-  --color-ink-muted: oklch(42% 0.008 286);
-  --color-ink-subtle: oklch(49% 0.009 286);
-  --color-ink-faint: oklch(54% 0.008 286);
-  --color-ink-inverse: oklch(98.5% 0 0);
+  /* ── Ink ──────────────────────────────────────────────────────────────── */
+  --color-ink: #172033;
+  --color-ink-muted: #56607a;
+  --color-ink-subtle: #667085;
+  --color-ink-inverse: #ffffff;
 
-  --color-line: oklch(92% 0.003 286);
-  --color-line-strong: oklch(87% 0.004 286);
+  /* ── Lines ────────────────────────────────────────────────────────────── */
+  --color-line: #e4e7ec;
+  --color-line-strong: #d2d7e0;
 
-  /* ── Brand ────────────────────────────────────────────────────────────── */
-  /* One accent, used sparingly: primary CTA, active nav, focus ring. */
-  --color-brand: oklch(51% 0.19 267);
-  --color-brand-hover: oklch(46% 0.19 267);
-  --color-brand-subtle: oklch(96.5% 0.02 267);
-  --color-brand-line: oklch(89% 0.05 267);
+  /* ── Navy — headers, footer, dark panels ──────────────────────────────── */
+  --color-navy: #14213a;
+  --color-navy-soft: #1e2d4d;
+  --color-navy-line: #2c3c60;
 
-  /* ── Score / rating ───────────────────────────────────────────────────── */
-  /* Restrained tints, not traffic lights. Always paired with a text label. */
-  --color-score-excellent: oklch(54% 0.13 162);
-  --color-score-good: oklch(54.5% 0.13 145);
-  --color-score-mid: oklch(56.5% 0.15 75);
-  --color-score-poor: oklch(58.5% 0.19 22);
+  /* ── Brand — cobalt ───────────────────────────────────────────────────── */
+  --color-brand: #5267f7;
+  --color-brand-hover: #3f52dd;
+  --color-brand-press: #3444bd;
+  --color-brand-subtle: #e9edff;
+  --color-brand-line: #c6cfff;
+  --color-brand-ink: #2b3aa8;
+  /* Text and icons drawn on top of a solid --color-brand fill. Cobalt is dark
+     enough for white in the light theme and light enough to need dark ink in
+     the dark one, so this is a token rather than a hard-coded white. */
+  --color-on-brand: #ffffff;
 
-  --color-score-excellent-bg: oklch(96% 0.03 162);
-  --color-score-good-bg: oklch(96% 0.03 145);
-  --color-score-mid-bg: oklch(96.5% 0.04 85);
-  --color-score-poor-bg: oklch(96.5% 0.02 22);
+  /* ── Mint — progress, availability, positive states ───────────────────── */
+  --color-mint: #cdefe2;
+  --color-mint-line: #a5ddc9;
+  --color-mint-ink: #0f6b53;
 
-  /* ── Severity ─────────────────────────────────────────────────────────── */
-  --color-severity-critical: oklch(52% 0.2 22);
-  --color-severity-critical-bg: oklch(96% 0.02 22);
-  --color-severity-critical-line: oklch(88% 0.05 22);
+  /* ── Status ───────────────────────────────────────────────────────────── */
+  --color-success: #158467;
+  --color-success-bg: #e3f5ee;
+  --color-success-line: #b6e2d3;
 
-  --color-severity-high: oklch(54.5% 0.15 60);
-  --color-severity-high-bg: oklch(96.5% 0.04 75);
-  --color-severity-high-line: oklch(89% 0.07 75);
+  --color-warning: #c77b18;
+  --color-warning-bg: #fbf1e0;
+  --color-warning-line: #efd7ab;
 
-  --color-severity-medium: oklch(52% 0.13 240);
-  --color-severity-medium-bg: oklch(96.5% 0.025 240);
-  --color-severity-medium-line: oklch(89% 0.05 240);
+  --color-danger: #c2414b;
+  --color-danger-bg: #fbeaeb;
+  --color-danger-line: #f0c4c7;
 
-  --color-severity-low: oklch(50% 0.008 286);
-  --color-severity-low-bg: oklch(96.7% 0.001 286);
-  --color-severity-low-line: oklch(90% 0.003 286);
+  --color-info: #2f6fd0;
+  --color-info-bg: #e6effb;
+  --color-info-line: #c3d8f4;
 
-  /* ── Radius ───────────────────────────────────────────────────────────── */
-  --radius-control: 8px;
-  --radius-card: 10px;
-  --radius-panel: 14px;
+  /* ── Radius — medium, never fully rounded ─────────────────────────────── */
+  --radius-control: 10px;
+  --radius-card: 14px;
+  --radius-panel: 18px;
 
-  /* ── Elevation — two levels, no more ──────────────────────────────────── */
-  --shadow-card:
-    0 1px 2px oklch(21% 0.006 285 / 0.04), 0 1px 3px oklch(21% 0.006 285 / 0.03);
-  --shadow-raised:
-    0 4px 12px oklch(21% 0.006 285 / 0.06), 0 2px 4px oklch(21% 0.006 285 / 0.04);
+  /* ── Elevation — two levels ───────────────────────────────────────────── */
+  --shadow-card: 0 1px 2px rgb(23 32 51 / 0.05), 0 1px 3px rgb(23 32 51 / 0.04);
+  --shadow-raised: 0 6px 20px rgb(23 32 51 / 0.09), 0 2px 6px rgb(23 32 51 / 0.05);
 
   /* ── Motion — one curve, three durations ──────────────────────────────── */
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
-  --duration-fast: 150ms;
-  --duration-base: 300ms;
-  --duration-slow: 600ms;
+  --duration-fast: 160ms;
+  --duration-base: 240ms;
+  --duration-slow: 420ms;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   DARK THEME
+   DARK THEME — a token swap, applied by <html class="dark">.
 
-   A token swap, not a second design — which is the whole reason every colour
-   was defined as a variable from the start.
-
-   The dark palette is not the light one inverted. Surfaces lift as they come
-   forward (canvas is darkest, cards sit above it) rather than darkening, and the
-   accent and status hues are lightened so they clear 4.5:1 against a dark ground
-   instead of the light one they were tuned for.
+   Surfaces lift as they come forward rather than darkening, and cobalt and the
+   status hues are lightened so they still clear 4.5:1 on a dark ground.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-canvas: oklch(17.5% 0.005 285);
-    --color-surface: oklch(21% 0.006 285);
-    --color-surface-subtle: oklch(19.5% 0.006 285);
-    --color-surface-sunken: oklch(25% 0.007 285);
+.dark {
+  --color-canvas: #0d1322;
+  --color-surface: #151d31;
+  --color-surface-subtle: #121a2b;
+  --color-surface-sunken: #1c263d;
 
-    --color-ink: oklch(96% 0.002 286);
-    --color-ink-muted: oklch(78% 0.006 286);
-    --color-ink-subtle: oklch(70% 0.007 286);
-    /* 63.5%, not 62%: measured against surface-sunken, the darkest ground a
-       muted label sits on. The light theme's ink-faint failed the same check. */
-    --color-ink-faint: oklch(63.5% 0.008 286);
-    --color-ink-inverse: oklch(17.5% 0.005 285);
+  --color-ink: #eef1f7;
+  --color-ink-muted: #b0b9cc;
+  --color-ink-subtle: #97a1b6;
+  --color-ink-inverse: #0d1322;
 
-    --color-line: oklch(28% 0.007 285);
-    --color-line-strong: oklch(34% 0.008 285);
+  --color-line: #26314b;
+  --color-line-strong: #33415f;
 
-    --color-brand: oklch(70% 0.15 267);
-    --color-brand-hover: oklch(77% 0.14 267);
-    --color-brand-subtle: oklch(26% 0.05 267);
-    --color-brand-line: oklch(36% 0.08 267);
+  --color-navy: #0a0f1c;
+  --color-navy-soft: #151d31;
+  --color-navy-line: #2b3853;
 
-    --color-score-excellent: oklch(76% 0.14 162);
-    --color-score-good: oklch(78% 0.15 145);
-    --color-score-mid: oklch(80% 0.15 80);
-    --color-score-poor: oklch(72% 0.17 22);
+  --color-brand: #8f9dff;
+  --color-brand-hover: #a6b1ff;
+  --color-brand-press: #b8c1ff;
+  --color-brand-subtle: #1e2749;
+  --color-brand-line: #33406e;
+  --color-brand-ink: #c3cbff;
+  --color-on-brand: #0d1322;
 
-    --color-score-excellent-bg: oklch(26% 0.05 162);
-    --color-score-good-bg: oklch(26% 0.05 145);
-    --color-score-mid-bg: oklch(27% 0.06 80);
-    --color-score-poor-bg: oklch(26% 0.06 22);
+  --color-mint: #143a30;
+  --color-mint-line: #245446;
+  --color-mint-ink: #7fdcbe;
 
-    --color-severity-critical: oklch(74% 0.16 22);
-    --color-severity-critical-bg: oklch(25% 0.06 22);
-    --color-severity-critical-line: oklch(36% 0.09 22);
+  --color-success: #58d3ac;
+  --color-success-bg: #10362c;
+  --color-success-line: #1d5344;
 
-    --color-severity-high: oklch(80% 0.14 75);
-    --color-severity-high-bg: oklch(26% 0.05 75);
-    --color-severity-high-line: oklch(37% 0.07 75);
+  --color-warning: #e6ad5c;
+  --color-warning-bg: #382a12;
+  --color-warning-line: #57411e;
 
-    --color-severity-medium: oklch(76% 0.13 240);
-    --color-severity-medium-bg: oklch(25% 0.05 240);
-    --color-severity-medium-line: oklch(36% 0.08 240);
+  --color-danger: #ef8b92;
+  --color-danger-bg: #3a1c20;
+  --color-danger-line: #5a2c31;
 
-    --color-severity-low: oklch(72% 0.007 286);
-    --color-severity-low-bg: oklch(25% 0.006 286);
-    --color-severity-low-line: oklch(34% 0.008 286);
+  --color-info: #7fb0f0;
+  --color-info-bg: #14263e;
+  --color-info-line: #24405f;
 
-    /* Shadows do almost nothing on a dark ground; borders carry the separation,
-       so the shadow tokens are reduced rather than removed. */
-    --shadow-card: 0 1px 2px oklch(0% 0 0 / 0.3);
-    --shadow-raised: 0 4px 14px oklch(0% 0 0 / 0.4);
-  }
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 1px 3px rgb(0 0 0 / 0.3);
+  --shadow-raised: 0 6px 20px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.35);
+
+  color-scheme: dark;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
-    /* Sticky nav clearance for in-page anchors. */
-    scroll-padding-top: 6rem;
   }
 
   body {
-    font-family: var(--font-sans);
     background-color: var(--color-canvas);
     color: var(--color-ink);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    font-family: var(--font-sans);
     text-rendering: optimizeLegibility;
-
-    /*
-     * Reports render text taken from audited pages: URLs, query strings, minified
-     * attribute values — none of which contain spaces and all of which would
-     * otherwise blow out of their card. overflow-wrap is inherited, so setting it
-     * here covers every surface, and `break-word` only breaks a word that genuinely
-     * cannot fit, leaving normal prose untouched.
-     */
-    overflow-wrap: break-word;
   }
 
-  /* Display type: tight tracking, balanced wrapping. */
+  /* Headings carry weight through size and tracking, not through 800-weight. */
   h1,
   h2,
-  h3 {
-    letter-spacing: var(--tracking-display);
+  h3,
+  h4 {
+    letter-spacing: var(--tracking-tight);
+    font-weight: 600;
+    color: var(--color-ink);
     text-wrap: balance;
   }
 
@@ -201,58 +184,101 @@
     text-wrap: pretty;
   }
 
-  /* One focus treatment everywhere, always visible. */
+  /* One focus treatment across the whole product. */
   :focus-visible {
     outline: 2px solid var(--color-brand);
     outline-offset: 2px;
     border-radius: 4px;
   }
 
-  /* iOS zooms any input under 16px on focus. */
-  input,
-  textarea,
-  select {
-    font-size: 16px;
+  ::selection {
+    background: var(--color-brand-subtle);
+    color: var(--color-brand-ink);
   }
 
-  ::selection {
-    background-color: var(--color-brand-subtle);
-    color: var(--color-brand-hover);
+  /* Form controls inherit the type scale rather than the UA default. */
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  [hidden] {
+    display: none !important;
   }
 }
 
 @layer utilities {
-  /* Score digits must not jitter as they animate. */
+  /* Public pages cap at 1280px; dashboards use their own wider shell. */
+  .container-page {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 1280px;
+    padding-inline: 1.25rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-page {
+      padding-inline: 2rem;
+    }
+  }
+
+  .container-narrow {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 44rem;
+    padding-inline: 1.25rem;
+  }
+
+  /* Restrained depth for the hero and the closing panel — the only two places
+     a gradient appears on the public site. */
+  .surface-navy-gradient {
+    background:
+      radial-gradient(
+        60rem 30rem at 78% -10%,
+        color-mix(in oklab, var(--color-brand) 34%, transparent),
+        transparent 70%
+      ),
+      linear-gradient(180deg, var(--color-navy) 0%, var(--color-navy-soft) 100%);
+  }
+
+  .surface-hero {
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-brand-subtle) 70%, var(--color-canvas)) 0%,
+      var(--color-canvas) 62%
+    );
+  }
+
+  /* Hides a scrollbar on horizontally scrolling chip rows without removing the
+     ability to scroll. */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   .tabular {
     font-variant-numeric: tabular-nums;
   }
-
-  /* Readable prose measure — applied to every block of AI-written text. */
-  .measure {
-    max-width: 68ch;
-  }
-
-  /* Horizontal scroller with an edge fade, used by the mobile filter/nav rails. */
-  .scroll-rail {
-    overflow-x: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    -webkit-overflow-scrolling: touch;
-  }
-  .scroll-rail::-webkit-scrollbar {
-    display: none;
-  }
 }
 
+/* Motion is decoration here; when it is unwelcome, remove it everywhere at
+   once rather than auditing components one by one. */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
+
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

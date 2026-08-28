@@ -1,15 +1,9 @@
 import { ImageResponse } from 'next/og';
-import { BRAND } from '@/config/brand';
 
 export const size = { width: 32, height: 32 };
 export const contentType = 'image/png';
 
-/**
- * Favicon — the monogram from config/brand.ts on the brand square.
- *
- * Generated rather than checked in as a PNG so that renaming the product does
- * not leave a stale asset behind that nobody remembers to replace.
- */
+/** The favicon: the Tutor Hub mark, drawn with the same shapes as the SVG. */
 export default function Icon() {
   return new ImageResponse(
     <div
@@ -19,15 +13,45 @@ export default function Icon() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#3538cd',
-        borderRadius: 7,
-        color: '#fff',
-        fontSize: 15,
-        fontWeight: 600,
-        letterSpacing: '-0.02em',
+        background: '#14213a',
+        borderRadius: 9,
+        position: 'relative',
       }}
     >
-      {BRAND.monogram}
+      <div
+        style={{
+          position: 'absolute',
+          left: 7,
+          top: 6,
+          width: 4,
+          height: 20,
+          borderRadius: 2,
+          background: '#ffffff',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          right: 7,
+          top: 6,
+          width: 4,
+          height: 20,
+          borderRadius: 2,
+          background: '#ffffff',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          left: 8,
+          top: 15,
+          width: 16,
+          height: 4,
+          borderRadius: 2,
+          background: '#a5ddc9',
+          transform: 'rotate(-9deg)',
+        }}
+      />
     </div>,
     size,
   );

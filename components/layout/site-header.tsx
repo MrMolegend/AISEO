@@ -1,101 +1,183 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Logo } from '@/components/ui/logo';
-import { getCurrentUser } from '@/lib/auth/server';
-import { getTokenWallet } from '@/lib/tokens';
-import { BRAND } from '@/config/brand';
+import { usePathname } from 'next/navigation';
+import { Menu as MenuIcon, Search } from 'lucide-react';
+import { Logo } from '@/components/brand/logo';
+import { ButtonLink } from '@/components/ui/button';
+import { Drawer } from '@/components/ui/overlay';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { AccountMenu } from './account-menu';
-import { MobileNav } from './mobile-nav';
+import { NotificationMenu } from './notification-menu';
+import { useDemo } from '@/lib/store/demo-store';
+import { DASHBOARD_HOME, PUBLIC_NAV, ROLE_LABELS } from '@/lib/nav';
+import { cn } from '@/lib/utils';
 
 /**
- * Site header.
- *
- * A Server Component, so the signed-in state is resolved on the server and the
- * page never flashes a signed-out header before correcting itself. Identity
- * comes from a verified JWT, never from anything the browser volunteered.
- *
- * Both states are deliberately explicit. Signed out shows Sign in *and* Create
- * account, because "sign in" alone reads as a wall to someone who has never
- * been here. Signed in shows who you are and what you have, at every width —
- * the previous version hid the navigation below `md` and the balance below
- * `sm`, with no menu in their place, so a phone user saw a logo and a circle.
+ * Sticky, and slightly translucent once the page has moved — enough to separate
+ * it from content scrolling underneath without turning into frosted glass.
  */
-export async function SiteHeader() {
-  const user = await getCurrentUser();
+export function SiteHeader() {
+  const pathname = usePathname();
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { account, hydrated } = useDemo();
+  const closeMenu = () => setMenuOpen(false);
 
-  let balance: { available: number; reserved: number } | null = null;
-  if (user) {
-    const wallet = await getTokenWallet();
-    balance = await wallet.getBalance(user.id);
-  }
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    // Deferred to the next frame so a reload part-way down the page still gets
+    // the condensed header, without setting state during the effect itself.
+    const frame = requestAnimationFrame(onScroll);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
 
-  const links = user
-    ? [
-        { href: '/dashboard', label: 'Dashboard' },
-        { href: '/research/new', label: 'New research' },
-        { href: '/wallet', label: BRAND.currency.name },
-        { href: '/pricing', label: 'Pricing' },
-      ]
-    : [{ href: '/pricing', label: 'Pricing' }];
+  const signedIn = hydrated && account;
 
   return (
-    <header className="border-line bg-surface/90 sticky top-0 z-40 border-b backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-[1240px] items-center gap-3 px-5 md:px-8">
-        <Link
-          href={user ? '/dashboard' : '/'}
-          className="focus-visible:ring-brand rounded-[var(--radius-control)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-          aria-label={`${BRAND.name} home`}
-        >
+    <header
+      className={cn(
+        'sticky top-0 z-40 transition-[background-color,border-color,backdrop-filter] duration-[var(--duration-base)]',
+        scrolled
+          ? 'border-line bg-canvas/85 border-b backdrop-blur-md'
+          : 'border-b border-transparent',
+      )}
+    >
+      <div className="container-page flex h-16 items-center justify-between gap-4 lg:h-[4.5rem]">
+        <div className="flex items-center gap-8">
           <Logo />
-        </Link>
+          <nav aria-label="Main" className="hidden lg:block">
+            <ul className="flex items-center gap-1">
+              {PUBLIC_NAV.map((item) => {
+                const active =
+                  pathname === item.href || pathname.startsWith(`${item.href}/`);
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      aria-current={active ? 'page' : undefined}
+                      className={cn(
+                        'flex h-10 items-center rounded-[var(--radius-control)] px-3 text-[0.9375rem] font-medium transition-colors duration-[var(--duration-fast)]',
+                        active
+                          ? 'text-brand bg-brand-subtle'
+                          : 'text-ink-muted hover:text-ink hover:bg-surface-sunken',
+                      )}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+        </div>
 
-        <nav aria-label="Main" className="ml-2 hidden items-center gap-1 md:flex">
-          {links.map((link) => (
-            <HeaderLink key={link.href} href={link.href}>
-              {link.label}
-            </HeaderLink>
-          ))}
-        </nav>
-
-        <div className="ml-auto flex items-center gap-2">
-          {user ? (
-            <AccountMenu email={user.email} balance={balance} />
+        <div className="flex items-center gap-2">
+          {signedIn ? (
+            <>
+              <ButtonLink
+                href={DASHBOARD_HOME[account.role]}
+                variant="secondary"
+                size="sm"
+                className="hidden sm:inline-flex"
+              >
+                Dashboard
+              </ButtonLink>
+              <NotificationMenu />
+              <AccountMenu />
+            </>
           ) : (
             <>
-              <Link
+              <ButtonLink
                 href="/sign-in"
-                className="text-ink-muted hover:bg-surface-sunken hover:text-ink focus-visible:ring-brand inline-flex h-9 items-center rounded-[var(--radius-control)] px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                variant="ghost"
+                size="sm"
+                className="hidden lg:inline-flex"
               >
                 Sign in
-              </Link>
-              {/* Both buttons plus the menu trigger overflow a 360px viewport,
-                  so below `sm` this one lives in the menu instead. Sign in stays
-                  visible, because someone who already has an account should
-                  never have to open a menu to use it. */}
-              <Link
-                href="/sign-up"
-                className="bg-brand text-ink-inverse hover:bg-brand-hover focus-visible:ring-brand hidden h-9 items-center rounded-[var(--radius-control)] px-4 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:inline-flex"
-              >
-                Create account
-              </Link>
+              </ButtonLink>
+              <ButtonLink href="/tutors" size="sm" className="hidden lg:inline-flex">
+                <Search className="size-4" aria-hidden />
+                Find a tutor
+              </ButtonLink>
             </>
           )}
 
-          {/* Below md this is the only route to the navigation, so it exists in
-              both states rather than only when signed in. */}
-          <MobileNav links={links} signedIn={Boolean(user)} />
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            className="text-ink hover:bg-surface-sunken flex size-11 items-center justify-center rounded-[var(--radius-control)] lg:hidden"
+          >
+            <MenuIcon className="size-6" aria-hidden />
+            <span className="sr-only">Open menu</span>
+          </button>
         </div>
       </div>
-    </header>
-  );
-}
 
-function HeaderLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="text-ink-muted hover:bg-surface-sunken hover:text-ink focus-visible:ring-brand rounded-[var(--radius-control)] px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
-    >
-      {children}
-    </Link>
+      <Drawer open={menuOpen} onClose={() => setMenuOpen(false)} title="Menu" hideTitle>
+        <nav aria-label="Mobile" className="px-3 py-3">
+          <ul className="space-y-0.5">
+            {PUBLIC_NAV.map((item) => {
+              const active = pathname === item.href;
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={closeMenu}
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      'flex min-h-12 items-center rounded-[var(--radius-control)] px-3 text-base font-medium',
+                      active
+                        ? 'text-brand bg-brand-subtle'
+                        : 'text-ink hover:bg-surface-sunken',
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+            {signedIn && (
+              <li>
+                <Link
+                  href={DASHBOARD_HOME[account.role]}
+                  onClick={closeMenu}
+                  className="text-ink hover:bg-surface-sunken flex min-h-12 items-center rounded-[var(--radius-control)] px-3 text-base font-medium"
+                >
+                  {ROLE_LABELS[account.role]} dashboard
+                </Link>
+              </li>
+            )}
+          </ul>
+        </nav>
+        <div className="border-line mt-1 border-t px-5 py-4">
+          <p className="text-ink-subtle mb-2 text-xs font-semibold tracking-wide uppercase">
+            Appearance
+          </p>
+          <ThemeToggle />
+        </div>
+        <div className="space-y-2 px-5 py-4">
+          <ButtonLink href="/tutors" block size="lg" onClick={closeMenu}>
+            Find a tutor
+          </ButtonLink>
+          {!signedIn && (
+            <ButtonLink
+              href="/sign-in"
+              variant="secondary"
+              block
+              size="lg"
+              onClick={closeMenu}
+            >
+              Sign in
+            </ButtonLink>
+          )}
+        </div>
+      </Drawer>
+    </header>
   );
 }
