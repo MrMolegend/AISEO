@@ -133,6 +133,21 @@ export function newPublicId(): string {
  * Unparseable values pass through untouched so a corrupt row stays a rejected
  * row rather than a crash.
  */
+/**
+ * A publication date, as a `date` column will accept it.
+ *
+ * Providers report publication dates in whatever shape the page carried, and
+ * Postgres will reject most of them. An unparseable date is dropped rather than
+ * guessed: knowing when a source was published is useful, and inventing it is
+ * the same class of error as inventing a tariff rate.
+ */
+function normalisePublicationDate(value: string | null): string | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString().slice(0, 10);
+}
+
 function toIsoUtc(value: string): string {
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString();
@@ -271,7 +286,19 @@ export class SupabaseResearchJobStore implements ResearchJobStore {
           position: source.position,
           canonical_url: source.url,
           title: source.title,
-          source_type: 'web_page',
+          /*
+           * The document kind and the publisher kind are different questions.
+           *
+           * source_type used to be hardcoded to 'web_page' here, which made the
+           * column say nothing at all. It now records how the source reached
+           * us; source_category records who stands behind it, and only the
+           * second decides whether a regulatory claim may rest on it.
+           */
+          source_type: source.retrievalMode === 'direct' ? 'web_page' : 'search_result',
+          source_category: source.category ?? null,
+          retrieval_mode: source.retrievalMode ?? null,
+          geographic_relevance: source.geographicRelevance ?? null,
+          published_at: normalisePublicationDate(source.publishedAt ?? null),
           publisher_domain: source.publisherDomain,
           retrieved_at: source.retrievedAt,
         })),
