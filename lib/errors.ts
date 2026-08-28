@@ -66,6 +66,7 @@ export const ERROR_CODES = [
   'RESEARCH_PROVIDER_UNAVAILABLE',
   'RESEARCH_PROVIDER_RATE_LIMITED',
   'NO_RELIABLE_SOURCES',
+  'INSUFFICIENT_MARKET_EVIDENCE',
 
   // ── AI ──────────────────────────────────────────────────────────────────
   'AI_TIMEOUT',
@@ -359,6 +360,27 @@ export const ERROR_COPY: Record<ErrorCode, ErrorCopy> = {
   NO_RELIABLE_SOURCES: {
     title: 'We could not find enough public information',
     body: 'There was too little published about this subject to build a report we would stand behind. Rather than pad it with guesses, we stopped and returned your tokens.',
+    retryable: true,
+    status: 422,
+    refundsTokens: true,
+  },
+
+  /**
+   * The quality gate refused the report.
+   *
+   * Distinct from NO_RELIABLE_SOURCES, which means the research phase found
+   * almost nothing. This one means research ran, a report was produced, and it
+   * did not clear the bar we set for a document someone might spend money
+   * against — too few independent sources, or regulatory claims we could not
+   * put behind an authority.
+   *
+   * Deliberately not a failure of the customer's inputs and deliberately
+   * refunding: they asked a reasonable question and we could not answer it
+   * responsibly, so they keep their credit.
+   */
+  INSUFFICIENT_MARKET_EVIDENCE: {
+    title: 'Not enough evidence to answer this responsibly',
+    body: 'We researched {subject} but could not gather enough independent, credible sources to build a market-entry assessment you could safely act on. Your report credit has been returned. Adjusting the target market or describing the product more specifically often helps.',
     retryable: true,
     status: 422,
     refundsTokens: true,

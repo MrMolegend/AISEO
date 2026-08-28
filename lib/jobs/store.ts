@@ -365,7 +365,7 @@ interface MemoryState {
   jobs: Map<string, ResearchJobRecord>;
 }
 
-const MEMORY_KEY = Symbol.for('research-suite.job-store');
+const MEMORY_KEY = Symbol.for('corridor.job-store');
 
 function memory(): MemoryState {
   const holder = globalThis as unknown as Record<symbol, MemoryState | undefined>;

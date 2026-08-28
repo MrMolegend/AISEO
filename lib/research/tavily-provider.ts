@@ -136,7 +136,7 @@ export class TavilyResearchProvider implements ResearchProvider {
         headers: {
           'content-type': 'application/json',
           authorization: `Bearer ${this.apiKey}`,
-          'x-client-source': 'research-suite',
+          'x-client-source': 'corridor',
         },
         body: JSON.stringify({
           query: query.query,
