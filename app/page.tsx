@@ -45,23 +45,23 @@ export default async function LandingPage({
         {/* ── Hero ──────────────────────────────────────────────────────── */}
         <section className="mx-auto max-w-[1240px] px-5 pt-16 pb-4 md:px-8 md:pt-24">
           <div className="max-w-[720px]">
-            <h1 className="text-ink text-[38px] leading-[1.1] font-semibold tracking-[var(--tracking-display)] md:text-[52px]">
+            <h1 className="text-text text-[38px] leading-[1.1] font-semibold tracking-[var(--tracking-display)] md:text-[52px]">
               {BRAND.tagline}
             </h1>
-            <p className="text-ink-muted mt-5 max-w-[60ch] text-lg leading-relaxed">
+            <p className="text-text-muted mt-5 max-w-[60ch] text-lg leading-relaxed">
               {BRAND.description}
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
                 href={startHref}
-                className="bg-brand text-ink-inverse hover:bg-brand-hover focus-visible:ring-brand inline-flex h-14 items-center rounded-[var(--radius-control)] px-7 text-base font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                className="bg-signal text-text-on-signal hover:bg-signal-dim focus-visible:ring-cobalt inline-flex h-14 items-center rounded-[var(--radius-control)] px-7 text-base font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               >
                 Start a report
               </Link>
               <Link
                 href="/pricing"
-                className="border-line-strong bg-surface text-ink hover:bg-surface-subtle focus-visible:ring-brand inline-flex h-14 items-center rounded-[var(--radius-control)] border px-7 text-base font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                className="border-rule-strong bg-ground-raised text-text hover:bg-ground-raised focus-visible:ring-cobalt inline-flex h-14 items-center rounded-[var(--radius-control)] border px-7 text-base font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               >
                 See pricing
               </Link>
@@ -74,8 +74,8 @@ export default async function LandingPage({
           <div className="grid gap-5 md:grid-cols-3">
             <Card>
               <CardBody>
-                <h2 className="text-ink text-base font-semibold">Every claim is cited</h2>
-                <p className="text-ink-muted mt-2 text-sm leading-relaxed">
+                <h2 className="text-text text-base font-semibold">Every claim is cited</h2>
+                <p className="text-text-muted mt-2 text-sm leading-relaxed">
                   Each factual statement carries a numbered link to the page it came from.
                   If a claim has no source, it does not go in the report — a validator
                   rejects it before you ever see it.
@@ -85,8 +85,8 @@ export default async function LandingPage({
 
             <Card>
               <CardBody>
-                <h2 className="text-ink text-base font-semibold">Nothing is invented</h2>
-                <p className="text-ink-muted mt-2 text-sm leading-relaxed">
+                <h2 className="text-text text-base font-semibold">Nothing is invented</h2>
+                <p className="text-text-muted mt-2 text-sm leading-relaxed">
                   Prices, follower counts and company sizes are either published somewhere
                   we could read, or marked as unavailable. We would rather show you a gap
                   than an estimate you might quote in a meeting.
@@ -96,10 +96,10 @@ export default async function LandingPage({
 
             <Card>
               <CardBody>
-                <h2 className="text-ink text-base font-semibold">
+                <h2 className="text-text text-base font-semibold">
                   It tells you what it missed
                 </h2>
-                <p className="text-ink-muted mt-2 text-sm leading-relaxed">
+                <p className="text-text-muted mt-2 text-sm leading-relaxed">
                   Every report has a limitations section, and it is honest. Some markets
                   are thinly documented, and a report that admits that is worth more than
                   one that pads the gap.
@@ -116,11 +116,11 @@ export default async function LandingPage({
         >
           <h2
             id="packages-heading"
-            className="text-ink text-[26px] font-semibold tracking-[var(--tracking-tight)]"
+            className="text-text text-[26px] font-semibold tracking-[var(--tracking-tight)]"
           >
             Research packages
           </h2>
-          <p className="text-ink-muted mt-2 max-w-[62ch] leading-relaxed">
+          <p className="text-text-muted mt-2 max-w-[62ch] leading-relaxed">
             Choose what you need. Each one spends {BRAND.currency.name} from your balance.
           </p>
 
@@ -141,12 +141,12 @@ export default async function LandingPage({
         {/* ── How it works ──────────────────────────────────────────────── */}
         <section
           aria-labelledby="how-heading"
-          className="border-line bg-surface-subtle border-y"
+          className="border-rule bg-ground-raised border-y"
         >
           <div className="mx-auto max-w-[1240px] px-5 py-16 md:px-8 md:py-20">
             <h2
               id="how-heading"
-              className="text-ink text-[26px] font-semibold tracking-[var(--tracking-tight)]"
+              className="text-text text-[26px] font-semibold tracking-[var(--tracking-tight)]"
             >
               How it works
             </h2>
@@ -173,12 +173,12 @@ export default async function LandingPage({
                 <li key={step.title}>
                   <span
                     aria-hidden="true"
-                    className="text-brand block text-sm font-semibold tabular-nums"
+                    className="text-cobalt block text-sm font-semibold tabular-nums"
                   >
                     {String(index + 1).padStart(2, '0')}
                   </span>
-                  <h3 className="text-ink mt-2 text-base font-semibold">{step.title}</h3>
-                  <p className="text-ink-muted mt-1.5 text-sm leading-relaxed">
+                  <h3 className="text-text mt-2 text-base font-semibold">{step.title}</h3>
+                  <p className="text-text-muted mt-1.5 text-sm leading-relaxed">
                     {step.body}
                   </p>
                 </li>
@@ -196,22 +196,22 @@ export default async function LandingPage({
             <div>
               <h2
                 id="tokens-heading"
-                className="text-ink text-[26px] font-semibold tracking-[var(--tracking-tight)]"
+                className="text-text text-[26px] font-semibold tracking-[var(--tracking-tight)]"
               >
                 {BRAND.currency.name}
               </h2>
-              <p className="text-ink-muted mt-3 leading-relaxed">
+              <p className="text-text-muted mt-3 leading-relaxed">
                 One balance, spent on whichever reports you need. A report that fails on
                 our side returns its {BRAND.currency.plural} automatically.
               </p>
-              <p className="text-ink-subtle mt-4 text-sm leading-relaxed">
+              <p className="text-text-subtle mt-4 text-sm leading-relaxed">
                 {BRAND.currency.disclaimer}
               </p>
             </div>
 
             <div>
               <div className="mb-3 flex items-center gap-2">
-                <h3 className="text-ink text-sm font-semibold">Provisional bundles</h3>
+                <h3 className="text-text text-sm font-semibold">Provisional bundles</h3>
                 {!PURCHASING_ENABLED && (
                   <Badge tone="neutral" size="sm">
                     Coming soon
@@ -223,11 +223,11 @@ export default async function LandingPage({
                 {BUNDLE_LIST.map((bundle) => (
                   <Card key={bundle.id}>
                     <CardBody className="p-4">
-                      <p className="text-ink-subtle text-xs font-medium">{bundle.name}</p>
-                      <p className="text-ink mt-1 text-lg font-semibold tabular-nums">
+                      <p className="text-text-subtle text-xs font-medium">{bundle.name}</p>
+                      <p className="text-text mt-1 text-lg font-semibold tabular-nums">
                         {formatTokens(bundle.tokens)}
                       </p>
-                      <p className="text-ink-muted text-sm tabular-nums">
+                      <p className="text-text-muted text-sm tabular-nums">
                         {formatPrice(bundle.priceMinorUnits)}
                       </p>
                     </CardBody>
@@ -237,7 +237,7 @@ export default async function LandingPage({
 
               <Link
                 href="/pricing"
-                className="text-brand hover:text-brand-hover focus-visible:ring-brand mt-4 inline-block rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+                className="text-cobalt hover:text-cobalt focus-visible:ring-cobalt mt-4 inline-block rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
               >
                 Full pricing and package costs
               </Link>

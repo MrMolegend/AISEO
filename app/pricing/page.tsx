@@ -36,10 +36,10 @@ export default function PricingPage() {
 
       <main id="main" className="mx-auto max-w-[1240px] px-5 py-16 md:px-8 md:py-20">
         <div className="max-w-[640px]">
-          <h1 className="text-ink text-[38px] leading-tight font-semibold tracking-[var(--tracking-display)]">
+          <h1 className="text-text text-[38px] leading-tight font-semibold tracking-[var(--tracking-display)]">
             Pricing
           </h1>
-          <p className="text-ink-muted mt-4 text-lg leading-relaxed">
+          <p className="text-text-muted mt-4 text-lg leading-relaxed">
             Buy {BRAND.currency.name} once, spend them on whichever reports you need.
           </p>
         </div>
@@ -49,7 +49,7 @@ export default function PricingPage() {
           <div className="mb-6 flex flex-wrap items-center gap-3">
             <h2
               id="bundles-heading"
-              className="text-ink text-[22px] font-semibold tracking-[var(--tracking-tight)]"
+              className="text-text text-[22px] font-semibold tracking-[var(--tracking-tight)]"
             >
               Token bundles
             </h2>
@@ -61,7 +61,7 @@ export default function PricingPage() {
               <Card key={bundle.id} raised={bundle.highlighted}>
                 <CardBody className="flex h-full flex-col">
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-ink text-[17px] font-semibold">{bundle.name}</h3>
+                    <h3 className="text-text text-[17px] font-semibold">{bundle.name}</h3>
                     {bundle.highlighted && (
                       <Badge tone="brand" size="sm">
                         Most useful
@@ -69,15 +69,15 @@ export default function PricingPage() {
                     )}
                   </div>
 
-                  <p className="text-ink mt-4 text-[32px] leading-none font-semibold tabular-nums">
+                  <p className="text-text mt-4 text-[32px] leading-none font-semibold tabular-nums">
                     {formatPrice(bundle.priceMinorUnits)}
                   </p>
-                  <p className="text-ink-muted mt-2 text-sm tabular-nums">
+                  <p className="text-text-muted mt-2 text-sm tabular-nums">
                     {formatTokens(bundle.tokens)} {BRAND.currency.plural} ·{' '}
                     {(pricePerToken(bundle) / 100).toFixed(3).replace(/0+$/, '')}p each
                   </p>
 
-                  <p className="text-ink-subtle mt-4 text-sm leading-relaxed">
+                  <p className="text-text-subtle mt-4 text-sm leading-relaxed">
                     {bundle.blurb}
                   </p>
 
@@ -86,13 +86,13 @@ export default function PricingPage() {
                       type="button"
                       disabled
                       aria-describedby={`bundle-${bundle.id}-note`}
-                      className="border-line bg-surface-sunken text-ink-faint inline-flex h-11 w-full cursor-not-allowed items-center justify-center rounded-[var(--radius-control)] border px-5 text-[15px] font-medium"
+                      className="border-rule bg-ground-sunken text-text-faint inline-flex h-11 w-full cursor-not-allowed items-center justify-center rounded-[var(--radius-control)] border px-5 text-[15px] font-medium"
                     >
                       Coming soon
                     </button>
                     <p
                       id={`bundle-${bundle.id}-note`}
-                      className="text-ink-faint mt-2 text-center text-xs"
+                      className="text-text-faint mt-2 text-center text-xs"
                     >
                       Payments are not yet available
                     </p>
@@ -107,7 +107,7 @@ export default function PricingPage() {
         <section aria-labelledby="costs-heading" className="mt-16">
           <h2
             id="costs-heading"
-            className="text-ink text-[22px] font-semibold tracking-[var(--tracking-tight)]"
+            className="text-text text-[22px] font-semibold tracking-[var(--tracking-tight)]"
           >
             What each report costs
           </h2>
@@ -132,43 +132,43 @@ export default function PricingPage() {
             role="region"
             aria-labelledby="costs-table-caption"
             tabIndex={0}
-            className="border-line focus-visible:ring-brand mt-6 overflow-x-auto rounded-[var(--radius-card)] border focus-visible:ring-2 focus-visible:outline-none"
+            className="border-rule focus-visible:ring-cobalt mt-6 overflow-x-auto rounded-[var(--radius-panel)] border focus-visible:ring-2 focus-visible:outline-none"
           >
             <table className="w-full min-w-[640px] border-collapse text-left">
               <caption id="costs-table-caption" className="sr-only">
                 Research packages, their token costs and what they include
               </caption>
               <thead>
-                <tr className="border-line bg-surface-subtle border-b">
-                  <th scope="col" className="text-ink px-5 py-3 text-sm font-semibold">
+                <tr className="border-rule bg-ground-raised border-b">
+                  <th scope="col" className="text-text px-5 py-3 text-sm font-semibold">
                     Package
                   </th>
-                  <th scope="col" className="text-ink px-5 py-3 text-sm font-semibold">
+                  <th scope="col" className="text-text px-5 py-3 text-sm font-semibold">
                     {BRAND.currency.shortName}
                   </th>
-                  <th scope="col" className="text-ink px-5 py-3 text-sm font-semibold">
+                  <th scope="col" className="text-text px-5 py-3 text-sm font-semibold">
                     Results
                   </th>
-                  <th scope="col" className="text-ink px-5 py-3 text-sm font-semibold">
+                  <th scope="col" className="text-text px-5 py-3 text-sm font-semibold">
                     Typical time
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {PACKAGE_LIST.map((pkg) => (
-                  <tr key={pkg.id} className="border-line border-b last:border-0">
+                  <tr key={pkg.id} className="border-rule border-b last:border-0">
                     <th scope="row" className="px-5 py-4 align-top">
-                      <span className="text-ink block text-sm font-semibold">
+                      <span className="text-text block text-sm font-semibold">
                         {pkg.name}
                       </span>
-                      <span className="text-ink-subtle mt-1 block text-sm leading-relaxed font-normal">
+                      <span className="text-text-subtle mt-1 block text-sm leading-relaxed font-normal">
                         {pkg.summary}
                       </span>
                     </th>
-                    <td className="text-ink px-5 py-4 align-top text-sm font-semibold tabular-nums">
+                    <td className="text-text px-5 py-4 align-top text-sm font-semibold tabular-nums">
                       {formatTokens(pkg.tokenCost)}
                     </td>
-                    <td className="text-ink-muted px-5 py-4 align-top text-sm">
+                    <td className="text-text-muted px-5 py-4 align-top text-sm">
                       {[
                         pkg.limits.maxCompetitors > 0 &&
                           `${pkg.limits.maxCompetitors} competitors`,
@@ -179,7 +179,7 @@ export default function PricingPage() {
                         .filter(Boolean)
                         .join(', ')}
                     </td>
-                    <td className="text-ink-muted px-5 py-4 align-top text-sm tabular-nums">
+                    <td className="text-text-muted px-5 py-4 align-top text-sm tabular-nums">
                       {pkg.typicalDurationMinutes[0]}–{pkg.typicalDurationMinutes[1]} min
                     </td>
                   </tr>
@@ -193,7 +193,7 @@ export default function PricingPage() {
         <section aria-labelledby="faq-heading" className="mt-16 max-w-[70ch]">
           <h2
             id="faq-heading"
-            className="text-ink text-[22px] font-semibold tracking-[var(--tracking-tight)]"
+            className="text-text text-[22px] font-semibold tracking-[var(--tracking-tight)]"
           >
             Questions
           </h2>
@@ -234,21 +234,21 @@ export default function PricingPage() {
         {/* ── Notes ─────────────────────────────────────────────────────── */}
         <section
           aria-labelledby="notes-heading"
-          className="border-line bg-surface-subtle mt-16 rounded-[var(--radius-card)] border p-6"
+          className="border-rule bg-ground-raised mt-16 rounded-[var(--radius-panel)] border p-6"
         >
-          <h2 id="notes-heading" className="text-ink text-sm font-semibold">
+          <h2 id="notes-heading" className="text-text text-sm font-semibold">
             The small print, in plain words
           </h2>
           <ul className="mt-3 space-y-2">
             {PRICING_NOTES.map((note) => (
-              <li key={note} className="text-ink-muted text-sm leading-relaxed">
+              <li key={note} className="text-text-muted text-sm leading-relaxed">
                 {note}
               </li>
             ))}
           </ul>
           <Link
             href="/terms"
-            className="text-brand hover:text-brand-hover focus-visible:ring-brand mt-4 inline-block rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+            className="text-cobalt hover:text-cobalt focus-visible:ring-cobalt mt-4 inline-block rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
           >
             Full terms
           </Link>
@@ -263,8 +263,8 @@ export default function PricingPage() {
 function Faq({ q, children }: { q: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-ink text-base font-semibold">{q}</dt>
-      <dd className="text-ink-muted mt-1.5 leading-relaxed">{children}</dd>
+      <dt className="text-text text-base font-semibold">{q}</dt>
+      <dd className="text-text-muted mt-1.5 leading-relaxed">{children}</dd>
     </div>
   );
 }

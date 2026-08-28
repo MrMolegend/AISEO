@@ -31,7 +31,7 @@ export function PackageCard({
     <Card raised={featured} className="flex h-full flex-col">
       <CardBody className="flex h-full flex-col">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="text-ink text-[17px] font-semibold tracking-[var(--tracking-tight)]">
+          <h3 className="text-text text-[17px] font-semibold tracking-[var(--tracking-tight)]">
             {pkg.name}
           </h3>
           <Badge tone={featured ? 'brand' : 'neutral'} size="sm">
@@ -41,12 +41,12 @@ export function PackageCard({
           </Badge>
         </div>
 
-        <p className="text-ink-muted mt-2 text-sm leading-relaxed">{pkg.summary}</p>
+        <p className="text-text-muted mt-2 text-sm leading-relaxed">{pkg.summary}</p>
 
         <ul className="mt-4 space-y-1.5">
           {pkg.deliverables.map((item) => (
-            <li key={item} className="text-ink-subtle flex gap-2 text-sm leading-relaxed">
-              <span aria-hidden="true" className="text-brand mt-[3px] shrink-0">
+            <li key={item} className="text-text-subtle flex gap-2 text-sm leading-relaxed">
+              <span aria-hidden="true" className="text-cobalt mt-[3px] shrink-0">
                 ·
               </span>
               {item}
@@ -55,7 +55,7 @@ export function PackageCard({
         </ul>
 
         <div className="mt-auto pt-5">
-          <p className="text-ink-faint mb-3 text-xs tabular-nums">
+          <p className="text-text-faint mb-3 text-xs tabular-nums">
             Typically {pkg.typicalDurationMinutes[0]}–{pkg.typicalDurationMinutes[1]}{' '}
             minutes
           </p>
@@ -63,7 +63,7 @@ export function PackageCard({
           {affordable ? (
             <Link
               href={href}
-              className="bg-brand text-ink-inverse hover:bg-brand-hover focus-visible:ring-brand inline-flex h-11 w-full items-center justify-center rounded-[var(--radius-control)] px-5 text-[15px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              className="bg-signal text-text-on-signal hover:bg-signal-dim focus-visible:ring-cobalt inline-flex h-11 w-full items-center justify-center rounded-[var(--radius-control)] px-5 text-[15px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               Start this research
             </Link>
@@ -71,11 +71,11 @@ export function PackageCard({
             <div>
               <Link
                 href="/wallet"
-                className="border-line-strong bg-surface text-ink hover:bg-surface-subtle focus-visible:ring-brand inline-flex h-11 w-full items-center justify-center rounded-[var(--radius-control)] border px-5 text-[15px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                className="border-rule-strong bg-ground-raised text-text hover:bg-ground-raised focus-visible:ring-cobalt inline-flex h-11 w-full items-center justify-center rounded-[var(--radius-control)] border px-5 text-[15px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               >
                 Not enough {BRAND.currency.plural}
               </Link>
-              <p className="text-ink-faint mt-2 text-center text-xs tabular-nums">
+              <p className="text-text-faint mt-2 text-center text-xs tabular-nums">
                 You have {formatTokens(balance!)} of {formatTokens(pkg.tokenCost)}
               </p>
             </div>

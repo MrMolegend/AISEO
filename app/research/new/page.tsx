@@ -36,10 +36,10 @@ export default async function NewResearchPage() {
       <SiteHeader />
 
       <main id="main" className="mx-auto max-w-[1240px] px-5 py-12 md:px-8">
-        <h1 className="text-ink text-[30px] font-semibold tracking-[var(--tracking-display)]">
+        <h1 className="text-text text-[30px] font-semibold tracking-[var(--tracking-display)]">
           What would you like to know?
         </h1>
-        <p className="text-ink-muted mt-2 tabular-nums">
+        <p className="text-text-muted mt-2 tabular-nums">
           {formatTokens(balance.available)} {BRAND.currency.plural} available
         </p>
 

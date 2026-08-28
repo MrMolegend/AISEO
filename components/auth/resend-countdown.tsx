@@ -73,7 +73,7 @@ export function ResendCountdown({
       <p
         id="resend-countdown"
         aria-live="polite"
-        className="text-ink-subtle mt-2 text-sm tabular-nums"
+        className="text-text-subtle mt-2 text-sm tabular-nums"
       >
         {waiting
           ? `You can request another in ${remaining} second${remaining === 1 ? '' : 's'}.`

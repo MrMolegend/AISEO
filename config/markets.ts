@@ -339,7 +339,7 @@ export function searchCurrencies(query: string, limit = 12): readonly Currency[]
       currency.code.toLowerCase().startsWith(needle) ||
       currency.name
         .toLowerCase()
-        .split(/[\s\-]+/)
+        .split(/[\s-]+/)
         .some((word) => word.startsWith(needle)),
   ).slice(0, limit);
 }

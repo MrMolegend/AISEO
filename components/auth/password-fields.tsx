@@ -65,19 +65,19 @@ export function PasswordFields({
       : null;
 
   const field =
-    'border-line-strong bg-surface text-ink placeholder:text-ink-faint focus:border-brand focus-visible:ring-brand h-12 w-full rounded-[var(--radius-control)] border px-3.5 text-base transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60';
+    'border-rule-strong bg-ground-raised text-text placeholder:text-text-faint focus:border-cobalt focus-visible:ring-cobalt h-12 w-full rounded-[var(--radius-control)] border px-3.5 text-base transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60';
 
   return (
     <div className="space-y-4">
       <div>
         <div className="mb-1.5 flex items-baseline justify-between gap-3">
-          <label htmlFor={passwordId} className="text-ink block text-sm font-medium">
+          <label htmlFor={passwordId} className="text-text block text-sm font-medium">
             Password
           </label>
           <button
             type="button"
             onClick={() => setVisible((shown) => !shown)}
-            className="text-ink-subtle hover:text-ink focus-visible:ring-brand rounded text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            className="text-text-subtle hover:text-text focus-visible:ring-cobalt rounded text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
           >
             {visible ? 'Hide' : 'Show'}
             <span className="sr-only"> password</span>
@@ -98,14 +98,14 @@ export function PasswordFields({
           aria-invalid={problem !== null}
           className={field}
         />
-        <p id={rulesId} className="text-ink-subtle mt-1.5 text-xs leading-relaxed">
+        <p id={rulesId} className="text-text-subtle mt-1.5 text-xs leading-relaxed">
           At least {MIN_PASSWORD_LENGTH} characters. A short phrase you will remember
           beats a short word with symbols in it.
         </p>
       </div>
 
       <div>
-        <label htmlFor={confirmId} className="text-ink mb-1.5 block text-sm font-medium">
+        <label htmlFor={confirmId} className="text-text mb-1.5 block text-sm font-medium">
           Confirm password
         </label>
         <input
@@ -130,7 +130,7 @@ export function PasswordFields({
         id={errorId}
         role="alert"
         aria-live="assertive"
-        className="text-sm text-[var(--color-severity-critical)]"
+        className="text-sm text-[var(--color-copper)]"
       >
         {problem}
       </p>

@@ -13,7 +13,7 @@ export function ForgotPasswordForm({ configured }: { configured: boolean }) {
       sentTitle="Check your email"
       sentBody={(email) => (
         <>
-          If <strong className="text-ink">{email}</strong> has an account with us, a link
+          If <strong className="text-text">{email}</strong> has an account with us, a link
           to set a new password is on its way.
           <span className="mt-2 block">The link works once and lasts an hour.</span>
         </>

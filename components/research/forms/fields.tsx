@@ -38,22 +38,22 @@ function FieldShell({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="text-ink mb-2 block text-sm font-medium">
+      <label htmlFor={id} className="text-text mb-2 block text-sm font-medium">
         {label}
         {required ? (
-          <span className="text-[var(--color-severity-critical)]" aria-hidden="true">
+          <span className="text-[var(--color-copper)]" aria-hidden="true">
             {' '}
             *
           </span>
         ) : (
-          <span className="text-ink-faint font-normal"> (optional)</span>
+          <span className="text-text-faint font-normal"> (optional)</span>
         )}
       </label>
 
       {children}
 
       {hint && (
-        <p id={hintId} className="text-ink-subtle mt-1.5 text-sm leading-relaxed">
+        <p id={hintId} className="text-text-subtle mt-1.5 text-sm leading-relaxed">
           {hint}
         </p>
       )}
@@ -61,7 +61,7 @@ function FieldShell({
         <p
           id={errorId}
           role="alert"
-          className="mt-1.5 text-sm text-[var(--color-severity-critical)]"
+          className="mt-1.5 text-sm text-[var(--color-copper)]"
         >
           {error}
         </p>
@@ -71,7 +71,7 @@ function FieldShell({
 }
 
 const inputClass =
-  'border-line-strong bg-surface text-ink placeholder:text-ink-faint focus:border-brand focus-visible:ring-brand w-full rounded-[var(--radius-control)] border px-4 text-base transition-colors focus-visible:ring-2 focus-visible:outline-none aria-[invalid=true]:border-[var(--color-severity-critical)]';
+  'border-rule-strong bg-ground-raised text-text placeholder:text-text-faint focus:border-cobalt focus-visible:ring-cobalt w-full rounded-[var(--radius-control)] border px-4 text-base transition-colors focus-visible:ring-2 focus-visible:outline-none aria-[invalid=true]:border-[var(--color-copper)]';
 
 export function TextField({
   value,
@@ -162,7 +162,7 @@ export function TextAreaField({
         className={`${inputClass} resize-y py-3 leading-relaxed`}
       />
       {maxLength && (
-        <p id={counterId} className="text-ink-faint mt-1 text-right text-xs tabular-nums">
+        <p id={counterId} className="text-text-faint mt-1 text-right text-xs tabular-nums">
           {/* Live, so someone who cannot see the counter still hears it as they
               approach the limit rather than discovering it on submit. */}
           <span aria-live="polite">

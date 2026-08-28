@@ -33,27 +33,27 @@ export function AuthShell({
       <div className="mb-8">
         <Link
           href="/"
-          className="focus-visible:ring-brand inline-flex rounded-[var(--radius-control)] focus-visible:ring-2 focus-visible:outline-none"
+          className="focus-visible:ring-cobalt inline-flex rounded-[var(--radius-control)] focus-visible:ring-2 focus-visible:outline-none"
         >
           <Logo />
         </Link>
       </div>
 
-      <h1 className="text-ink text-[26px] leading-tight font-semibold tracking-[var(--tracking-display)]">
+      <h1 className="text-text text-[26px] leading-tight font-semibold tracking-[var(--tracking-display)]">
         {title}
       </h1>
       {subtitle && (
-        <div className="text-ink-muted mt-2.5 leading-relaxed">{subtitle}</div>
+        <div className="text-text-muted mt-2.5 leading-relaxed">{subtitle}</div>
       )}
 
       <div className="mt-8">{children}</div>
 
-      {footer && <div className="text-ink-muted mt-8 text-sm">{footer}</div>}
+      {footer && <div className="text-text-muted mt-8 text-sm">{footer}</div>}
 
       <p className="mt-10">
         <Link
           href="/"
-          className="text-ink-subtle hover:text-ink focus-visible:ring-brand inline-flex items-center gap-1.5 rounded-[var(--radius-control)] text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+          className="text-text-subtle hover:text-text focus-visible:ring-cobalt inline-flex items-center gap-1.5 rounded-[var(--radius-control)] text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
         >
           <span aria-hidden="true">←</span> Back to home
         </Link>
@@ -82,9 +82,9 @@ export function AuthMessage({
 }) {
   const styles = {
     error:
-      'border-[var(--color-severity-critical-line)] bg-[var(--color-severity-critical-bg)]',
-    info: 'border-line bg-surface-subtle',
-    success: 'border-brand-line bg-brand-subtle',
+      'border-[var(--color-copper-line)] bg-[var(--color-copper-surface)]',
+    info: 'border-rule bg-ground-raised',
+    success: 'border-cobalt-line bg-cobalt-surface',
   } as const;
 
   return (
@@ -92,10 +92,10 @@ export function AuthMessage({
       id={id}
       role={tone === 'error' ? 'alert' : 'status'}
       aria-live={tone === 'error' ? 'assertive' : 'polite'}
-      className={`rounded-[var(--radius-card)] border p-4 ${styles[tone]}`}
+      className={`rounded-[var(--radius-panel)] border p-4 ${styles[tone]}`}
     >
-      {title && <p className="text-ink text-sm font-semibold">{title}</p>}
-      <div className={`text-ink-muted text-sm leading-relaxed ${title ? 'mt-1' : ''}`}>
+      {title && <p className="text-text text-sm font-semibold">{title}</p>}
+      <div className={`text-text-muted text-sm leading-relaxed ${title ? 'mt-1' : ''}`}>
         {children}
       </div>
     </div>

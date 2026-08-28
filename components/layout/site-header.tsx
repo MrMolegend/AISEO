@@ -38,11 +38,11 @@ export async function SiteHeader() {
     : [{ href: '/pricing', label: 'Pricing' }];
 
   return (
-    <header className="border-line bg-surface/90 sticky top-0 z-40 border-b backdrop-blur-md">
+    <header className="border-rule bg-ground-raised/90 sticky top-0 z-40 border-b backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-[1240px] items-center gap-3 px-5 md:px-8">
         <Link
           href={user ? '/dashboard' : '/'}
-          className="focus-visible:ring-brand rounded-[var(--radius-control)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="focus-visible:ring-cobalt rounded-[var(--radius-control)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           aria-label={`${BRAND.name} home`}
         >
           <Logo />
@@ -63,7 +63,7 @@ export async function SiteHeader() {
             <>
               <Link
                 href="/sign-in"
-                className="text-ink-muted hover:bg-surface-sunken hover:text-ink focus-visible:ring-brand inline-flex h-9 items-center rounded-[var(--radius-control)] px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="text-text-muted hover:bg-ground-sunken hover:text-text focus-visible:ring-cobalt inline-flex h-9 items-center rounded-[var(--radius-control)] px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
               >
                 Sign in
               </Link>
@@ -73,7 +73,7 @@ export async function SiteHeader() {
                   never have to open a menu to use it. */}
               <Link
                 href="/sign-up"
-                className="bg-brand text-ink-inverse hover:bg-brand-hover focus-visible:ring-brand hidden h-9 items-center rounded-[var(--radius-control)] px-4 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:inline-flex"
+                className="bg-signal text-text-on-signal hover:bg-signal-dim focus-visible:ring-cobalt hidden h-9 items-center rounded-[var(--radius-control)] px-4 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:inline-flex"
               >
                 Create account
               </Link>
@@ -93,7 +93,7 @@ function HeaderLink({ href, children }: { href: string; children: React.ReactNod
   return (
     <Link
       href={href}
-      className="text-ink-muted hover:bg-surface-sunken hover:text-ink focus-visible:ring-brand rounded-[var(--radius-control)] px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+      className="text-text-muted hover:bg-ground-sunken hover:text-text focus-visible:ring-cobalt rounded-[var(--radius-control)] px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
     >
       {children}
     </Link>

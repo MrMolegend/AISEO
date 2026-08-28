@@ -31,7 +31,7 @@ export default async function SetPasswordPage() {
           Your email is confirmed. Set a password and you will use it to sign in from now
           on.
           {user.email && (
-            <span className="text-ink-subtle mt-1 block text-sm">
+            <span className="text-text-subtle mt-1 block text-sm">
               Signing in as {user.email}
             </span>
           )}

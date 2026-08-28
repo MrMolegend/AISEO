@@ -60,11 +60,11 @@ export function AccountMenu({
         onClick={() => setOpen((shown) => !shown)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="border-line bg-surface-subtle text-ink hover:border-line-strong focus-visible:ring-brand flex h-9 items-center gap-2 rounded-full border pr-3 pl-1 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+        className="border-rule bg-ground-raised text-text hover:border-rule-strong focus-visible:ring-cobalt flex h-9 items-center gap-2 rounded-full border pr-3 pl-1 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
       >
         <span
           aria-hidden="true"
-          className="bg-brand text-ink-inverse flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-semibold"
+          className="bg-signal text-text-on-signal flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-semibold"
         >
           {initial}
         </span>
@@ -88,21 +88,21 @@ export function AccountMenu({
         <div
           role="menu"
           aria-label="Account"
-          className="border-line bg-surface absolute right-0 z-50 mt-2 w-64 rounded-[var(--radius-card)] border p-1.5 shadow-[var(--shadow-raised)]"
+          className="border-rule bg-ground-raised absolute right-0 z-50 mt-2 w-64 rounded-[var(--radius-panel)] border p-1.5 shadow-[var(--shadow-lift)]"
         >
           <div className="px-3 py-2.5">
-            <p className="text-ink truncate text-sm font-medium">
+            <p className="text-text truncate text-sm font-medium">
               {email ?? 'Signed in'}
             </p>
             {balance && (
-              <p className="text-ink-subtle mt-0.5 text-xs tabular-nums">
+              <p className="text-text-subtle mt-0.5 text-xs tabular-nums">
                 {formatTokens(balance.available)} {BRAND.currency.plural}
                 {balance.reserved > 0 && ` · ${formatTokens(balance.reserved)} held`}
               </p>
             )}
           </div>
 
-          <div role="none" className="border-line my-1 border-t" />
+          <div role="none" className="border-rule my-1 border-t" />
 
           <MenuLink href="/dashboard" onNavigate={() => setOpen(false)}>
             Dashboard
@@ -117,7 +117,7 @@ export function AccountMenu({
             Account
           </MenuLink>
 
-          <div role="none" className="border-line my-1 border-t" />
+          <div role="none" className="border-rule my-1 border-t" />
 
           <SignOutMenuItem />
         </div>
@@ -140,7 +140,7 @@ function MenuLink({
       href={href}
       role="menuitem"
       onClick={onNavigate}
-      className="text-ink-muted hover:bg-surface-sunken hover:text-ink focus-visible:ring-brand block rounded-[var(--radius-control)] px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+      className="text-text-muted hover:bg-ground-sunken hover:text-text focus-visible:ring-cobalt block rounded-[var(--radius-control)] px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
     >
       {children}
     </Link>
@@ -154,7 +154,7 @@ export function SignOutMenuItem() {
       <button
         type="submit"
         role="menuitem"
-        className="text-ink-muted hover:bg-surface-sunken hover:text-ink focus-visible:ring-brand block w-full rounded-[var(--radius-control)] px-3 py-2 text-left text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+        className="text-text-muted hover:bg-ground-sunken hover:text-text focus-visible:ring-cobalt block w-full rounded-[var(--radius-control)] px-3 py-2 text-left text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
       >
         Sign out
       </button>

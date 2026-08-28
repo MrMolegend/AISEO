@@ -26,13 +26,6 @@ import { MARKET_ENTRY_PACKAGE_ID } from '@/config/report';
  *   and every figure here feeds a scenario the customer may act on.
  */
 
-const trimmed = (max: number) =>
-  z
-    .string()
-    .trim()
-    .max(max)
-    .transform((value) => value.replace(/\s+/g, ' '));
-
 const optionalText = (max: number) =>
   z
     .string()

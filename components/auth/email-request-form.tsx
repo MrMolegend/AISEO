@@ -104,7 +104,7 @@ export function EmailRequestForm({
             setPhase('idle');
             setFailure(undefined);
           }}
-          className="text-brand hover:text-brand-hover focus-visible:ring-brand rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+          className="text-cobalt hover:text-cobalt focus-visible:ring-cobalt rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
         >
           Use a different email
         </button>
@@ -122,7 +122,7 @@ export function EmailRequestForm({
       className="space-y-5"
     >
       <div>
-        <label htmlFor={emailId} className="text-ink mb-1.5 block text-sm font-medium">
+        <label htmlFor={emailId} className="text-text mb-1.5 block text-sm font-medium">
           Email address
         </label>
         <input
@@ -141,7 +141,7 @@ export function EmailRequestForm({
           disabled={phase === 'working'}
           aria-describedby={failure ? errorId : undefined}
           aria-invalid={Boolean(failure)}
-          className="border-line-strong bg-surface text-ink placeholder:text-ink-faint focus:border-brand focus-visible:ring-brand h-12 w-full rounded-[var(--radius-control)] border px-3.5 text-base transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60"
+          className="border-rule-strong bg-ground-raised text-text placeholder:text-text-faint focus:border-cobalt focus-visible:ring-cobalt h-12 w-full rounded-[var(--radius-control)] border px-3.5 text-base transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60"
         />
       </div>
 

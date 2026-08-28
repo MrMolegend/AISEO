@@ -150,9 +150,9 @@ export function ResearchForm({
       {errors.length > 0 && (
         <div
           role="alert"
-          className="rounded-[var(--radius-card)] border border-[var(--color-severity-critical-line)] bg-[var(--color-severity-critical-bg)] p-4"
+          className="rounded-[var(--radius-panel)] border border-[var(--color-copper-line)] bg-[var(--color-copper-surface)] p-4"
         >
-          <p className="text-sm font-medium text-[var(--color-severity-critical)]">
+          <p className="text-sm font-medium text-[var(--color-copper)]">
             {errors.length === 1
               ? 'One field needs attention'
               : `${errors.length} fields need attention`}
@@ -170,16 +170,16 @@ export function ResearchForm({
         />
       ))}
 
-      <div className="border-line flex flex-wrap items-center gap-4 border-t pt-6">
+      <div className="border-rule flex flex-wrap items-center gap-4 border-t pt-6">
         <button
           type="submit"
           disabled={!affordable}
-          className="bg-brand text-ink-inverse hover:bg-brand-hover focus-visible:ring-brand inline-flex h-12 items-center rounded-[var(--radius-control)] px-6 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          className="bg-signal text-text-on-signal hover:bg-signal-dim focus-visible:ring-cobalt inline-flex h-12 items-center rounded-[var(--radius-control)] px-6 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         >
           Review and confirm
         </button>
 
-        <p className="text-ink-subtle text-sm tabular-nums">
+        <p className="text-text-subtle text-sm tabular-nums">
           Costs {formatTokens(pkg.tokenCost)} {BRAND.currency.plural} · you have{' '}
           {formatTokens(available)}
         </p>
@@ -188,18 +188,18 @@ export function ResearchForm({
       {!affordable && (
         <div
           role="status"
-          className="border-line bg-surface-subtle rounded-[var(--radius-card)] border p-5"
+          className="border-rule bg-ground-raised rounded-[var(--radius-panel)] border p-5"
         >
-          <p className="text-ink text-sm font-medium">
+          <p className="text-text text-sm font-medium">
             Not enough {BRAND.currency.plural} for this package
           </p>
-          <p className="text-ink-muted mt-1.5 text-sm leading-relaxed">
+          <p className="text-text-muted mt-1.5 text-sm leading-relaxed">
             {pkg.name} costs {formatTokens(pkg.tokenCost)} and your balance is{' '}
             {formatTokens(available)}. Nothing has been charged.
           </p>
           <Link
             href="/wallet"
-            className="text-brand hover:text-brand-hover focus-visible:ring-brand mt-3 inline-block rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+            className="text-cobalt hover:text-cobalt focus-visible:ring-cobalt mt-3 inline-block rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
           >
             Go to your wallet
           </Link>
@@ -240,7 +240,7 @@ function ConfirmStep({
       <Card>
         <CardBody>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-ink text-lg font-semibold">Confirm this research</h2>
+            <h2 className="text-text text-lg font-semibold">Confirm this research</h2>
             <Badge tone="brand">
               {formatTokens(pkg.tokenCost)} {BRAND.currency.plural}
             </Badge>
@@ -249,8 +249,8 @@ function ConfirmStep({
           <dl className="mt-5 space-y-3">
             {summary.map(({ label, value }) => (
               <div key={label} className="flex flex-col gap-0.5 sm:flex-row sm:gap-4">
-                <dt className="text-ink-subtle w-44 shrink-0 text-sm">{label}</dt>
-                <dd className="text-ink text-sm leading-relaxed break-words">
+                <dt className="text-text-subtle w-44 shrink-0 text-sm">{label}</dt>
+                <dd className="text-text text-sm leading-relaxed break-words">
                   {Array.isArray(value) ? value.join(', ') : String(value)}
                 </dd>
               </div>
@@ -259,14 +259,14 @@ function ConfirmStep({
         </CardBody>
       </Card>
 
-      <div className="border-line bg-surface-subtle rounded-[var(--radius-card)] border p-5">
-        <p className="text-ink text-sm leading-relaxed">
+      <div className="border-rule bg-ground-raised rounded-[var(--radius-panel)] border p-5">
+        <p className="text-text text-sm leading-relaxed">
           Confirming spends {formatTokens(pkg.tokenCost)} {BRAND.currency.plural}, leaving{' '}
           <span className="tabular-nums">{formatTokens(available - pkg.tokenCost)}</span>.
           They are held while the research runs and returned automatically if it fails on
           our side.
         </p>
-        <p className="text-ink-subtle mt-2 text-sm leading-relaxed">
+        <p className="text-text-subtle mt-2 text-sm leading-relaxed">
           Typically {pkg.typicalDurationMinutes[0]}–{pkg.typicalDurationMinutes[1]}{' '}
           minutes. You can leave the page and come back.
         </p>
@@ -275,12 +275,12 @@ function ConfirmStep({
       {failure && (
         <div
           role="alert"
-          className="rounded-[var(--radius-card)] border border-[var(--color-severity-critical-line)] bg-[var(--color-severity-critical-bg)] p-5"
+          className="rounded-[var(--radius-panel)] border border-[var(--color-copper-line)] bg-[var(--color-copper-surface)] p-5"
         >
-          <p className="text-sm font-medium text-[var(--color-severity-critical)]">
+          <p className="text-sm font-medium text-[var(--color-copper)]">
             {failure.title}
           </p>
-          <p className="text-ink-muted mt-1.5 text-sm leading-relaxed">
+          <p className="text-text-muted mt-1.5 text-sm leading-relaxed">
             {failure.message}
           </p>
         </div>
@@ -291,7 +291,7 @@ function ConfirmStep({
           type="button"
           onClick={onConfirm}
           disabled={busy}
-          className="bg-brand text-ink-inverse hover:bg-brand-hover focus-visible:ring-brand inline-flex h-12 items-center rounded-[var(--radius-control)] px-6 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+          className="bg-signal text-text-on-signal hover:bg-signal-dim focus-visible:ring-cobalt inline-flex h-12 items-center rounded-[var(--radius-control)] px-6 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
         >
           {busy ? 'Starting…' : `Spend ${formatTokens(pkg.tokenCost)} and start`}
         </button>
@@ -300,7 +300,7 @@ function ConfirmStep({
           type="button"
           onClick={onBack}
           disabled={busy}
-          className="border-line-strong bg-surface text-ink hover:bg-surface-subtle focus-visible:ring-brand inline-flex h-12 items-center rounded-[var(--radius-control)] border px-6 font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+          className="border-rule-strong bg-ground-raised text-text hover:bg-ground-raised focus-visible:ring-cobalt inline-flex h-12 items-center rounded-[var(--radius-control)] border px-6 font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
         >
           Back to the form
         </button>

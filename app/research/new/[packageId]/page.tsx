@@ -48,15 +48,15 @@ export default async function PackageFormPage({
       <main id="main" className="mx-auto max-w-[760px] px-5 py-12 md:px-8">
         <Link
           href="/research/new"
-          className="text-ink-subtle hover:text-ink focus-visible:ring-brand inline-flex items-center gap-1.5 rounded text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+          className="text-text-subtle hover:text-text focus-visible:ring-cobalt inline-flex items-center gap-1.5 rounded text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
         >
           <span aria-hidden="true">←</span> All packages
         </Link>
 
-        <h1 className="text-ink mt-6 text-[30px] leading-tight font-semibold tracking-[var(--tracking-display)]">
+        <h1 className="text-text mt-6 text-[30px] leading-tight font-semibold tracking-[var(--tracking-display)]">
           {pkg.name}
         </h1>
-        <p className="text-ink-muted mt-3 max-w-[62ch] leading-relaxed">
+        <p className="text-text-muted mt-3 max-w-[62ch] leading-relaxed">
           {pkg.description}
         </p>
 

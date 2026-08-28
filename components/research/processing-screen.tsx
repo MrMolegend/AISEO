@@ -111,8 +111,8 @@ export function ProcessingScreen({
 
   return (
     <div className="mx-auto max-w-[520px] py-10">
-      <p className="text-ink-subtle text-sm">{packageName}</p>
-      <h1 className="text-ink mt-1 text-[26px] leading-tight font-semibold tracking-[var(--tracking-display)]">
+      <p className="text-text-subtle text-sm">{packageName}</p>
+      <h1 className="text-text mt-1 text-[26px] leading-tight font-semibold tracking-[var(--tracking-display)]">
         Researching {subject}
       </h1>
 
@@ -120,7 +120,7 @@ export function ProcessingScreen({
         role="status"
         aria-live="polite"
         aria-atomic="true"
-        className="text-ink-muted mt-3 leading-relaxed"
+        className="text-text-muted mt-3 leading-relaxed"
       >
         {STAGES[currentIndex]?.label ?? 'Working'}
       </p>
@@ -140,10 +140,10 @@ export function ProcessingScreen({
                 aria-hidden="true"
                 className={
                   state === 'done'
-                    ? 'bg-brand text-ink-inverse flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px]'
+                    ? 'bg-signal text-text-on-signal flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px]'
                     : state === 'active'
-                      ? 'border-brand bg-brand-subtle h-5 w-5 shrink-0 animate-pulse rounded-full border-2'
-                      : 'border-line-strong h-5 w-5 shrink-0 rounded-full border'
+                      ? 'border-cobalt bg-cobalt-surface h-5 w-5 shrink-0 animate-pulse rounded-full border-2'
+                      : 'border-rule-strong h-5 w-5 shrink-0 rounded-full border'
                 }
               >
                 {state === 'done' ? '✓' : ''}
@@ -152,10 +152,10 @@ export function ProcessingScreen({
               <span
                 className={
                   state === 'pending'
-                    ? 'text-ink-faint text-sm'
+                    ? 'text-text-faint text-sm'
                     : state === 'active'
-                      ? 'text-ink text-sm font-medium'
-                      : 'text-ink-muted text-sm'
+                      ? 'text-text text-sm font-medium'
+                      : 'text-text-muted text-sm'
                 }
               >
                 {s.label}
@@ -167,16 +167,16 @@ export function ProcessingScreen({
         })}
       </ol>
 
-      <div className="border-line mt-8 border-t pt-6">
-        <p className="text-ink-subtle text-sm tabular-nums">
+      <div className="border-rule mt-8 border-t pt-6">
+        <p className="text-text-subtle text-sm tabular-nums">
           {formatElapsed(elapsed)} elapsed
         </p>
-        <p className="text-ink-muted mt-3 text-sm leading-relaxed">
+        <p className="text-text-muted mt-3 text-sm leading-relaxed">
           This runs on our servers, so you can close this page and come back. The link
           works from the moment it was created — it is in{' '}
           <Link
             href="/dashboard"
-            className="text-brand focus-visible:ring-brand rounded underline underline-offset-4 focus-visible:ring-2 focus-visible:outline-none"
+            className="text-cobalt focus-visible:ring-cobalt rounded underline underline-offset-4 focus-visible:ring-2 focus-visible:outline-none"
           >
             your dashboard
           </Link>{' '}
@@ -192,22 +192,22 @@ function FailureState({ error }: { error: NonNullable<StatusPayload['error']> })
     <div className="mx-auto max-w-[520px] py-10">
       <div
         role="alert"
-        className="rounded-[var(--radius-card)] border border-[var(--color-severity-critical-line)] bg-[var(--color-severity-critical-bg)] p-6"
+        className="rounded-[var(--radius-panel)] border border-[var(--color-copper-line)] bg-[var(--color-copper-surface)] p-6"
       >
-        <h1 className="text-ink text-lg font-semibold">{error.title}</h1>
-        <p className="text-ink-muted mt-2 leading-relaxed">{error.body}</p>
+        <h1 className="text-text text-lg font-semibold">{error.title}</h1>
+        <p className="text-text-muted mt-2 leading-relaxed">{error.body}</p>
       </div>
 
       <div className="mt-6 flex flex-wrap gap-3">
         <Link
           href="/research/new"
-          className="bg-brand text-ink-inverse hover:bg-brand-hover focus-visible:ring-brand inline-flex h-11 items-center rounded-[var(--radius-control)] px-5 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="bg-signal text-text-on-signal hover:bg-signal-dim focus-visible:ring-cobalt inline-flex h-11 items-center rounded-[var(--radius-control)] px-5 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
         >
           Start new research
         </Link>
         <Link
           href="/dashboard"
-          className="border-line-strong bg-surface text-ink hover:bg-surface-subtle focus-visible:ring-brand inline-flex h-11 items-center rounded-[var(--radius-control)] border px-5 font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+          className="border-rule-strong bg-ground-raised text-text hover:bg-ground-raised focus-visible:ring-cobalt inline-flex h-11 items-center rounded-[var(--radius-control)] border px-5 font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
         >
           Back to dashboard
         </Link>

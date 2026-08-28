@@ -62,13 +62,13 @@ export default async function DashboardPage({
 
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-ink text-[30px] font-semibold tracking-[var(--tracking-display)]">
+            <h1 className="text-text text-[30px] font-semibold tracking-[var(--tracking-display)]">
               Your research
             </h1>
-            <p className="text-ink-muted mt-1.5 tabular-nums">
+            <p className="text-text-muted mt-1.5 tabular-nums">
               {formatTokens(balance.available)} {BRAND.currency.plural} available
               {balance.reserved > 0 && (
-                <span className="text-ink-subtle">
+                <span className="text-text-subtle">
                   {' '}
                   · {formatTokens(balance.reserved)} held against running reports
                 </span>
@@ -78,7 +78,7 @@ export default async function DashboardPage({
 
           <Link
             href="/research/new"
-            className="bg-brand text-ink-inverse hover:bg-brand-hover focus-visible:ring-brand inline-flex h-11 items-center rounded-[var(--radius-control)] px-5 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+            className="bg-signal text-text-on-signal hover:bg-signal-dim focus-visible:ring-cobalt inline-flex h-11 items-center rounded-[var(--radius-control)] px-5 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           >
             Start new research
           </Link>
@@ -99,13 +99,13 @@ export default async function DashboardPage({
                     <CardBody className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h2 className="text-ink truncate text-[15px] font-semibold">
+                          <h2 className="text-text truncate text-[15px] font-semibold">
                             {job.subjectName}
                           </h2>
                           <StatusBadge job={job} />
                         </div>
 
-                        <p className="text-ink-subtle mt-1 text-sm">
+                        <p className="text-text-subtle mt-1 text-sm">
                           {pkg.name} · {formatTokens(job.tokenCost)}{' '}
                           {BRAND.currency.plural} ·{' '}
                           <time dateTime={job.createdAt}>
@@ -118,7 +118,7 @@ export default async function DashboardPage({
                         </p>
 
                         {isFailed && job.errorCode && (
-                          <p className="text-ink-muted mt-2 max-w-[62ch] text-sm leading-relaxed">
+                          <p className="text-text-muted mt-2 max-w-[62ch] text-sm leading-relaxed">
                             {renderErrorCopy(job.errorCode, job.subjectDomain).body}
                           </p>
                         )}
@@ -128,14 +128,14 @@ export default async function DashboardPage({
                         {isFailed ? (
                           <Link
                             href={`/research/new/${job.packageId}`}
-                            className="border-line-strong bg-surface text-ink hover:bg-surface-subtle focus-visible:ring-brand inline-flex h-10 items-center rounded-[var(--radius-control)] border px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                            className="border-rule-strong bg-ground-raised text-text hover:bg-ground-raised focus-visible:ring-cobalt inline-flex h-10 items-center rounded-[var(--radius-control)] border px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
                           >
                             Try again
                           </Link>
                         ) : (
                           <Link
                             href={`/research/${job.publicId}`}
-                            className="border-line-strong bg-surface text-ink hover:bg-surface-subtle focus-visible:ring-brand inline-flex h-10 items-center rounded-[var(--radius-control)] border px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                            className="border-rule-strong bg-ground-raised text-text hover:bg-ground-raised focus-visible:ring-cobalt inline-flex h-10 items-center rounded-[var(--radius-control)] border px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
                           >
                             {isDone ? 'Open report' : 'View progress'}
                           </Link>
@@ -185,14 +185,14 @@ function EmptyState() {
   return (
     <Card className="mt-10">
       <CardBody className="py-14 text-center">
-        <h2 className="text-ink text-lg font-semibold">No research yet</h2>
-        <p className="text-ink-muted mx-auto mt-2 max-w-[52ch] leading-relaxed">
+        <h2 className="text-text text-lg font-semibold">No research yet</h2>
+        <p className="text-text-muted mx-auto mt-2 max-w-[52ch] leading-relaxed">
           Pick a package, tell us about your business, and we will build a report from
           public sources — with a link behind every claim.
         </p>
         <Link
           href="/research/new"
-          className="bg-brand text-ink-inverse hover:bg-brand-hover focus-visible:ring-brand mt-6 inline-flex h-11 items-center rounded-[var(--radius-control)] px-5 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="bg-signal text-text-on-signal hover:bg-signal-dim focus-visible:ring-cobalt mt-6 inline-flex h-11 items-center rounded-[var(--radius-control)] px-5 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
         >
           Start your first report
         </Link>

@@ -13,7 +13,7 @@ export function SignUpForm({ configured }: { configured: boolean }) {
       sentTitle="Check your email"
       sentBody={(email) => (
         <>
-          We sent a verification link to <strong className="text-ink">{email}</strong>.
+          We sent a verification link to <strong className="text-text">{email}</strong>.
           Open it to confirm the address and choose a password.
           <span className="mt-2 block">The link works once and lasts an hour.</span>
         </>

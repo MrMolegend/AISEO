@@ -3,193 +3,307 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    DESIGN TOKENS
 
-   Restrained, editorial, data-forward. Confidence comes from typography,
-   spacing and precise alignment — never from glow or gradient.
+   A strategy room, not a dashboard.
 
-   Every colour is defined as a CSS variable on :root so dark mode (Phase 7) is
-   a token swap rather than a refactor. Nothing in a component hard-codes a hex.
+   Two ideas hold the whole system together. Colour carries weight rather than
+   decoration: one accent, used where a decision is being signalled, and
+   everything else is ink, bone and a hairline. And a document is a surface —
+   report prose sits on `leaf`, a warm sheet, while the page it rests on is
+   `ground`. That single relationship is what makes a dossier read like a
+   document rather than like a web page with sections.
+
+   The obsidian scheme below is the primary composition. The parchment scheme
+   further down is a second design rather than an inversion: `leaf` stays the
+   paper and `ground` stays the desk, and what changes is which of them is dark.
+
+   Every colour pair a component actually uses is contrast-checked
+   arithmetically by tests/unit/design-tokens.test.ts, straight from these
+   values. Do not adjust a lightness here without running it.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @theme {
-  /* ── Type ─────────────────────────────────────────────────────────────── */
-  --font-sans:
-    var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+  /* ── Type ─────────────────────────────────────────────────────────────────
+     Three families, three jobs. Display is the editorial voice and is never set
+     below 24px. Interface carries everything a person reads to operate the
+     product. Mono carries metadata that has to line up in columns: source refs,
+     ISO codes, dates, scores, coordinates. */
+  --font-display: var(--font-fraunces), ui-serif, Georgia, 'Times New Roman', serif;
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, 'SF Mono', Menlo, monospace;
 
-  /* Display sizes get negative tracking; body stays neutral. */
-  --tracking-display: -0.028em;
-  --tracking-tight: -0.015em;
+  --tracking-display: -0.021em;
+  --tracking-tight: -0.011em;
+  /* Mono metadata is set small and uppercase; it needs air to stay legible. */
+  --tracking-meta: 0.07em;
 
-  /* ── Surface & text ───────────────────────────────────────────────────── */
-  --color-canvas: oklch(100% 0 0);
-  --color-surface: oklch(100% 0 0);
-  --color-surface-subtle: oklch(98.4% 0.001 286);
-  --color-surface-sunken: oklch(96.7% 0.001 286);
+  /* ── Ground and surfaces ──────────────────────────────────────────────── */
+  --color-ground: oklch(15% 0.014 258);
+  --color-ground-raised: oklch(19.5% 0.014 258);
+  --color-ground-sunken: oklch(11.5% 0.012 258);
 
-  /*
-   * Neutral text ramp. Every step clears WCAG AA (4.5:1) against the darkest
-   * surface it is used on — surface-sunken, not white — because muted labels
-   * sit inside tinted panels. Verified with axe; do not lighten without
-   * re-measuring.
-   */
-  --color-ink: oklch(21% 0.006 285);
-  --color-ink-muted: oklch(42% 0.008 286);
-  --color-ink-subtle: oklch(49% 0.009 286);
-  --color-ink-faint: oklch(54% 0.008 286);
-  --color-ink-inverse: oklch(98.5% 0 0);
+  /* The document. Warm, because a cold white sheet on obsidian reads as a
+     modal, and this is meant to read as paper on a desk. */
+  --color-leaf: oklch(94% 0.014 85);
+  --color-leaf-sunken: oklch(89.5% 0.018 85);
 
-  --color-line: oklch(92% 0.003 286);
-  --color-line-strong: oklch(87% 0.004 286);
+  /* ── Text ─────────────────────────────────────────────────────────────── */
+  --color-text: oklch(95% 0.006 85);
+  --color-text-muted: oklch(79% 0.008 85);
+  --color-text-subtle: oklch(70% 0.009 85);
+  --color-text-faint: oklch(62% 0.009 85);
+  --color-text-on-leaf: oklch(22% 0.02 60);
+  --color-text-on-leaf-muted: oklch(41% 0.02 60);
+  --color-text-on-signal: oklch(16% 0.03 122);
 
-  /* ── Brand ────────────────────────────────────────────────────────────── */
-  /* One accent, used sparingly: primary CTA, active nav, focus ring. */
-  --color-brand: oklch(51% 0.19 267);
-  --color-brand-hover: oklch(46% 0.19 267);
-  --color-brand-subtle: oklch(96.5% 0.02 267);
-  --color-brand-line: oklch(89% 0.05 267);
+  /* ── Signal ───────────────────────────────────────────────────────────────
+     One accent. It marks the primary action, the active route, the drawn line
+     between two markets, and nothing else. A second accent is how a palette
+     stops meaning anything. */
+  --color-signal: oklch(86% 0.18 122);
+  --color-signal-dim: oklch(72% 0.15 122);
+  --color-signal-surface: oklch(26% 0.07 122);
 
-  /* ── Score / rating ───────────────────────────────────────────────────── */
-  /* Restrained tints, not traffic lights. Always paired with a text label. */
-  --color-score-excellent: oklch(54% 0.13 162);
-  --color-score-good: oklch(54.5% 0.13 145);
-  --color-score-mid: oklch(56.5% 0.15 75);
-  --color-score-poor: oklch(58.5% 0.19 22);
+  /* Cobalt: interactive intelligence states — links, focus, selected filters. */
+  --color-cobalt: oklch(76% 0.14 250);
+  --color-cobalt-surface: oklch(26% 0.07 250);
+  --color-cobalt-line: oklch(40% 0.1 250);
 
-  --color-score-excellent-bg: oklch(96% 0.03 162);
-  --color-score-good-bg: oklch(96% 0.03 145);
-  --color-score-mid-bg: oklch(96.5% 0.04 85);
-  --color-score-poor-bg: oklch(96.5% 0.02 22);
+  /* Copper: risk and warning. Muted on purpose — a risk register full of red
+     is a risk register nobody reads. */
+  --color-copper: oklch(79% 0.12 55);
+  --color-copper-surface: oklch(27% 0.06 55);
+  --color-copper-line: oklch(40% 0.08 55);
 
-  /* ── Severity ─────────────────────────────────────────────────────────── */
-  --color-severity-critical: oklch(52% 0.2 22);
-  --color-severity-critical-bg: oklch(96% 0.02 22);
-  --color-severity-critical-line: oklch(88% 0.05 22);
+  /* ── Cartographic rules ───────────────────────────────────────────────── */
+  --color-rule: oklch(30% 0.011 258);
+  --color-rule-strong: oklch(52% 0.014 258);
+  --color-rule-faint: oklch(23% 0.01 258);
 
-  --color-severity-high: oklch(54.5% 0.15 60);
-  --color-severity-high-bg: oklch(96.5% 0.04 75);
-  --color-severity-high-line: oklch(89% 0.07 75);
+  /* ── Evidence grades ──────────────────────────────────────────────────────
+     Always rendered with their label as text. The colour is a second signal for
+     someone scanning, never the carrier of the meaning. */
+  --color-grade-verified: oklch(82% 0.15 152);
+  --color-grade-provided: oklch(80% 0.11 250);
+  --color-grade-modelled: oklch(84% 0.08 85);
+  --color-grade-inference: oklch(80% 0.1 55);
+  --color-grade-unknown: oklch(72% 0.011 258);
 
-  --color-severity-medium: oklch(52% 0.13 240);
-  --color-severity-medium-bg: oklch(96.5% 0.025 240);
-  --color-severity-medium-line: oklch(89% 0.05 240);
+  /* ── Verdicts ─────────────────────────────────────────────────────────── */
+  --color-verdict-promising: oklch(84% 0.16 145);
+  --color-verdict-conditional: oklch(85% 0.13 95);
+  --color-verdict-risk: oklch(78% 0.14 40);
+  --color-verdict-insufficient: oklch(74% 0.012 258);
 
-  --color-severity-low: oklch(50% 0.008 286);
-  --color-severity-low-bg: oklch(96.7% 0.001 286);
-  --color-severity-low-line: oklch(90% 0.003 286);
+  /* ── Radii ────────────────────────────────────────────────────────────────
+     Square is the default. Data panels have corners; only controls are
+     softened, and only slightly. This is the single largest reason the product
+     does not read as a pile of cards. */
+  --radius-hair: 2px;
+  --radius-control: 4px;
+  --radius-panel: 8px;
 
-  /* ── Radius ───────────────────────────────────────────────────────────── */
-  --radius-control: 8px;
-  --radius-card: 10px;
-  --radius-panel: 14px;
+  /* ── Borders ──────────────────────────────────────────────────────────── */
+  --border-hair: 1px;
+  --border-rule: 2px;
+  --border-emphasis: 3px;
 
-  /* ── Elevation — two levels, no more ──────────────────────────────────── */
-  --shadow-card:
-    0 1px 2px oklch(21% 0.006 285 / 0.04), 0 1px 3px oklch(21% 0.006 285 / 0.03);
-  --shadow-raised:
-    0 4px 12px oklch(21% 0.006 285 / 0.06), 0 2px 4px oklch(21% 0.006 285 / 0.04);
+  /* ── Elevation — two levels, and neither is a glow ────────────────────── */
+  --shadow-panel: 0 1px 0 oklch(0% 0 0 / 0.4);
+  --shadow-lift: 0 12px 32px oklch(0% 0 0 / 0.45), 0 2px 6px oklch(0% 0 0 / 0.3);
 
-  /* ── Motion — one curve, three durations ──────────────────────────────── */
+  /* ── Motion ───────────────────────────────────────────────────────────── */
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
-  --duration-fast: 150ms;
-  --duration-base: 300ms;
-  --duration-slow: 600ms;
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-draw: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-instant: 90ms;
+  --duration-fast: 160ms;
+  --duration-base: 280ms;
+  --duration-slow: 520ms;
+  --duration-route: 1200ms;
+
+  /* ── Z-index ──────────────────────────────────────────────────────────── */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky-nav: 20;
+  --z-header: 30;
+  --z-drawer: 40;
+  --z-menu: 50;
+  --z-skip-link: 60;
+
+  /* ── Container widths ─────────────────────────────────────────────────── */
+  --container-prose: 68ch;
+  --container-narrow: 640px;
+  --container-page: 1180px;
+  --container-wide: 1440px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   DARK THEME
+   PARCHMENT SCHEME
 
-   A token swap, not a second design — which is the whole reason every colour
-   was defined as a variable from the start.
-
-   The dark palette is not the light one inverted. Surfaces lift as they come
-   forward (canvas is darkest, cards sit above it) rather than darkening, and the
-   accent and status hues are lightened so they clear 4.5:1 against a dark ground
-   instead of the light one they were tuned for.
+   Not the obsidian palette inverted. `leaf` is still the sheet a document sits
+   on and `ground` is still the desk beneath it — what changes is that the desk
+   becomes warm paper-board and the sheet becomes near-white. The obsidian
+   itself does not disappear: it moves into the header rail, the decision panel
+   and the data blocks, where it does the same job of separating the analysis
+   from the page around it.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --color-canvas: oklch(17.5% 0.005 285);
-    --color-surface: oklch(21% 0.006 285);
-    --color-surface-subtle: oklch(19.5% 0.006 285);
-    --color-surface-sunken: oklch(25% 0.007 285);
+    --color-ground: oklch(95.5% 0.012 85);
+    --color-ground-raised: oklch(98.5% 0.007 85);
+    --color-ground-sunken: oklch(91.5% 0.016 85);
 
-    --color-ink: oklch(96% 0.002 286);
-    --color-ink-muted: oklch(78% 0.006 286);
-    --color-ink-subtle: oklch(70% 0.007 286);
-    /* 63.5%, not 62%: measured against surface-sunken, the darkest ground a
-       muted label sits on. The light theme's ink-faint failed the same check. */
-    --color-ink-faint: oklch(63.5% 0.008 286);
-    --color-ink-inverse: oklch(17.5% 0.005 285);
+    --color-leaf: oklch(99.2% 0.004 85);
+    --color-leaf-sunken: oklch(96.2% 0.01 85);
 
-    --color-line: oklch(28% 0.007 285);
-    --color-line-strong: oklch(34% 0.008 285);
+    --color-text: oklch(20% 0.018 60);
+    --color-text-muted: oklch(39% 0.018 60);
+    --color-text-subtle: oklch(45% 0.016 60);
+    --color-text-faint: oklch(50% 0.014 60);
+    --color-text-on-leaf: oklch(20% 0.018 60);
+    --color-text-on-leaf-muted: oklch(41% 0.016 60);
+    --color-text-on-signal: oklch(99% 0.005 85);
 
-    --color-brand: oklch(70% 0.15 267);
-    --color-brand-hover: oklch(77% 0.14 267);
-    --color-brand-subtle: oklch(26% 0.05 267);
-    --color-brand-line: oklch(36% 0.08 267);
+    /* Lime has to come a long way down to carry text on a light ground. It
+       keeps its hue and loses its brightness rather than being swapped for a
+       different colour, so the product still reads as the same product. */
+    --color-signal: oklch(46% 0.14 132);
+    --color-signal-dim: oklch(40% 0.12 132);
+    --color-signal-surface: oklch(93.5% 0.06 122);
 
-    --color-score-excellent: oklch(76% 0.14 162);
-    --color-score-good: oklch(78% 0.15 145);
-    --color-score-mid: oklch(80% 0.15 80);
-    --color-score-poor: oklch(72% 0.17 22);
+    --color-cobalt: oklch(43% 0.16 253);
+    --color-cobalt-surface: oklch(94% 0.04 250);
+    --color-cobalt-line: oklch(82% 0.07 250);
 
-    --color-score-excellent-bg: oklch(26% 0.05 162);
-    --color-score-good-bg: oklch(26% 0.05 145);
-    --color-score-mid-bg: oklch(27% 0.06 80);
-    --color-score-poor-bg: oklch(26% 0.06 22);
+    --color-copper: oklch(45% 0.13 45);
+    --color-copper-surface: oklch(94.5% 0.035 55);
+    --color-copper-line: oklch(84% 0.06 55);
 
-    --color-severity-critical: oklch(74% 0.16 22);
-    --color-severity-critical-bg: oklch(25% 0.06 22);
-    --color-severity-critical-line: oklch(36% 0.09 22);
+    --color-rule: oklch(86% 0.011 85);
+    --color-rule-strong: oklch(59% 0.018 85);
+    --color-rule-faint: oklch(90.5% 0.008 85);
 
-    --color-severity-high: oklch(80% 0.14 75);
-    --color-severity-high-bg: oklch(26% 0.05 75);
-    --color-severity-high-line: oklch(37% 0.07 75);
+    --color-grade-verified: oklch(42% 0.13 152);
+    --color-grade-provided: oklch(42% 0.14 253);
+    --color-grade-modelled: oklch(43% 0.06 75);
+    --color-grade-inference: oklch(45% 0.12 50);
+    --color-grade-unknown: oklch(44% 0.011 258);
 
-    --color-severity-medium: oklch(76% 0.13 240);
-    --color-severity-medium-bg: oklch(25% 0.05 240);
-    --color-severity-medium-line: oklch(36% 0.08 240);
+    --color-verdict-promising: oklch(41% 0.14 148);
+    --color-verdict-conditional: oklch(44% 0.11 85);
+    --color-verdict-risk: oklch(45% 0.16 35);
+    --color-verdict-insufficient: oklch(44% 0.011 258);
 
-    --color-severity-low: oklch(72% 0.007 286);
-    --color-severity-low-bg: oklch(25% 0.006 286);
-    --color-severity-low-line: oklch(34% 0.008 286);
-
-    /* Shadows do almost nothing on a dark ground; borders carry the separation,
-       so the shadow tokens are reduced rather than removed. */
-    --shadow-card: 0 1px 2px oklch(0% 0 0 / 0.3);
-    --shadow-raised: 0 4px 14px oklch(0% 0 0 / 0.4);
+    --shadow-panel: 0 1px 0 oklch(20% 0.018 60 / 0.06);
+    --shadow-lift:
+      0 12px 28px oklch(20% 0.018 60 / 0.1), 0 2px 6px oklch(20% 0.018 60 / 0.06);
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE LEAF SURFACE
+
+   A dossier is set on `leaf` — a warm sheet that is light in both schemes. That
+   creates a problem the usual approach solves badly: inside a bone panel on the
+   obsidian scheme, every semantic colour is wrong, because they were all tuned
+   against a near-black ground. The usual fix is a second set of class names,
+   `text-on-leaf` and friends, threaded through every component that might ever
+   sit on paper — which works right up until one of them does not get threaded.
+
+   Instead, the surface re-points the tokens. A component inside this block asks
+   for `--color-text` and `--color-grade-verified` exactly as it would anywhere
+   else, and gets the values tuned for paper. Nothing branches, nothing has to
+   remember, and the contrast test checks this surface as its own scheme.
+
+   These values are shared by both schemes, because `leaf` is light in both.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 @layer base {
+  [data-surface='leaf'] {
+    --color-ground: var(--color-leaf);
+    --color-ground-raised: var(--color-leaf);
+    --color-ground-sunken: var(--color-leaf-sunken);
+
+    --color-text: oklch(22% 0.02 60);
+    --color-text-muted: oklch(40% 0.02 60);
+    --color-text-subtle: oklch(45% 0.018 60);
+    --color-text-faint: oklch(49% 0.016 60);
+
+    --color-text-on-signal: oklch(99% 0.005 85);
+
+    --color-signal: oklch(44% 0.14 132);
+    --color-signal-dim: oklch(38% 0.12 132);
+    --color-signal-surface: oklch(92% 0.07 122);
+
+    --color-cobalt: oklch(42% 0.16 253);
+    --color-cobalt-surface: oklch(92.5% 0.045 250);
+    --color-cobalt-line: oklch(80% 0.075 250);
+
+    --color-copper: oklch(44% 0.13 45);
+    --color-copper-surface: oklch(93% 0.04 55);
+    --color-copper-line: oklch(82% 0.065 55);
+
+    --color-grade-verified: oklch(40% 0.13 152);
+    --color-grade-provided: oklch(41% 0.14 253);
+    --color-grade-modelled: oklch(42% 0.06 75);
+    --color-grade-inference: oklch(43% 0.12 50);
+    --color-grade-unknown: oklch(43% 0.011 258);
+
+    --color-verdict-promising: oklch(39% 0.14 148);
+    --color-verdict-conditional: oklch(42% 0.11 85);
+    --color-verdict-risk: oklch(43% 0.16 35);
+    --color-verdict-insufficient: oklch(43% 0.011 258);
+
+    --color-rule: oklch(84% 0.012 85);
+    --color-rule-strong: oklch(57% 0.019 85);
+    --color-rule-faint: oklch(89% 0.01 85);
+
+    color: var(--color-text);
+    background-color: var(--color-leaf);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      color-scheme: light;
+    }
+  }
+
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
-    /* Sticky nav clearance for in-page anchors. */
-    scroll-padding-top: 6rem;
+    /* Sticky header clearance for in-page anchors. */
+    scroll-padding-top: 5.5rem;
   }
 
   body {
     font-family: var(--font-sans);
-    background-color: var(--color-canvas);
-    color: var(--color-ink);
+    background-color: var(--color-ground);
+    color: var(--color-text);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
 
     /*
-     * Reports render text taken from audited pages: URLs, query strings, minified
-     * attribute values — none of which contain spaces and all of which would
-     * otherwise blow out of their card. overflow-wrap is inherited, so setting it
-     * here covers every surface, and `break-word` only breaks a word that genuinely
-     * cannot fit, leaving normal prose untouched.
+     * Reports carry source URLs, ISO codes and publisher domains, none of which
+     * contain spaces and all of which would otherwise push a panel wider than
+     * the viewport. overflow-wrap is inherited, so one declaration here covers
+     * every surface, and `break-word` only breaks a token that genuinely cannot
+     * fit — ordinary prose is untouched.
      */
     overflow-wrap: break-word;
   }
 
-  /* Display type: tight tracking, balanced wrapping. */
   h1,
   h2,
   h3 {
@@ -201,14 +315,17 @@
     text-wrap: pretty;
   }
 
-  /* One focus treatment everywhere, always visible. */
+  /* One focus treatment, everywhere, always visible. Cobalt rather than signal:
+     the accent already means "primary action", and a focus ring that looks like
+     a button is a focus ring people misread. */
   :focus-visible {
-    outline: 2px solid var(--color-brand);
+    outline: 2px solid var(--color-cobalt);
     outline-offset: 2px;
-    border-radius: 4px;
+    border-radius: var(--radius-hair);
   }
 
-  /* iOS zooms any input under 16px on focus. */
+  /* iOS zooms any input under 16px on focus, and the user has to pinch back
+     out for every field. */
   input,
   textarea,
   select {
@@ -216,23 +333,38 @@
   }
 
   ::selection {
-    background-color: var(--color-brand-subtle);
-    color: var(--color-brand-hover);
+    background-color: var(--color-signal);
+    color: var(--color-text-on-signal);
+  }
+
+  /* Numbers that change must not reflow the row they are in. */
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 @layer utilities {
-  /* Score digits must not jitter as they animate. */
-  .tabular {
+  /* A reading measure, applied to every block of synthesised prose. */
+  .measure {
+    max-width: var(--container-prose);
+  }
+
+  /* Compact monospace metadata: source refs, ISO codes, coordinates, dates. */
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.45;
+    letter-spacing: var(--tracking-meta);
+    text-transform: uppercase;
     font-variant-numeric: tabular-nums;
   }
 
-  /* Readable prose measure — applied to every block of AI-written text. */
-  .measure {
-    max-width: 68ch;
-  }
-
-  /* Horizontal scroller with an edge fade, used by the mobile filter/nav rails. */
+  /* Horizontal scroller with hidden bars — always paired with a focusable
+     region and a visible affordance, never used to hide content. */
   .scroll-rail {
     overflow-x: auto;
     scrollbar-width: none;
@@ -242,17 +374,199 @@
   .scroll-rail::-webkit-scrollbar {
     display: none;
   }
+
+  /*
+   * The cartographic grid.
+   *
+   * Two repeating-linear-gradients, which is a paint operation rather than a
+   * filter — it costs nothing to composite and nothing to animate by transform.
+   * Deliberately not a blurred layer: the brief rules those out and it is right
+   * to, because a continuously animated blur is the single most expensive thing
+   * a marketing page can do to a mid-range phone.
+   */
+  .grid-field {
+    background-image:
+      repeating-linear-gradient(
+        to right,
+        var(--color-rule-faint) 0 1px,
+        transparent 1px 64px
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        var(--color-rule-faint) 0 1px,
+        transparent 1px 64px
+      );
+  }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOTION
+
+   Every animation below moves transform or opacity and nothing else, so each
+   one stays on the compositor. Anything that would animate layout, colour on a
+   large area, or a blur, is absent on purpose.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes pulse-node {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-64px, -64px, 0);
+  }
+}
+
+@layer utilities {
+  /*
+   * Reveal on scroll.
+   *
+   * The element is authored in its final state and hidden only once the
+   * observer has claimed it, so a page with no JavaScript — or one whose script
+   * failed — renders complete rather than blank. That ordering is the whole
+   * trick; the usual arrangement starts at opacity 0 and leaves the content
+   * invisible forever if the observer never runs.
+   */
+  [data-reveal='pending'] {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+
+  [data-reveal='shown'] {
+    animation: rise var(--duration-slow) var(--ease-out-soft) both;
+    animation-delay: calc(var(--reveal-index, 0) * 60ms);
+  }
+
+  .animate-draw {
+    animation: draw var(--duration-route) var(--ease-draw) forwards;
+  }
+
+  .animate-node {
+    animation: pulse-node 2.4s var(--ease-in-out-soft) infinite;
+    animation-delay: calc(var(--node-index, 0) * 220ms);
+  }
+
+  .animate-drift {
+    animation: drift 24s linear infinite;
+  }
+
+  .animate-fade {
+    animation: fade var(--duration-base) var(--ease-out-soft) both;
+  }
+}
+
+/*
+ * Reduced motion.
+ *
+ * Not "animations off" — everything lands in its final state, which is the
+ * state each animation was authored to end in, so the page is complete and
+ * composed rather than stripped. The only things genuinely removed are the two
+ * that loop forever, because a looping animation has no final state to land in
+ * and repeating it quietly is exactly what the preference is asking us not to
+ * do.
+ */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
+
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  [data-reveal='pending'] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .animate-node,
+  .animate-drift {
+    animation: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRINT
+
+   The report is a document people take into a meeting, so print is a supported
+   output rather than an afterthought. Ink is expensive: the obsidian ground
+   becomes white and everything set on it becomes black, regardless of scheme.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media print {
+  :root {
+    --color-ground: white;
+    --color-ground-raised: white;
+    --color-ground-sunken: white;
+    --color-leaf: white;
+    --color-leaf-sunken: white;
+    --color-text: black;
+    --color-text-muted: #333;
+    --color-text-subtle: #444;
+    --color-text-faint: #555;
+    --color-text-on-leaf: black;
+    --color-text-on-leaf-muted: #333;
+    --color-rule: #bbb;
+    --color-rule-strong: #888;
+    --color-rule-faint: #ddd;
+    --shadow-panel: none;
+    --shadow-lift: none;
+  }
+
+  body {
+    background: white;
+  }
+
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+
+  /* A page break through a risk row or a plan action makes the table lie. */
+  [data-print-keep] {
+    break-inside: avoid;
   }
 }

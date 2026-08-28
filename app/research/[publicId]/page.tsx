@@ -74,23 +74,23 @@ export default async function ResearchPage({
         <main id="main" className="mx-auto max-w-[560px] px-5 py-16">
           <div
             role="alert"
-            className="rounded-[var(--radius-card)] border border-[var(--color-severity-critical-line)] bg-[var(--color-severity-critical-bg)] p-6"
+            className="rounded-[var(--radius-panel)] border border-[var(--color-copper-line)] bg-[var(--color-copper-surface)] p-6"
           >
-            <h1 className="text-ink text-lg font-semibold">{copy.title}</h1>
-            <p className="text-ink-muted mt-2 leading-relaxed">{copy.body}</p>
+            <h1 className="text-text text-lg font-semibold">{copy.title}</h1>
+            <p className="text-text-muted mt-2 leading-relaxed">{copy.body}</p>
           </div>
 
           {isOwner && (
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href={`/research/new/${job.packageId}`}
-                className="bg-brand text-ink-inverse hover:bg-brand-hover focus-visible:ring-brand inline-flex h-11 items-center rounded-[var(--radius-control)] px-5 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                className="bg-signal text-text-on-signal hover:bg-signal-dim focus-visible:ring-cobalt inline-flex h-11 items-center rounded-[var(--radius-control)] px-5 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               >
                 Try again
               </Link>
               <Link
                 href="/dashboard"
-                className="border-line-strong bg-surface text-ink hover:bg-surface-subtle focus-visible:ring-brand inline-flex h-11 items-center rounded-[var(--radius-control)] border px-5 font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="border-rule-strong bg-ground-raised text-text hover:bg-ground-raised focus-visible:ring-cobalt inline-flex h-11 items-center rounded-[var(--radius-control)] border px-5 font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
               >
                 Back to dashboard
               </Link>
