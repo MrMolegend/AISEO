@@ -73,7 +73,7 @@ const MARKDOWN_LINK_PATTERN = /\[([^\]]{1,200})\]\((?:[^()]|\([^()]{0,200}\)){0,
 const INJECTION_ECHO_PATTERN =
   /\b(?:ignore (?:all |any )?(?:previous|prior|above) instructions?|disregard (?:the |your )?(?:above|previous|system)|you are now|system prompt|new instructions?:)/gi;
 
-interface SanitiseState {
+export interface SanitiseState {
   fields: string[];
 }
 
@@ -84,7 +84,17 @@ interface SanitiseState {
  * would need updating every time a schema gains a field, and the one that got
  * missed would be the one that mattered.
  */
-function sanitiseDeep(value: unknown, path: string, state: SanitiseState): unknown {
+/**
+ * Exported so the market-entry validator uses this exact walker rather than a
+ * second copy. Sanitisation that exists twice is sanitisation that diverges,
+ * and the copy that gets missed is the one handling the report a customer
+ * actually reads.
+ */
+export function sanitiseDeep(
+  value: unknown,
+  path: string,
+  state: SanitiseState,
+): unknown {
   if (typeof value === 'string') {
     let cleaned = value;
 

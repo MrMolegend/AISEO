@@ -1,6 +1,6 @@
 import { getCurrentUser } from '@/lib/auth/server';
 import { getResearchJobStore } from '@/lib/jobs/store';
-import { stageLabel, stageProgress, isTerminal } from '@/lib/jobs/stages';
+import { STAGES, stageLabel, stageIndex, isTerminal } from '@/lib/jobs/stages';
 import { renderErrorCopy } from '@/lib/errors';
 
 /**
@@ -45,10 +45,21 @@ export async function GET(
       status: job.status,
       stage: job.stage,
       stageLabel: stageLabel(job.stage),
-      stageIndex: job.stageIndex,
-      progress: stageProgress(job.stage),
+      /*
+       * Position, not a percentage.
+       *
+       * There is deliberately no `progress` field any more. Stages do not take
+       * equal time — a twelve-query search phase and a single synthesis call
+       * are minutes apart — so any percentage derived from position is a number
+       * the product invented, and it produces the bar that sits at 94% while
+       * nothing happens. The screen shows which stage is running and how many
+       * remain, which is true.
+       */
+      stageIndex: stageIndex(job.stage),
+      stageCount: STAGES.length,
       done: isTerminal(job.status),
       subject: job.subjectName,
+      sourcesFound: job.sources.length,
       ...(job.errorCode
         ? {
             errorCode: job.errorCode,

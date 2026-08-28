@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { STAGES, type StageId } from '@/lib/jobs/stages';
+import { STAGES, type StageId, type StoredStageId } from '@/lib/jobs/stages';
 
 /**
  * The progress screen.
@@ -43,12 +43,12 @@ export function ProcessingScreen({
   packageName,
 }: {
   publicId: string;
-  initialStage: StageId;
+  initialStage: StoredStageId;
   subject: string;
   packageName: string;
 }) {
   const router = useRouter();
-  const [stage, setStage] = useState<StageId>(initialStage);
+  const [stage, setStage] = useState<StoredStageId>(initialStage);
   const [elapsed, setElapsed] = useState(0);
   const [failed, setFailed] = useState<StatusPayload['error'] | null>(null);
   // Stamped in an effect rather than during render: reading the clock while

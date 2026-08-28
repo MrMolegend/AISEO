@@ -29,10 +29,7 @@ export default function GlobalError({
       className="mx-auto flex max-w-lg flex-col items-center px-5 py-28 text-center md:py-36"
     >
       <span className="flex size-11 items-center justify-center rounded-full bg-[var(--color-copper-surface)]">
-        <TriangleAlert
-          className="size-5 text-[var(--color-copper)]"
-          aria-hidden
-        />
+        <TriangleAlert className="size-5 text-[var(--color-copper)]" aria-hidden />
       </span>
       <h1 className="mt-5 text-3xl font-semibold md:text-4xl">
         Something unexpected went wrong
@@ -41,7 +38,9 @@ export default function GlobalError({
         We have been notified and will look into it. Trying again often works.
       </p>
       {error.digest ? (
-        <p className="text-text-faint mt-4 font-mono text-xs">Reference: {error.digest}</p>
+        <p className="text-text-faint mt-4 font-mono text-xs">
+          Reference: {error.digest}
+        </p>
       ) : null}
       <div className="mt-8 flex gap-3">
         <Button size="lg" onClick={reset}>

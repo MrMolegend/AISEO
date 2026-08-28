@@ -162,7 +162,10 @@ export function TextAreaField({
         className={`${inputClass} resize-y py-3 leading-relaxed`}
       />
       {maxLength && (
-        <p id={counterId} className="text-text-faint mt-1 text-right text-xs tabular-nums">
+        <p
+          id={counterId}
+          className="text-text-faint mt-1 text-right text-xs tabular-nums"
+        >
           {/* Live, so someone who cannot see the counter still hears it as they
               approach the limit rather than discovering it on submit. */}
           <span aria-live="polite">

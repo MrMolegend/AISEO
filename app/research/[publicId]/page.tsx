@@ -5,8 +5,9 @@ import { SiteFooter } from '@/components/layout/site-footer';
 import { ProcessingScreen } from '@/components/research/processing-screen';
 import { ReportView } from '@/components/research/report/report-view';
 import { getCurrentUser } from '@/lib/auth/server';
+import { isResearchPackageId } from '@/config/packages';
+import { reportKindLabel } from '@/lib/jobs/labels';
 import { getResearchJobStore } from '@/lib/jobs/store';
-import { getPackage } from '@/config/packages';
 import { pageTitle } from '@/config/brand';
 import { renderErrorCopy } from '@/lib/errors';
 import type { StoredSource } from '@/schemas/research/shared';
@@ -59,7 +60,14 @@ export default async function ResearchPage({
   if (!job) notFound();
 
   const isOwner = Boolean(ownedJob);
-  const pkg = getPackage(job.packageId);
+  const kindLabel = reportKindLabel(job.packageId);
+  /*
+   * Reports from the previous product are still readable at the URLs they were
+   * shared with, and this is where the two eras part company. `isResearchPackageId`
+   * narrows to the four legacy ids; a market-entry job takes the dossier
+   * renderer below instead.
+   */
+  const legacyPackageId = isResearchPackageId(job.packageId) ? job.packageId : null;
 
   /* ── Failed ────────────────────────────────────────────────────────── */
   if (job.status === 'failed' || job.status === 'cancelled') {
@@ -117,7 +125,7 @@ export default async function ResearchPage({
             publicId={job.publicId}
             initialStage={job.stage}
             subject={job.subjectName}
-            packageName={pkg.name}
+            packageName={kindLabel}
           />
         </main>
         <SiteFooter />
@@ -131,7 +139,7 @@ export default async function ResearchPage({
       <SiteHeader />
       <main id="main">
         <ReportView
-          packageId={job.packageId}
+          packageId={legacyPackageId ?? 'competitor-intelligence'}
           report={job.report as Record<string, unknown>}
           sources={job.sources as StoredSource[]}
           meta={job.meta}

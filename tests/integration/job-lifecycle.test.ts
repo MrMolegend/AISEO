@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createResearchJob } from '@/lib/jobs/create-job';
 import { runResearchJob } from '@/lib/jobs/run-job';
 import {
@@ -8,11 +8,11 @@ import {
 } from '@/lib/jobs/store';
 import { getTokenWallet, resetTokenWalletCache } from '@/lib/tokens';
 import { resetMemoryWallet } from '@/lib/tokens/memory-wallet';
-import { MockResearchProvider, resetResearchProviderCache } from '@/lib/research';
+import { FixtureResearchProvider, resetResearchProviderCache } from '@/lib/research';
 import { resetRateLimiter } from '@/lib/security/rate-limit';
 import { isTerminal } from '@/lib/jobs/stages';
-import { tokenCostFor, getPackage } from '@/config/packages';
-import { PlatformError } from '@/lib/errors';
+import { REPORT_TOKEN_COST, formatCredits } from '@/config/report';
+import { EXAMPLE_SUBMISSION } from '@/fixtures/market-entry/case';
 
 /**
  * The money path, end to end, on the in-memory drivers.
@@ -32,75 +32,17 @@ const USER = '11111111-1111-4111-8111-111111111111';
 const OTHER_USER = '22222222-2222-4222-8222-222222222222';
 
 /*
- * The crawl of the submitted company's own site is stubbed.
+ * The brief, as the four-stage intake produces it.
  *
- * Not because the crawler is unimportant — it has its own suite in
- * tests/unit/crawl.test.ts and tests/integration/safe-fetch.test.ts, both
- * against real HTTP — but because these tests are about where the tokens go.
- * Standing up a fixture site here would make every assertion below depend on
- * DNS, and a failure would say "the crawl broke" when the question was "was the
- * user charged twice".
+ * There is no website field and no crawl to stub: the previous version of this
+ * file mocked a whole site fetch so the pipeline had something to read, which
+ * is exactly the dependency this product removed. Research now comes entirely
+ * from the deterministic fixture provider, so nothing here touches DNS and a
+ * failure below always means what it says.
  */
-vi.mock('@/lib/crawl/crawler', () => ({
-  crawlSite: vi.fn(async () => ({
-    pages: [
-      {
-        sourceRef: 'S1',
-        facts: {
-          url: 'https://northwind-bakery.example.com/',
-          path: '/',
-          httpStatus: 200,
-          title: 'Northwind Bakery — wholesale sourdough in Leeds',
-          metaDescription: 'Wholesale sourdough for independent cafés.',
-          canonical: 'https://northwind-bakery.example.com/',
-          lang: 'en',
-          headings: { h1: ['Northwind Bakery'], h2: ['Wholesale'], h3: [] },
-          text:
-            'We bake sourdough, rye and focaccia in Leeds and deliver wholesale to ' +
-            'independent cafés across Yorkshire. Founded 2016. Wholesale pricing from ' +
-            '£2.40 a loaf, minimum order twelve loaves, next-day delivery.',
-          wordCount: 38,
-          likelyClientRendered: false,
-          structuredDataTypes: ['Bakery'],
-          openGraph: {},
-          internalLinks: [],
-          externalLinks: [],
-          contact: {
-            publishedEmails: ['hello@northwind-bakery.example.com'],
-            contactPaths: ['/contact'],
-            socialProfiles: [],
-          },
-          bytes: 4096,
-        },
-      },
-    ],
-    startUrl: 'https://northwind-bakery.example.com/',
-    finalUrl: 'https://northwind-bakery.example.com/',
-    hostname: 'northwind-bakery.example.com',
-    stats: {
-      fetched: 1,
-      failed: 0,
-      discovered: 3,
-      totalBytes: 4096,
-      durationMs: 120,
-      stoppedBecause: 'exhausted' as const,
-    },
-    notes: [],
-  })),
-}));
+const BRIEF = () => ({ ...EXAMPLE_SUBMISSION });
 
-const BRIEF = () => ({
-  packageId: 'competitor-intelligence' as const,
-  companyName: 'Northwind Bakery',
-  website: 'northwind-bakery.example.com',
-  market: 'GB',
-  industry: 'Artisan bakery',
-  customerDescription: 'Independent cafés buying wholesale bread',
-  knownCompetitors: [],
-  specificQuestions: null,
-});
-
-const COST = tokenCostFor('competitor-intelligence');
+const COST = REPORT_TOKEN_COST;
 
 let submissionCounter = 0;
 /** A fresh, valid submission id. Distinct ids mean distinct reservations. */
@@ -144,11 +86,11 @@ beforeEach(() => {
   resetTokenWalletCache();
   resetResearchProviderCache();
   resetRateLimiter();
-  MockResearchProvider.reset();
+  FixtureResearchProvider.reset();
 });
 
 afterEach(() => {
-  MockResearchProvider.reset();
+  FixtureResearchProvider.reset();
 });
 
 describe('a research job that succeeds', () => {
@@ -205,7 +147,7 @@ describe('a research job that succeeds', () => {
     expect(isTerminal(job!.status)).toBe(true);
 
     // And a late stage write — an abandoned run, a retry — cannot undo it.
-    await store.setStage(created.job.id, 'analysing');
+    await store.setStage(created.job.id, 'strategy');
     const after = await store.getForUser(created.job.publicId, USER);
     expect(after?.status).toBe('complete');
     expect(isTerminal(after!.status)).toBe(true);
@@ -268,7 +210,7 @@ describe('a research job that fails', () => {
     await fund(USER, 500);
     const created = await submit();
 
-    MockResearchProvider.fault = 'unavailable';
+    FixtureResearchProvider.fault = 'unavailable';
     await runResearchJob(created.job);
 
     const store = await getResearchJobStore();
@@ -292,7 +234,7 @@ describe('a research job that fails', () => {
     // about what was *delivered*, not how much was found: a completed report
     // is charged however thin it turns out to be, but a run that produces no
     // report at all cannot be charged for.
-    MockResearchProvider.fault = 'empty';
+    FixtureResearchProvider.fault = 'empty';
     await runResearchJob(created.job);
 
     const store = await getResearchJobStore();
@@ -308,7 +250,7 @@ describe('a research job that fails', () => {
     await fund(USER, 500);
     const created = await submit();
 
-    MockResearchProvider.fault = 'unavailable';
+    FixtureResearchProvider.fault = 'unavailable';
     await runResearchJob(created.job);
     await runResearchJob(created.job);
     await runResearchJob(created.job);
@@ -412,21 +354,26 @@ describe('access', () => {
   });
 });
 
-describe('the package catalogue', () => {
-  it('prices every package from the server, never from a request', async () => {
-    for (const id of [
-      'competitor-intelligence',
-      'lead-finder',
-      'influencer-outreach',
-      'market-pack',
-    ] as const) {
-      expect(tokenCostFor(id)).toBe(getPackage(id).tokenCost);
-      expect(tokenCostFor(id)).toBeGreaterThan(0);
-    }
+describe('the price', () => {
+  it("is the server's, and the request cannot name one", async () => {
+    // There is one product and one cost. The body below tries to buy a report
+    // for nothing; the reservation is for the full amount regardless, because
+    // create-job never reads a price off the request.
+    await fund(USER, COST * 2);
+
+    const created = await submit({ tokenCost: 0, packageId: 'market-entry' });
+
+    expect(created.job.tokenCost).toBe(COST);
+    expect(created.tokensReserved).toBe(COST);
   });
 
-  it('throws rather than guessing a price for an unknown package', () => {
-    // @ts-expect-error deliberately outside the union — this is the runtime guard
-    expect(() => tokenCostFor('made-up')).toThrow(PlatformError);
+  it('is never shown to a customer as a token count', () => {
+    // The internal cost is a hundred tokens; the customer is told about one
+    // report credit. formatCredits is the only conversion, and it never
+    // renders the underlying number.
+    expect(formatCredits(COST)).toBe('1 report credit');
+    expect(formatCredits(COST * 3)).toBe('3 report credits');
+    expect(formatCredits(COST - 1)).toBe('0 report credits');
+    expect(formatCredits(COST * 3)).not.toContain('300');
   });
 });

@@ -8,8 +8,8 @@ import { Card, CardBody } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getCurrentUser, signInPath } from '@/lib/auth/server';
 import { getTokenWallet } from '@/lib/tokens';
+import { reportKindLabel } from '@/lib/jobs/labels';
 import { getResearchJobStore } from '@/lib/jobs/store';
-import { getPackage } from '@/config/packages';
 import { BRAND, pageTitle } from '@/config/brand';
 import { formatTokens } from '@/config/tokens';
 import { stageLabel } from '@/lib/jobs/stages';
@@ -89,7 +89,7 @@ export default async function DashboardPage({
         ) : (
           <ul className="mt-10 space-y-3">
             {jobs.map((job) => {
-              const pkg = getPackage(job.packageId);
+              const kindLabel = reportKindLabel(job.packageId);
               const isDone = job.status === 'complete';
               const isFailed = job.status === 'failed' || job.status === 'cancelled';
 
@@ -106,7 +106,7 @@ export default async function DashboardPage({
                         </div>
 
                         <p className="text-text-subtle mt-1 text-sm">
-                          {pkg.name} · {formatTokens(job.tokenCost)}{' '}
+                          {kindLabel} · {formatTokens(job.tokenCost)}{' '}
                           {BRAND.currency.plural} ·{' '}
                           <time dateTime={job.createdAt}>
                             {new Date(job.createdAt).toLocaleDateString('en-GB', {

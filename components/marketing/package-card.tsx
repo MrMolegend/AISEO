@@ -45,7 +45,10 @@ export function PackageCard({
 
         <ul className="mt-4 space-y-1.5">
           {pkg.deliverables.map((item) => (
-            <li key={item} className="text-text-subtle flex gap-2 text-sm leading-relaxed">
+            <li
+              key={item}
+              className="text-text-subtle flex gap-2 text-sm leading-relaxed"
+            >
               <span aria-hidden="true" className="text-cobalt mt-[3px] shrink-0">
                 ·
               </span>

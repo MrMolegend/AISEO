@@ -1,11 +1,13 @@
 import 'server-only';
-import { getPackage, isResearchPackageId, tokenCostFor } from '@/config/packages';
-import { getEnv } from '@/lib/env';
+import { BRAND } from '@/config/brand';
+import { REPORT_TOKEN_COST } from '@/config/report';
+import { getEnv, researchProvidersReady, servesRealCustomers } from '@/lib/env';
 import { PlatformError } from '@/lib/errors';
 import { logger } from '@/lib/observability/logger';
-import { researchInputSchema, subjectOf } from '@/schemas/research/inputs';
-import { validateAndNormalizeUrl } from '@/lib/security/url-validator';
-import { localTestingEnabled } from '@/lib/security/local-testing';
+import {
+  marketEntryInputSchema,
+  subjectOfMarketEntry,
+} from '@/schemas/market-entry/input';
 import { getTokenWallet } from '@/lib/tokens';
 import { reservationKey, isValidSubmissionId } from '@/lib/tokens/idempotency';
 import { checkResearchRateLimit } from '@/lib/security/rate-limit';
@@ -57,59 +59,54 @@ export async function createResearchJob(
 ): Promise<CreateJobResult> {
   const env = getEnv();
 
-  /* ── 1. Validate ───────────────────────────────────────────────────────── */
+  /* ── 1. Refuse to run on fabricated research ──────────────────────────── */
+
+  /*
+   * Checked first, and before anything is charged.
+   *
+   * A deployment real customers reach must never produce a report built on
+   * fixture data: the output is confident, well-shaped and entirely fictional,
+   * and nothing downstream — not the renderer, not the customer — can tell.
+   * The health endpoint reports the same condition, and the runner checks it
+   * again before synthesis, but doing it here is what makes it free: no row is
+   * created, no credit is reserved, and there is nothing to refund.
+   */
+  if (servesRealCustomers(env) && !researchProvidersReady(env)) {
+    throw new PlatformError(
+      'RESEARCH_PROVIDER_UNAVAILABLE',
+      'Live research providers are not configured on this deployment',
+    );
+  }
+
+  /* ── 2. Validate, and price from the server ───────────────────────────── */
 
   if (!isValidSubmissionId(request.submissionId)) {
-    throw new PlatformError('INVALID_INPUT', 'A valid submission id is required');
+    throw new PlatformError('INVALID_INPUT', 'Missing or malformed submission id');
   }
 
-  const body = request.body as { packageId?: unknown };
-  if (!isResearchPackageId(body?.packageId)) {
-    throw new PlatformError('INVALID_INPUT', 'Unknown research package');
-  }
-
-  const pkg = getPackage(body.packageId);
-  if (!pkg.enabled) {
-    throw new PlatformError('INVALID_INPUT', `${pkg.name} is not currently available`);
-  }
-
-  const parsed = researchInputSchema.safeParse(request.body);
+  const parsed = marketEntryInputSchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new PlatformError('INVALID_INPUT', 'The submitted details are not valid', {
+    throw new PlatformError('INVALID_INPUT', 'The brief did not validate', {
       context: {
-        issues: parsed.error.issues.slice(0, 8).map((i) => ({
-          field: i.path.join('.'),
-          message: i.message,
+        issues: parsed.error.issues.slice(0, 8).map((issue) => ({
+          field: issue.path.join('.'),
+          message: issue.message,
         })),
       },
     });
   }
 
   const input = parsed.data;
-  const subject = subjectOf(input);
+  const subject = subjectOfMarketEntry(input);
 
-  // The website is checked against the full SSRF rules now rather than at fetch
-  // time, so a private address is refused before the user is charged.
-  const urlCheck = validateAndNormalizeUrl(subject.website, {
-    allowNonStandardPorts: localTestingEnabled(),
-  });
-  if (!urlCheck.ok) {
-    // A private or internal address is a different message from a typo, and the
-    // user should be told which it was.
-    const isBlocked =
-      urlCheck.reason === 'not-public-hostname' ||
-      urlCheck.reason === 'unsupported-port' ||
-      urlCheck.reason === 'has-credentials';
-
-    throw new PlatformError(
-      isBlocked ? 'BLOCKED_URL' : 'INVALID_URL',
-      `The website address was rejected: ${urlCheck.reason}`,
-    );
-  }
-
-  /* ── 2. Price, from the catalogue ──────────────────────────────────────── */
-
-  const tokenCost = tokenCostFor(input.packageId);
+  /*
+   * There is one product and one price, and the browser names neither.
+   *
+   * The previous version looked a cost up in a catalogue by an id the client
+   * sent; this one does not read the request at all. A price the client cannot
+   * influence is a price the client cannot forge.
+   */
+  const tokenCost = REPORT_TOKEN_COST;
 
   /* ── 3. Rate limit ─────────────────────────────────────────────────────── */
 
@@ -155,9 +152,11 @@ export async function createResearchJob(
   // does not litter the dashboard with jobs that never ran.
   const balanceBefore = await wallet.getBalance(request.userId);
   if (balanceBefore.available < tokenCost) {
+    // The message is internal; the customer sees the taxonomy's copy, which
+    // speaks in report credits. Tokens never reach a customer-facing string.
     throw new PlatformError(
       'INSUFFICIENT_TOKENS',
-      `${pkg.name} costs ${tokenCost} tokens; the balance is ${balanceBefore.available}`,
+      `A report costs ${tokenCost} internal tokens; the balance is ${balanceBefore.available}`,
       { context: { required: tokenCost, available: balanceBefore.available } },
     );
   }
@@ -169,7 +168,16 @@ export async function createResearchJob(
     input,
     inputHash,
     subjectName: subject.name,
-    subjectDomain: urlCheck.hostname,
+    /*
+     * The target market, denormalised for listings.
+     *
+     * Reusing the `subject_domain` column rather than adding one: it is a
+     * nullable text field that exists to save the dashboard from opening the
+     * jsonb brief, and "which market is this dossier about" is exactly that
+     * kind of question. Legacy rows keep the website hostname they were written
+     * with; nothing reads the two as the same thing.
+     */
+    subjectDomain: input.targetCountry,
   });
 
   const reservation = await wallet.reserve({
@@ -177,8 +185,12 @@ export async function createResearchJob(
     jobId: job.id,
     amount: tokenCost,
     idempotencyKey: reservationKey(request.submissionId),
-    description: `${pkg.name} — ${subject.name}`,
-    metadata: { packageId: input.packageId, publicId: job.publicId },
+    description: `${BRAND.defaultReportTitle} — ${subject.name}`,
+    metadata: {
+      packageId: input.packageId,
+      publicId: job.publicId,
+      targetCountry: input.targetCountry,
+    },
   });
 
   if (reservation.replayed) {

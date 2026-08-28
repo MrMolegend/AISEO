@@ -81,8 +81,7 @@ export function AuthMessage({
   id?: string;
 }) {
   const styles = {
-    error:
-      'border-[var(--color-copper-line)] bg-[var(--color-copper-surface)]',
+    error: 'border-[var(--color-copper-line)] bg-[var(--color-copper-surface)]',
     info: 'border-rule bg-ground-raised',
     success: 'border-cobalt-line bg-cobalt-surface',
   } as const;

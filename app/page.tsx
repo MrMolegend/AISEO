@@ -74,7 +74,9 @@ export default async function LandingPage({
           <div className="grid gap-5 md:grid-cols-3">
             <Card>
               <CardBody>
-                <h2 className="text-text text-base font-semibold">Every claim is cited</h2>
+                <h2 className="text-text text-base font-semibold">
+                  Every claim is cited
+                </h2>
                 <p className="text-text-muted mt-2 text-sm leading-relaxed">
                   Each factual statement carries a numbered link to the page it came from.
                   If a claim has no source, it does not go in the report — a validator
@@ -223,7 +225,9 @@ export default async function LandingPage({
                 {BUNDLE_LIST.map((bundle) => (
                   <Card key={bundle.id}>
                     <CardBody className="p-4">
-                      <p className="text-text-subtle text-xs font-medium">{bundle.name}</p>
+                      <p className="text-text-subtle text-xs font-medium">
+                        {bundle.name}
+                      </p>
                       <p className="text-text mt-1 text-lg font-semibold tabular-nums">
                         {formatTokens(bundle.tokens)}
                       </p>

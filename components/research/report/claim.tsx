@@ -72,7 +72,9 @@ export function ValueWithBasis({
       <dd className="mt-1">
         <span
           className={
-            unavailable ? 'text-text-faint text-sm italic' : 'text-text text-sm font-medium'
+            unavailable
+              ? 'text-text-faint text-sm italic'
+              : 'text-text text-sm font-medium'
           }
         >
           {unavailable ? 'Not publicly available' : value.value}

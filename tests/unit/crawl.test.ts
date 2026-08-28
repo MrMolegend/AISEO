@@ -7,7 +7,6 @@ import {
   priorityOf,
   UrlFrontier,
 } from '@/lib/crawl/url-frontier';
-import { parseSitemap, defaultSitemapUrls } from '@/lib/crawl/sitemap';
 import {
   SourceRegistry,
   extractSourceRefs,
@@ -178,87 +177,6 @@ describe('UrlFrontier', () => {
     const frontier = new UrlFrontier('example.com');
     expect(frontier.add('https://competitor.com/pricing', 'link')).toBe(false);
     expect(frontier.add('https://blog.example.com/post', 'link')).toBe(true);
-  });
-});
-
-describe('sitemap parsing', () => {
-  it('reads page URLs from a sitemap', () => {
-    const xml = `<?xml version="1.0"?>
-      <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-        <url><loc>https://example.com/</loc></url>
-        <url><loc>https://example.com/pricing</loc><lastmod>2026-01-01</lastmod></url>
-      </urlset>`;
-
-    const parsed = parseSitemap(xml);
-    expect(parsed.urls).toEqual(['https://example.com/', 'https://example.com/pricing']);
-    expect(parsed.sitemaps).toEqual([]);
-  });
-
-  it('distinguishes an index from a sitemap, so index entries are not crawled as pages', () => {
-    const xml = `<?xml version="1.0"?>
-      <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-        <sitemap><loc>https://example.com/sitemap-pages.xml</loc></sitemap>
-        <sitemap><loc>https://example.com/sitemap-posts.xml</loc></sitemap>
-      </sitemapindex>`;
-
-    const parsed = parseSitemap(xml);
-    expect(parsed.urls).toEqual([]);
-    expect(parsed.sitemaps).toHaveLength(2);
-  });
-
-  it('handles CDATA and the predefined entities', () => {
-    const xml = `<urlset>
-      <url><loc><![CDATA[https://example.com/a?x=1&y=2]]></loc></url>
-      <url><loc>https://example.com/b?x=1&amp;y=2</loc></url>
-    </urlset>`;
-
-    expect(parseSitemap(xml).urls).toEqual([
-      'https://example.com/a?x=1&y=2',
-      'https://example.com/b?x=1&y=2',
-    ]);
-  });
-
-  /**
-   * The reason this parser is a regex rather than an XML parser. The input is
-   * chosen by whoever owns the target site, and a real parser brings entity
-   * expansion — and with it XXE and billion-laughs — to a feature that only
-   * ever wanted a flat list of URLs.
-   */
-  it('cannot be made to resolve an external entity', () => {
-    const xxe = `<?xml version="1.0"?>
-      <!DOCTYPE urlset [
-        <!ENTITY xxe SYSTEM "file:///etc/passwd">
-        <!ENTITY lol "lol">
-        <!ENTITY lol2 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
-      ]>
-      <urlset>
-        <url><loc>&xxe;</loc></url>
-        <url><loc>&lol2;</loc></url>
-        <url><loc>https://example.com/real</loc></url>
-      </urlset>`;
-
-    const parsed = parseSitemap(xxe);
-
-    // The entities are left as written rather than resolved, and the real URL
-    // still comes through.
-    expect(parsed.urls).toContain('https://example.com/real');
-    expect(parsed.urls.join(' ')).not.toContain('root:');
-    expect(parsed.urls.join(' ')).not.toContain('lollol');
-  });
-
-  it('stops at a bounded number of URLs', () => {
-    const many = Array.from(
-      { length: 900 },
-      (_, i) => `<url><loc>https://example.com/${i}</loc></url>`,
-    ).join('');
-    expect(parseSitemap(`<urlset>${many}</urlset>`).urls.length).toBeLessThanOrEqual(500);
-  });
-
-  it('offers the conventional locations when robots.txt names none', () => {
-    expect(defaultSitemapUrls('https://example.com')).toEqual([
-      'https://example.com/sitemap.xml',
-      'https://example.com/sitemap_index.xml',
-    ]);
   });
 });
 

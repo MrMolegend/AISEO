@@ -33,14 +33,14 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
         'Hotel and restaurant procurement is the larger channel by value for finishing salts in the Gulf, and it is the channel where the two hotel groups who approached you already sit.',
       basis: 'sourced',
       confidence: 'medium',
-      sources: ['S4', 'S5'],
+      sources: ['S16', 'S17'],
     },
     largestObstacle: {
       statement:
         'A food product cannot be registered for import by its overseas producer — the registration is held by a UAE-licensed importer — so shelf access depends on a partner being appointed before any order can ship.',
       basis: 'measured',
       confidence: 'high',
-      sources: ['S15'],
+      sources: ['S4'],
     },
     recommendedNextDecision:
       'Decide whether to spend the next quarter qualifying two or three consolidating importers, or to defer the UAE entirely and commit the same budget to UK wholesale. Do not decide on the distributor agreement itself yet — that decision is downstream of finding out what a portfolio importer would charge to carry your registration.',
@@ -68,14 +68,14 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
           'Finishing salts are described by category managers as a low-volume, high-margin line that anchors a premium seasoning fixture.',
         basis: 'sourced',
         confidence: 'medium',
-        sources: ['S4'],
+        sources: ['S16'],
       },
       {
         statement:
           'Hotel food and beverage procurement teams report increasing use of named-provenance ingredients on menus.',
         basis: 'sourced',
         confidence: 'medium',
-        sources: ['S5'],
+        sources: ['S17'],
       },
       {
         statement:
@@ -100,7 +100,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
           'Most hospitality buying still runs through consolidated distributors rather than direct import, even where the buyer has chosen the brand.',
         basis: 'sourced',
         confidence: 'medium',
-        sources: ['S5'],
+        sources: ['S17'],
       },
     ],
     trends: [
@@ -138,21 +138,21 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
             'Flake sea salt in retail and catering formats — the same product form and the same fixture position.',
           basis: 'sourced',
           confidence: 'high',
-          sources: ['S6'],
+          sources: ['S8'],
         },
         customerOverlap: {
           statement:
             'Sold through appointed Gulf distributors into premium grocery and hospitality supply, which is the channel you are considering.',
           basis: 'sourced',
           confidence: 'high',
-          sources: ['S6'],
+          sources: ['S8'],
         },
         marketPresence: {
           statement:
             'Lists appointed distributors covering the Gulf region on its own stockist pages.',
           basis: 'sourced',
           confidence: 'medium',
-          sources: ['S6'],
+          sources: ['S8'],
         },
         positioning:
           'Heritage English flake salt, widely recognised by chefs, positioned as the default premium finishing salt rather than as a discovery.',
@@ -169,7 +169,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
               'Established distributor relationships across the Gulf, so a buyer can order it without any new registration work.',
             basis: 'sourced',
             confidence: 'medium',
-            sources: ['S6'],
+            sources: ['S8'],
           },
         ],
         gaps: [
@@ -196,20 +196,20 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
             'Sea salt in retail and trade formats, sold on origin and hand-harvesting, which is the same claim you make.',
           basis: 'sourced',
           confidence: 'high',
-          sources: ['S7'],
+          sources: ['S9'],
         },
         customerOverlap: {
           statement:
             'Gulf distribution handled through a regional speciality food importer rather than direct retail supply.',
           basis: 'sourced',
           confidence: 'high',
-          sources: ['S7'],
+          sources: ['S9'],
         },
         marketPresence: {
           statement: 'States export to more than thirty markets including the Gulf.',
           basis: 'sourced',
           confidence: 'medium',
-          sources: ['S7'],
+          sources: ['S9'],
         },
         positioning:
           'Small-producer provenance with a protected-origin story, sold as a considered purchase rather than a staple.',
@@ -226,7 +226,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
               'Demonstrates that a producer of roughly your size can reach this market through a speciality importer — the route is proven, not theoretical.',
             basis: 'sourced',
             confidence: 'medium',
-            sources: ['S7'],
+            sources: ['S9'],
           },
         ],
         gaps: [
@@ -253,20 +253,20 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
             'The pantry range includes flake sea salts alongside rock salts and seasoning blends.',
           basis: 'sourced',
           confidence: 'medium',
-          sources: ['S8'],
+          sources: ['S10'],
         },
         customerOverlap: {
           statement:
             'Premium grocery shoppers in Dubai — the same buyer your retail pack is aimed at.',
           basis: 'inferred',
           confidence: 'medium',
-          sources: ['S8'],
+          sources: ['S10'],
         },
         marketPresence: {
           statement: 'A standing category in a national premium grocery chain.',
           basis: 'sourced',
           confidence: 'medium',
-          sources: ['S8'],
+          sources: ['S10'],
         },
         positioning:
           'A curated fixture rather than a single brand — entry means displacing a facing, not creating one.',
@@ -274,7 +274,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
           value: 'AED 28–65 for imported speciality flake salt retail packs',
           basis: 'measured',
           confidence: 'medium',
-          sources: ['S10'],
+          sources: ['S12'],
           note: 'Range observed across a competing retailer’s speciality salt listings, not this chain’s.',
         },
         strengths: [
@@ -283,7 +283,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
               'The category is already established, so no buyer education is needed to explain what a finishing salt is.',
             basis: 'sourced',
             confidence: 'medium',
-            sources: ['S8'],
+            sources: ['S10'],
           },
         ],
         gaps: [
@@ -310,20 +310,20 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
             'Carries flake sea salt and Himalayan pink salt in a pantry seasonings range delivered across the UAE.',
           basis: 'sourced',
           confidence: 'medium',
-          sources: ['S9'],
+          sources: ['S11'],
         },
         customerOverlap: {
           statement:
             'Reaches the same premium household buyer without requiring a physical fixture decision.',
           basis: 'inferred',
           confidence: 'low',
-          sources: ['S9'],
+          sources: ['S11'],
         },
         marketPresence: {
           statement: 'National delivery coverage within the UAE.',
           basis: 'sourced',
           confidence: 'medium',
-          sources: ['S9'],
+          sources: ['S11'],
         },
         positioning:
           'Convenience-led online grocery with a speciality tail — a plausible first listing rather than a destination.',
@@ -340,7 +340,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
               'A route to a first UAE listing that does not require winning shelf space in a national chain.',
             basis: 'inferred',
             confidence: 'low',
-            sources: ['S9'],
+            sources: ['S11'],
           },
         ],
         gaps: [
@@ -349,7 +349,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
               'Still requires the same import registration, so it lowers the commercial barrier without lowering the regulatory one.',
             basis: 'inferred',
             confidence: 'medium',
-            sources: ['S15'],
+            sources: ['S4'],
           },
         ],
         confidence: 'low',
@@ -374,7 +374,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
               'Named provenance on a menu is being used increasingly as a differentiator by hospitality buyers.',
             basis: 'sourced',
             confidence: 'medium',
-            sources: ['S5'],
+            sources: ['S17'],
           },
         ],
         purchaseCriteria: [
@@ -392,7 +392,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
               'Buying still runs through consolidated distributors even when the buyer has chosen the brand, so a producer without a distributor is difficult to buy from.',
             basis: 'sourced',
             confidence: 'high',
-            sources: ['S5'],
+            sources: ['S17'],
           },
         ],
         channels: [
@@ -423,7 +423,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
               'Listing decisions run from sample submission through registration verification to a trial period.',
             basis: 'sourced',
             confidence: 'low',
-            sources: ['S12'],
+            sources: ['S14'],
           },
         ],
         objections: [
@@ -432,7 +432,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
               'A fixture that is already full makes a listing a replacement decision rather than an addition.',
             basis: 'inferred',
             confidence: 'medium',
-            sources: ['S8'],
+            sources: ['S10'],
           },
         ],
         channels: [
@@ -474,7 +474,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
               'The common route for a first-time exporter is an appointed distributor who already holds importer licensing and can carry the registration.',
             basis: 'measured',
             confidence: 'high',
-            sources: ['S13'],
+            sources: ['S7'],
           },
           {
             statement:
@@ -508,7 +508,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
               'National online grocery carries the same speciality salt category with UAE-wide delivery.',
             basis: 'sourced',
             confidence: 'medium',
-            sources: ['S9'],
+            sources: ['S11'],
           },
         ],
       },
@@ -526,7 +526,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
               'Retailers rarely take on the registration administration for a single small line.',
             basis: 'measured',
             confidence: 'high',
-            sources: ['S13'],
+            sources: ['S7'],
           },
         ],
       },
@@ -544,7 +544,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
               'A producer outside the country cannot register a product in its own name; the registration is held by the importer.',
             basis: 'measured',
             confidence: 'high',
-            sources: ['S15'],
+            sources: ['S4'],
           },
         ],
       },
@@ -568,14 +568,14 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
           'Imported speciality flake salt retail packs are listed between AED 28 and AED 65 at a national grocery chain.',
         basis: 'measured',
         confidence: 'medium',
-        sources: ['S10'],
+        sources: ['S12'],
       },
       {
         statement:
           'Imported premium pantry lines commonly sit at a three to four times landed-cost retail multiple, covering distributor margin, retailer margin and listing costs.',
         basis: 'sourced',
         confidence: 'low',
-        sources: ['S11'],
+        sources: ['S13'],
       },
     ],
     suggestedPositioning:
@@ -609,7 +609,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
               'Registration is submitted by a UAE-licensed food establishment and requires specification, ingredient declaration and label artwork in Arabic and English.',
             basis: 'measured',
             confidence: 'high',
-            sources: ['S15'],
+            sources: ['S4'],
           },
         ],
         confidence: 'high',
@@ -627,14 +627,14 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
               'Mandatory particulars must appear in Arabic; English may appear alongside but does not replace it.',
             basis: 'measured',
             confidence: 'high',
-            sources: ['S16'],
+            sources: ['S5'],
           },
           {
             statement:
               'Stickering before release from the port is permitted where no mandatory particular is obscured.',
             basis: 'measured',
             confidence: 'high',
-            sources: ['S16'],
+            sources: ['S5'],
           },
         ],
         confidence: 'high',
@@ -652,7 +652,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
               'The GCC common external tariff rate applied to chapter 25 is five percent of the customs value.',
             basis: 'measured',
             confidence: 'high',
-            sources: ['S17'],
+            sources: ['S6'],
           },
         ],
         confidence: 'high',
@@ -733,7 +733,7 @@ export const FIXTURE_SYNTHESIS: ModelReport = {
             'Imported speciality flake salt retail packs are listed between AED 28 and AED 65.',
           basis: 'measured',
           confidence: 'medium',
-          sources: ['S10'],
+          sources: ['S12'],
         },
       ],
       confidence: 'medium',

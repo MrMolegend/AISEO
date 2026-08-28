@@ -423,7 +423,9 @@ function IdealCustomer({ report }: { report: AnyReport }) {
     <div className="space-y-4">
       <Card>
         <CardBody>
-          <p className="text-text-muted max-w-[68ch] leading-relaxed">{icp.description}</p>
+          <p className="text-text-muted max-w-[68ch] leading-relaxed">
+            {icp.description}
+          </p>
 
           <dl className="mt-5 grid gap-4 sm:grid-cols-3">
             <div>

@@ -105,6 +105,14 @@ export const FIXTURE_PAGES: Readonly<Record<string, FixturePage>> = {
     reason: 'robots-disallowed',
   },
 
+  'https://gulfoodtrade.example/guides/first-shipment-costs': page(
+    'What a first food shipment actually costs',
+    ['Beyond freight and duty'],
+    [
+      'First-time exporters commonly underestimate registration lead time, Arabic artwork origination and the cost of a compliant first sticker run.',
+    ],
+  ),
+
   /* Times out. The excerpt from the index is still usable as a weak signal. */
   'https://speciality-food-mena.example/reports/premium-pantry-price-architecture': {
     kind: 'fail',

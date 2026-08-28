@@ -1,7 +1,9 @@
 import 'server-only';
 import { getEnv, hasRealResearchProvider } from '@/lib/env';
-import { MockResearchProvider } from './mock-provider';
+import { FixtureResearchProvider, fixturePageFetcher } from './fixture-provider';
 import type { ResearchProvider } from './provider';
+import type { RetrievalTransport } from './retrieve';
+import { liveTransport } from './retrieve';
 
 export type {
   ResearchProvider,
@@ -10,19 +12,23 @@ export type {
   SearchResponse,
 } from './provider';
 export { MAX_RESULTS_PER_QUERY, NON_CRAWLABLE_HOSTS } from './provider';
-export { MockResearchProvider } from './mock-provider';
+export { FixtureResearchProvider } from './fixture-provider';
 
 let cached: ResearchProvider | null = null;
 
 /**
  * Resolves the research provider.
  *
- * Falls back to the mock when no key is configured, so the application runs
- * without an account — but the fallback is loud rather than silent. The health
- * endpoint reports a production deployment running on the mock as *failing*,
- * not degraded, because a mock research provider is the most dangerous
- * misconfiguration in this system: it returns confident, well-shaped,
- * completely fictional sources, and nothing downstream can tell.
+ * Falls back to deterministic fixtures when no key is configured, so the
+ * application runs end to end without an account — but the fallback is loud
+ * rather than silent. `isLive` is false on the fixture provider, the health
+ * endpoint reports a production deployment running on it as failing, and the
+ * job pipeline refuses to start a customer's report at all.
+ *
+ * That triple is deliberate. A fabricated research provider is the single most
+ * dangerous misconfiguration in this system: it produces confident,
+ * well-shaped, entirely fictional sources, and nothing downstream can tell.
+ * Reporting it is not enough — the job has to not run.
  */
 export async function getResearchProvider(): Promise<ResearchProvider> {
   if (cached) return cached;
@@ -30,13 +36,31 @@ export async function getResearchProvider(): Promise<ResearchProvider> {
   const env = getEnv();
 
   if (!hasRealResearchProvider(env)) {
-    cached = new MockResearchProvider();
+    cached = new FixtureResearchProvider();
     return cached;
   }
 
   const { TavilyResearchProvider } = await import('./tavily-provider');
   cached = new TavilyResearchProvider(env.TAVILY_API_KEY!);
   return cached;
+}
+
+/**
+ * Resolves the retrieval transport that pairs with the provider.
+ *
+ * Chosen here rather than at the call site so the two can never disagree: a
+ * deployment running on fixture search must not make real HTTP requests during
+ * retrieval, or CI acquires network egress by accident and the fixture case
+ * stops being reproducible.
+ *
+ * The fixture transport allows every robots check, because the fixture
+ * expresses a refusal through the page fetcher instead — one place decides
+ * which pages fail and why.
+ */
+export async function getRetrievalTransport(): Promise<RetrievalTransport> {
+  const provider = await getResearchProvider();
+  if (provider.isLive) return liveTransport;
+  return { fetchPage: fixturePageFetcher, robotsAllows: async () => true };
 }
 
 /** Test-only: clears the memoised provider so env changes take effect. */

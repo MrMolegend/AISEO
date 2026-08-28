@@ -127,7 +127,7 @@ export const FIXTURE_RESULTS: Record<Area, SearchResult[]> = {
       'Premium pantry price architecture in Gulf grocery',
       'Imported premium pantry lines commonly sit at a three to four times landed-cost retail multiple, reflecting distributor margin, retailer margin and listing costs.',
       '2024-12-09',
-      0.8,
+      0.92,
     ),
   ],
 
@@ -137,7 +137,7 @@ export const FIXTURE_RESULTS: Record<Area, SearchResult[]> = {
       'How grocery listing decisions are made — Dubai Chamber of Commerce',
       'Category managers described a listing process running from sample submission through registration verification to a trial period, typically over one to two quarters.',
       '2024-08-14',
-      0.82,
+      0.9,
     ),
   ],
 
