@@ -46,19 +46,20 @@ test.describe('the header tells you whether you are signed in', () => {
     await page.goto('/');
 
     const header = page.locator('header');
-    // Sign in is visible at every width. Create account moves into the menu
-    // below `sm`, where three controls plus the trigger would overflow.
+    // Sign in is visible at every width — someone who already has an account
+    // should never have to open a menu to use it. Start report moves into the
+    // menu below `sm`, where both controls plus the trigger would overflow.
     await expect(header.getByRole('link', { name: 'Sign in' })).toBeVisible();
     await expect(header.getByRole('button', { name: /Account menu/ })).toHaveCount(0);
 
     const viewport = page.viewportSize();
     if ((viewport?.width ?? 0) >= 640) {
-      await expect(header.getByRole('link', { name: 'Create account' })).toBeVisible();
+      await expect(header.getByRole('link', { name: 'Start report' })).toBeVisible();
     } else {
       await page.getByRole('button', { name: 'Open menu' }).click();
       await expect(
         page.getByRole('menu', { name: 'Site' }).getByRole('menuitem', {
-          name: 'Create account',
+          name: 'Start report',
         }),
       ).toBeVisible();
     }
@@ -80,7 +81,7 @@ test.describe('the header tells you whether you are signed in', () => {
     const menu = page.getByRole('menu', { name: 'Account' });
     await expect(menu).toBeVisible();
     await expect(menu.getByText(SESSION.email)).toBeVisible();
-    for (const item of ['Dashboard', 'My reports', 'Account']) {
+    for (const item of ['Intelligence Desk', 'My dossiers', 'Account']) {
       await expect(menu.getByRole('menuitem', { name: item })).toBeVisible();
     }
     await expect(menu.getByRole('menuitem', { name: 'Sign out' })).toBeVisible();
@@ -103,8 +104,10 @@ test.describe('the header tells you whether you are signed in', () => {
 
     await page.getByRole('button', { name: 'Open menu' }).click();
     const menu = page.getByRole('menu', { name: 'Site' });
-    await expect(menu.getByRole('menuitem', { name: 'Dashboard' })).toBeVisible();
-    await expect(menu.getByRole('menuitem', { name: 'Pricing' })).toBeVisible();
+    await expect(menu.getByRole('menuitem', { name: 'Intelligence Desk' })).toBeVisible();
+    await expect(menu.getByRole('menuitem', { name: 'Assess a market' })).toBeVisible();
+    await expect(menu.getByRole('menuitem', { name: 'Account' })).toBeVisible();
+    await expect(menu.getByRole('menuitem', { name: 'Sign out' })).toBeVisible();
   });
 });
 

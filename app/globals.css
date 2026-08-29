@@ -407,13 +407,23 @@
    large area, or a blur, is absent on purpose.
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/*
+ * A rise, and only a rise.
+ *
+ * This used to fade from `opacity: 0` as well, which meant a section waiting to
+ * be revealed was not merely low — it was invisible, and every piece of text in
+ * it failed WCAG contrast for as long as it waited. axe reported five hundred
+ * violations on the landing page for exactly that reason, and it was right to:
+ * content held at zero opacity by a script is content a reader loses if the
+ * script never runs, which is the failure this component was already written to
+ * avoid. Moving twelve pixels is the whole effect; it reads the same and it is
+ * always legible.
+ */
 @keyframes rise {
   from {
-    opacity: 0;
     transform: translate3d(0, 12px, 0);
   }
   to {
-    opacity: 1;
     transform: none;
   }
 }
@@ -465,7 +475,6 @@
    * invisible forever if the observer never runs.
    */
   [data-reveal='pending'] {
-    opacity: 0;
     transform: translate3d(0, 12px, 0);
   }
 
@@ -517,7 +526,6 @@
   }
 
   [data-reveal='pending'] {
-    opacity: 1;
     transform: none;
   }
 

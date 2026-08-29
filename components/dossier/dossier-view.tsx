@@ -44,6 +44,12 @@ export function DossierView({
   /** Set for the worked example, which is fictional and says so throughout. */
   illustrative?: boolean;
 }) {
+  /*
+   * The example page carries its own h1 ("What a market-entry dossier looks
+   * like"), so the dossier's title steps down to an h2 there. Two h1s leave a
+   * screen-reader user with two competing answers to "what is this page".
+   */
+  const titleLevel = illustrative ? 2 : 1;
   const lookup = buildLookup(report.sources, report.grades);
   const { decision } = report;
 
@@ -82,7 +88,7 @@ export function DossierView({
         )}
 
         <Section id="decision" hideHeading label="Decision">
-          <DecisionHeader report={report} />
+          <DecisionHeader report={report} titleLevel={titleLevel} />
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
             <Meta>
               {BRAND.defaultReportTitle}

@@ -36,8 +36,23 @@ const SUITABILITY_TOKEN = {
 
 /* ───────────────────────── 1. Decision header ────────────────────────────── */
 
-export function DecisionHeader({ report }: { report: MarketEntryReport }) {
+export function DecisionHeader({
+  report,
+  titleLevel = 1,
+}: {
+  report: MarketEntryReport;
+  /**
+   * Which heading level the business name takes.
+   *
+   * A dossier on its own page is that page's h1. The same dossier embedded in
+   * the worked example sits under the example page's own h1, and two h1s on one
+   * page is not a style question — it leaves a screen-reader user with two
+   * competing answers to "what is this page".
+   */
+  titleLevel?: 1 | 2;
+}) {
   const { decision } = report;
+  const Title = titleLevel === 1 ? 'h1' : 'h2';
 
   return (
     <Panel edge={VERDICT_TOKEN[decision.verdict]} className="overflow-hidden">
@@ -47,9 +62,9 @@ export function DecisionHeader({ report }: { report: MarketEntryReport }) {
             {countryName(decision.originCountry)} → {countryName(decision.targetCountry)}
             {decision.targetRegion ? ` · ${decision.targetRegion}` : ''}
           </Meta>
-          <h1 className="font-display text-text mt-3 text-[30px] leading-tight md:text-[38px]">
+          <Title className="font-display text-text mt-3 text-[30px] leading-tight md:text-[38px]">
             {decision.businessName}
-          </h1>
+          </Title>
           <p className="text-text-muted mt-1 text-[15px]">{decision.productName}</p>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">

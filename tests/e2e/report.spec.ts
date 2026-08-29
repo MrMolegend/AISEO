@@ -35,7 +35,9 @@ test.describe('the document', () => {
   });
 
   test('opens with the decision, not with methodology', async ({ page }) => {
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    // Exactly one h1: the example page's own. The dossier's title steps down to
+    // an h2 when it is embedded rather than being the page.
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
     await expect(page.locator('#decision')).toBeVisible();
   });
 
@@ -67,7 +69,9 @@ test.describe('the document', () => {
   test('presents regulation as research rather than legal advice', async ({ page }) => {
     const regulation = page.locator('#regulation');
     await regulation.scrollIntoViewIfNeeded();
-    await expect(regulation.getByRole('note')).toContainText(/not legal advice/i);
+    await expect(regulation.getByRole('note')).toContainText(
+      /not legal or regulatory advice/i,
+    );
   });
 });
 
@@ -79,8 +83,10 @@ test.describe('evidence is labelled, not implied', () => {
   test('names the grade of a claim in words', async ({ page }) => {
     // Every grade the fixture carries must appear as text somewhere. A coloured
     // dot alone is unreadable to a screen reader and to a printer.
+    // Case-insensitive: the badges are set in the metadata face, which
+    // uppercases them, and `innerText` reports text as rendered.
     const body = await page.locator('main').innerText();
-    expect(body).toMatch(/Verified fact|Unverified|Strategic inference|You told us/);
+    expect(body).toMatch(/verified fact|unverified|strategic inference|you told us/i);
   });
 
   test('distinguishes a page we read from one we only saw summarised', async ({
