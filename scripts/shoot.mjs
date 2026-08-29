@@ -95,7 +95,16 @@ for (const scheme of ['dark', 'light']) {
     if (ONLY && !view.id.includes(ONLY)) continue;
     const context = await browser.newContext({
       viewport: view.viewport,
-      deviceScaleFactor: 2,
+      /*
+       * Retina only for the framed captures.
+       *
+       * A full-page shot of the dossier is already 42,000 CSS pixels tall, and
+       * the print view is taller still because print opens all forty-three
+       * source drawers. At 2× that is past what Chromium will encode: the
+       * capture times out rather than failing, which reads as a hung script.
+       * 1× is plenty to inspect layout, spacing and contrast by eye.
+       */
+      deviceScaleFactor: view.full ? 1 : 2,
       colorScheme: scheme,
       reducedMotion: view.reducedMotion ?? 'no-preference',
     });
@@ -176,7 +185,13 @@ for (const scheme of ['dark', 'light']) {
     await page.waitForTimeout(700);
 
     const file = `${OUT}/${view.id}-${scheme}.png`;
-    await page.screenshot({ path: file, fullPage: Boolean(view.full) });
+    await page.screenshot({
+      path: file,
+      fullPage: Boolean(view.full),
+      // A tall document takes real time to encode. The default 30s is a
+      // timeout on the encoder, not on anything that could be wrong.
+      timeout: 120_000,
+    });
 
     if (errors.length > 0) {
       problems += errors.length;
