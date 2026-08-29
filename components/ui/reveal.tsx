@@ -68,7 +68,52 @@ export function Reveal({
     );
 
     observer.observe(element);
-    return () => observer.disconnect();
+
+    /*
+     * The safety net, and the reason it exists.
+     *
+     * An IntersectionObserver reports *changes* in intersection, sampled per
+     * frame. An element shorter than the distance a single jump covers can
+     * therefore be skipped entirely — below the viewport on one frame, above it
+     * on the next — and it then stays at opacity 0 for as long as the reader
+     * never scrolls back. In-page anchor links do exactly that kind of jump,
+     * and so does any script that walks a page in large steps.
+     *
+     * This was not theoretical: the screenshot QA produced three sections that
+     * were blank in the image and fully present in the DOM, which is precisely
+     * what that failure looks like from the outside.
+     *
+     * So position is also checked directly — once shortly after mount, for a
+     * component that hydrated after the reader had already arrived, and again
+     * on scroll. Anything at or above the fold is shown. The check is a single
+     * rect read behind a rAF guard, and it stops the moment it succeeds.
+     */
+    let frame = 0;
+
+    const revealIfReached = () => {
+      frame = 0;
+      const box = element.getBoundingClientRect();
+      if (box.top < window.innerHeight) {
+        setState('shown');
+        cleanup();
+      }
+    };
+
+    const onScroll = () => {
+      if (frame === 0) frame = window.requestAnimationFrame(revealIfReached);
+    };
+
+    const cleanup = () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', onScroll);
+      if (frame !== 0) window.cancelAnimationFrame(frame);
+      clearTimeout(settle);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    const settle = setTimeout(revealIfReached, 250);
+
+    return cleanup;
   }, []);
 
   return (

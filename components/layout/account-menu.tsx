@@ -2,12 +2,11 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { BRAND } from '@/config/brand';
-import { formatTokens } from '@/config/tokens';
 
 /**
  * The signed-in control.
  *
- * Carries the account's identity and its balance, so that on any page — and at
+ * Carries the account's identity and its remaining report credits, so that on
  * any width — there is one obvious place that answers "am I signed in, as whom,
  * and with how many tokens". Previously the balance lived in a chip that
  * disappeared below `sm` and the navigation disappeared below `md`, which left
@@ -20,10 +19,11 @@ import { formatTokens } from '@/config/tokens';
 
 export function AccountMenu({
   email,
-  balance,
+  credits,
 }: {
   email: string | null;
-  balance: { available: number; reserved: number } | null;
+  /** Whole report credits. The token figure never leaves the server. */
+  credits: number;
 }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -68,19 +68,15 @@ export function AccountMenu({
         >
           {initial}
         </span>
-        {/* The balance sits in the trigger so it survives to the narrowest
-            viewport, where a separate chip would have been hidden. */}
-        {balance && (
-          <span className="text-[13px] font-medium tabular-nums">
-            {formatTokens(balance.available)}
-          </span>
-        )}
+        {/* The credit count sits in the trigger so it survives to the
+            narrowest viewport, where a separate chip would have been hidden. */}
+        <span className="text-[13px] font-medium" data-numeric>
+          {credits}
+        </span>
         <span className="sr-only">
           Account menu
           {email ? ` for ${email}` : ''}
-          {balance
-            ? `. ${formatTokens(balance.available)} ${BRAND.currency.plural} available`
-            : ''}
+          {`. ${credits} ${credits === 1 ? BRAND.credit.singular : BRAND.credit.plural} remaining`}
         </span>
       </button>
 
@@ -94,24 +90,18 @@ export function AccountMenu({
             <p className="text-text truncate text-sm font-medium">
               {email ?? 'Signed in'}
             </p>
-            {balance && (
-              <p className="text-text-subtle mt-0.5 text-xs tabular-nums">
-                {formatTokens(balance.available)} {BRAND.currency.plural}
-                {balance.reserved > 0 && ` · ${formatTokens(balance.reserved)} held`}
-              </p>
-            )}
+            <p className="text-text-subtle mt-0.5 text-xs" data-numeric>
+              {credits} {credits === 1 ? BRAND.credit.singular : BRAND.credit.plural}
+            </p>
           </div>
 
           <div role="none" className="border-rule my-1 border-t" />
 
           <MenuLink href="/dashboard" onNavigate={() => setOpen(false)}>
-            Dashboard
+            Intelligence Desk
           </MenuLink>
-          <MenuLink href="/dashboard#reports" onNavigate={() => setOpen(false)}>
-            My reports
-          </MenuLink>
-          <MenuLink href="/wallet" onNavigate={() => setOpen(false)}>
-            {BRAND.currency.name}
+          <MenuLink href="/dashboard#dossiers" onNavigate={() => setOpen(false)}>
+            My dossiers
           </MenuLink>
           <MenuLink href="/account" onNavigate={() => setOpen(false)}>
             Account

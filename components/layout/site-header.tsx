@@ -1,10 +1,13 @@
 import Link from 'next/link';
 import { Logo } from '@/components/ui/logo';
+import { Button } from '@/components/ui/button';
 import { getCurrentUser } from '@/lib/auth/server';
 import { getTokenWallet } from '@/lib/tokens';
 import { BRAND } from '@/config/brand';
+import { creditsFrom } from '@/config/report';
 import { AccountMenu } from './account-menu';
 import { MobileNav } from './mobile-nav';
+import { ScrollShrink } from './scroll-shrink';
 
 /**
  * Site header.
@@ -13,42 +16,45 @@ import { MobileNav } from './mobile-nav';
  * page never flashes a signed-out header before correcting itself. Identity
  * comes from a verified JWT, never from anything the browser volunteered.
  *
- * Both states are deliberately explicit. Signed out shows Sign in *and* Create
- * account, because "sign in" alone reads as a wall to someone who has never
- * been here. Signed in shows who you are and what you have, at every width —
- * the previous version hid the navigation below `md` and the balance below
- * `sm`, with no menu in their place, so a phone user saw a logo and a circle.
+ * What it shows a signed-in visitor is a count of report credits, not a token
+ * balance. The conversion happens here, on the server, so no token figure is
+ * ever sent to the browser — there is nothing in the markup for a later change
+ * to accidentally reveal.
  */
 export async function SiteHeader() {
   const user = await getCurrentUser();
 
-  let balance: { available: number; reserved: number } | null = null;
+  let credits: number | null = null;
   if (user) {
     const wallet = await getTokenWallet();
-    balance = await wallet.getBalance(user.id);
+    const balance = await wallet.getBalance(user.id);
+    credits = creditsFrom(balance.available);
   }
 
   const links = user
     ? [
-        { href: '/dashboard', label: 'Dashboard' },
-        { href: '/research/new', label: 'New research' },
-        { href: '/wallet', label: BRAND.currency.name },
-        { href: '/pricing', label: 'Pricing' },
+        { href: '/dashboard', label: 'Intelligence Desk' },
+        { href: '/assess', label: 'Assess a market' },
+        { href: '/methodology', label: 'Methodology' },
       ]
-    : [{ href: '/pricing', label: 'Pricing' }];
+    : [
+        { href: '/#how-it-works', label: 'How it works' },
+        { href: '/example', label: 'Example report' },
+        { href: '/methodology', label: 'Methodology' },
+      ];
 
   return (
-    <header className="border-rule bg-ground-raised/90 sticky top-0 z-40 border-b backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-[1240px] items-center gap-3 px-5 md:px-8">
+    <ScrollShrink>
+      <div className="mx-auto flex h-[var(--header-height)] max-w-[var(--container-page)] items-center gap-4 px-5 transition-[height] duration-[var(--duration-base)] ease-[var(--ease-out-soft)] md:px-8">
         <Link
           href={user ? '/dashboard' : '/'}
-          className="focus-visible:ring-cobalt rounded-[var(--radius-control)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="text-text rounded-[var(--radius-control)] focus-visible:outline-none"
           aria-label={`${BRAND.name} home`}
         >
           <Logo />
         </Link>
 
-        <nav aria-label="Main" className="ml-2 hidden items-center gap-1 md:flex">
+        <nav aria-label="Main" className="ml-4 hidden items-center gap-1 md:flex">
           {links.map((link) => (
             <HeaderLink key={link.href} href={link.href}>
               {link.label}
@@ -58,25 +64,22 @@ export async function SiteHeader() {
 
         <div className="ml-auto flex items-center gap-2">
           {user ? (
-            <AccountMenu email={user.email} balance={balance} />
+            <AccountMenu email={user.email} credits={credits ?? 0} />
           ) : (
             <>
               <Link
                 href="/sign-in"
-                className="text-text-muted hover:bg-ground-sunken hover:text-text focus-visible:ring-cobalt inline-flex h-9 items-center rounded-[var(--radius-control)] px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="text-text-muted hover:text-text inline-flex h-9 items-center rounded-[var(--radius-control)] px-3 text-[13px] font-medium transition-colors"
               >
                 Sign in
               </Link>
-              {/* Both buttons plus the menu trigger overflow a 360px viewport,
-                  so below `sm` this one lives in the menu instead. Sign in stays
-                  visible, because someone who already has an account should
-                  never have to open a menu to use it. */}
-              <Link
-                href="/sign-up"
-                className="bg-signal text-text-on-signal hover:bg-signal-dim focus-visible:ring-cobalt hidden h-9 items-center rounded-[var(--radius-control)] px-4 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:inline-flex"
-              >
-                Create account
-              </Link>
+              {/* Both controls plus the menu trigger overflow a 320px viewport,
+                  so below `sm` this one lives in the menu instead. Sign in
+                  stays visible: someone who already has an account should never
+                  have to open a menu to use it. */}
+              <Button asChild size="sm" className="hidden sm:inline-flex">
+                <Link href="/assess">Start report</Link>
+              </Button>
             </>
           )}
 
@@ -85,15 +88,23 @@ export async function SiteHeader() {
           <MobileNav links={links} signedIn={Boolean(user)} />
         </div>
       </div>
-    </header>
+    </ScrollShrink>
   );
 }
 
+/**
+ * A navigation link whose underline travels rather than appears.
+ *
+ * The transform runs on a pseudo-element scaled from its left edge, so the
+ * motion is a single composited property and the text never shifts. A border
+ * that toggles on hover would reflow the row by a pixel, which is the kind of
+ * thing nobody can name and everybody notices.
+ */
 function HeaderLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <Link
       href={href}
-      className="text-text-muted hover:bg-ground-sunken hover:text-text focus-visible:ring-cobalt rounded-[var(--radius-control)] px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+      className="text-text-muted hover:text-text relative rounded-[var(--radius-control)] px-3 py-2 text-[13px] font-medium transition-colors after:absolute after:right-3 after:bottom-1 after:left-3 after:h-px after:origin-left after:scale-x-0 after:bg-[var(--color-signal)] after:transition-transform after:duration-[var(--duration-fast)] after:ease-[var(--ease-out-soft)] hover:after:scale-x-100"
     >
       {children}
     </Link>
