@@ -49,9 +49,17 @@ export const BRAND = {
   credit: {
     singular: 'report credit',
     plural: 'report credits',
-    /** Shown wherever a balance appears for the first time on a page. */
+    /*
+     * Shown wherever a balance appears for the first time on a page. It says
+     * what a credit is not, without naming the internal unit.
+     *
+     * An earlier version added "and they are not the AI provider's tokens",
+     * which was true and was the only place the word reached a customer-facing
+     * page. It also raised the question it was trying to close. What a person
+     * needs here is that this is not a currency and not an investment.
+     */
     disclaimer:
-      'Report credits are service credits used to run market-entry research. They are not cryptocurrency, they are not the AI provider’s tokens, and they have no cash value.',
+      'Report credits are service credits used to run market-entry research. They are not cryptocurrency, cannot be transferred, and have no cash value.',
   },
 
   /**

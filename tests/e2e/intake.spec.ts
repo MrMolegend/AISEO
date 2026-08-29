@@ -248,8 +248,27 @@ test.describe('the competitor chip input', () => {
   });
 
   test('splits a pasted list on commas and newlines', async ({ page }) => {
-    await field(page).fill('Maldon Salt, Halen Môn\nCornish Sea Salt');
-    await field(page).blur();
+    /*
+     * A real paste event, not `fill`.
+     *
+     * A text input silently drops newlines from a programmatic value, so
+     * `fill` with a multi-line string tests the wrong thing entirely — it
+     * arrives as one run-on line and would pass or fail for reasons unrelated
+     * to paste handling. Someone copying three names out of a spreadsheet
+     * fires a `paste` event, so that is what this fires.
+     */
+    await field(page).focus();
+    await field(page).evaluate((input) => {
+      const data = new DataTransfer();
+      data.setData('text/plain', 'Maldon Salt, Halen Môn\nCornish Sea Salt');
+      input.dispatchEvent(
+        new ClipboardEvent('paste', {
+          clipboardData: data,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
 
     await expect(chips(page)).toHaveCount(3);
   });
