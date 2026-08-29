@@ -26,26 +26,48 @@ import { MARKET_ENTRY_PACKAGE_ID } from '@/config/report';
  *   and every figure here feeds a scenario the customer may act on.
  */
 
+/*
+ * Every message a customer can see is written out.
+ *
+ * Zod's defaults are accurate and unusable — "Invalid input: expected string,
+ * received undefined" on a country selector, or an enum error that prints its
+ * own member list back at the reader. Those are internal errors, and this form
+ * routes field errors straight onto the stage that collected them, so a default
+ * message is a default message on screen. Anything without an explicit message
+ * here is a leak waiting to happen.
+ */
+
 const optionalText = (max: number) =>
   z
-    .string()
+    .string({ error: 'Enter text, or leave this blank' })
     .trim()
-    .max(max)
+    .max(max, { error: `Keep this under ${max} characters` })
     .transform((value) => (value.length === 0 ? null : value.replace(/\s+/g, ' ')))
     .nullable()
     .default(null);
 
 const requiredText = (min: number, max: number) =>
   z
-    .string()
+    .string({ error: 'This one is needed' })
     .trim()
-    .min(min)
-    .max(max)
+    .min(min, {
+      error:
+        min <= 2
+          ? 'This one is needed'
+          : `Give us a little more — at least ${min} characters`,
+    })
+    .max(max, { error: `Keep this under ${max} characters` })
     .transform((value) => value.replace(/\s+/g, ' '));
 
-const countryCode = z.string().trim().toUpperCase().refine(isCountryCode, {
-  message: 'Choose a country from the list',
-});
+const countryCode = z
+  .string({ error: 'Choose a country from the list' })
+  .trim()
+  .toUpperCase()
+  .refine(isCountryCode, { error: 'Choose a country from the list' });
+
+/** An enum whose failure message names the question, not the member list. */
+const choice = <T extends readonly [string, ...string[]]>(values: T, error: string) =>
+  z.enum(values, { error });
 
 /**
  * An amount of money, as the customer typed it, stored as integer minor units.
@@ -118,7 +140,7 @@ export const offerStageSchema = z.object({
   offerDescription: requiredText(40, 1400),
   category: requiredText(2, 160),
   originCountry: countryCode,
-  businessStatus: z.enum(BUSINESS_STATUSES),
+  businessStatus: choice(BUSINESS_STATUSES, 'Choose where the business is today'),
   supplyArrangements: optionalText(800),
   productCharacteristics: optionalText(800),
 });
@@ -167,8 +189,8 @@ export const targetStageSchema = z.object({
   targetCountry: countryCode,
   /** A city, emirate, state or region. Optional — many entries are national. */
   targetRegion: optionalText(160),
-  routeToMarket: z.enum(ROUTES_TO_MARKET),
-  intendedCustomer: z.enum(CUSTOMER_TYPES),
+  routeToMarket: choice(ROUTES_TO_MARKET, 'Choose how you intend to reach the market'),
+  intendedCustomer: choice(CUSTOMER_TYPES, 'Choose who the buyer is'),
   customerDescription: requiredText(20, 900),
   /**
    * Why this market.
@@ -209,7 +231,7 @@ export const LAUNCH_TIMEFRAME_LABEL: Record<LaunchTimeframe, string> = {
  */
 export const commercialStageSchema = z.object({
   currency: z
-    .string()
+    .string({ error: 'Choose a currency from the list' })
     .trim()
     .toUpperCase()
     .refine(isCurrencyCode, { message: 'Choose a currency from the list' })
@@ -221,14 +243,16 @@ export const commercialStageSchema = z.object({
   targetPrice: money,
   launchBudget: money,
   minimumOrderQuantity: z.coerce
-    .number()
-    .int()
-    .min(0)
-    .max(10_000_000)
+    .number({ error: 'Enter a whole number of units' })
+    .int({ error: 'Enter a whole number of units' })
+    .min(0, { error: 'Enter a whole number of units' })
+    .max(10_000_000, { error: 'That quantity is larger than we can use' })
     .nullable()
     .default(null),
   productionCapacity: optionalText(400),
-  launchTimeframe: z.enum(LAUNCH_TIMEFRAMES).default('undecided'),
+  launchTimeframe: choice(LAUNCH_TIMEFRAMES, 'Choose a launch timeframe').default(
+    'undecided',
+  ),
 });
 
 /* ─────────────────── Stage 4: objectives and constraints ─────────────────── */
@@ -245,8 +269,14 @@ export const objectivesStageSchema = z.object({
    * trustworthy.
    */
   knownCompetitors: z
-    .array(z.string().trim().min(1).max(120))
-    .max(10)
+    .array(
+      z
+        .string({ error: 'Enter a competitor name' })
+        .trim()
+        .min(1, { error: 'Enter a competitor name' })
+        .max(120, { error: 'That name is longer than we can use' }),
+    )
+    .max(10, { error: 'Ten is as many as the research can seed from' })
     .default([])
     .transform((names) => {
       const seen = new Set<string>();

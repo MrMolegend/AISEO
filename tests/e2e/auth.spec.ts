@@ -143,7 +143,7 @@ test.describe('signing out', () => {
 });
 
 test.describe('protected routes', () => {
-  for (const path of ['/dashboard', '/wallet', '/account', '/research/new']) {
+  for (const path of ['/dashboard', '/wallet', '/account', '/assess']) {
     test(`${path} sends an anonymous visitor to sign-in, remembering where`, async ({
       page,
     }) => {

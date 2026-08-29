@@ -254,3 +254,82 @@ describe('reading a brief back out of storage', () => {
     ).toBe(false);
   });
 });
+
+describe('error messages are written for a customer', () => {
+  /*
+   * The intake routes a field error onto the stage that collected it and shows
+   * it under the field. That makes every message customer-facing, and Zod's
+   * defaults are accurate and unusable — "Invalid input: expected string,
+   * received undefined" under a country selector, or an enum error that prints
+   * its own member list back at the reader.
+   *
+   * This walks every field of every stage, gives it something invalid, and
+   * reads what a person would see.
+   */
+  const INTERNAL = [
+    /expected .*received/i,
+    /invalid input/i,
+    /invalid option/i,
+    /invalid enum/i,
+    /^expected/i,
+    /\bundefined\b/,
+    /\bNaN\b/,
+    /ZodError/,
+    /"[a-z-]+"\|"/,
+  ];
+
+  function messagesFor(value: unknown): string[] {
+    const result = marketEntryInputSchema.safeParse(value);
+    return result.success ? [] : result.error.issues.map((issue) => issue.message);
+  }
+
+  it('says something human when a required answer is missing', () => {
+    const fields = Object.keys(
+      marketEntryInputSchema.parse(EXAMPLE_SUBMISSION),
+    ) as (keyof typeof EXAMPLE_SUBMISSION)[];
+
+    for (const field of fields) {
+      if (field === 'packageId') continue;
+      const without = { ...EXAMPLE_SUBMISSION };
+      delete without[field];
+
+      for (const message of messagesFor(without)) {
+        for (const pattern of INTERNAL) {
+          expect(message, `omitting ${String(field)} produced "${message}"`).not.toMatch(
+            pattern,
+          );
+        }
+      }
+    }
+  });
+
+  it('says something human when an answer is the wrong kind of thing', () => {
+    const junk: Record<string, unknown> = {
+      originCountry: 'Atlantis',
+      targetCountry: 42,
+      businessStatus: 'thriving',
+      routeToMarket: 'telepathy',
+      intendedCustomer: {},
+      currency: 'GOLD',
+      launchTimeframe: 'someday',
+      minimumOrderQuantity: 'lots',
+      unitCost: 'about a fiver',
+      knownCompetitors: Array.from({ length: 14 }, (_, i) => `Brand ${i}`),
+      businessName: '',
+      offerDescription: 'salt',
+    };
+
+    for (const [field, value] of Object.entries(junk)) {
+      const messages = messagesFor({ ...EXAMPLE_SUBMISSION, [field]: value });
+      expect(messages.length, `${field} was accepted`).toBeGreaterThan(0);
+
+      for (const message of messages) {
+        for (const pattern of INTERNAL) {
+          expect(message, `${field} produced "${message}"`).not.toMatch(pattern);
+        }
+        // A message a person can act on starts with a word, not a type name.
+        expect(message[0]).toMatch(/[A-Z]/);
+      }
+    }
+  });
+});

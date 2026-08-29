@@ -17,7 +17,14 @@ import { AxeBuilder } from '@axe-core/playwright';
  * and no cost. The signed-in pages are covered by the integration suite, which
  * exercises the same server code without a browser.
  */
-const PAGES = ['/', '/pricing', '/privacy', '/terms', '/sign-in'] as const;
+const PAGES = [
+  '/',
+  '/example',
+  '/methodology',
+  '/privacy',
+  '/terms',
+  '/sign-in',
+] as const;
 
 async function scan(page: Page) {
   const { violations } = await new AxeBuilder({ page })
@@ -71,29 +78,30 @@ test.describe('the signed-out surface', () => {
   test('sends an anonymous visitor to sign-in rather than showing an empty dashboard', async ({
     page,
   }) => {
-    for (const path of ['/dashboard', '/wallet', '/account', '/research/new']) {
+    for (const path of ['/dashboard', '/wallet', '/account', '/assess']) {
       await page.goto(path);
       await expect(page).toHaveURL(/\/sign-in/);
     }
   });
 
-  test('the pricing table can be scrolled without a mouse', async ({ page }) => {
+  test('a comparison table can be scrolled without a mouse', async ({ page }) => {
     /*
-     * The table is wider than a phone viewport, so its wrapper scrolls. Nothing
-     * inside it is focusable — it is plain text — so without an explicit focus
-     * stop a keyboard user cannot reach the scroll at all and the right-hand
-     * columns are simply unavailable to them.
+     * The route comparison is wider than a phone viewport, so its wrapper
+     * scrolls. Nothing inside it is focusable — it is plain text — so without
+     * an explicit focus stop a keyboard user cannot reach the scroll at all and
+     * the right-hand columns are simply unavailable to them.
      *
      * axe catches the absence of the focus stop. This asserts the presence of a
-     * working one: that it is reachable, that it is announced with the heading
-     * it belongs to, and that arrowing actually moves it.
+     * working one: that it is reachable, that it is announced with the caption
+     * it belongs to, and that scrolling it actually moves.
      */
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto('/pricing');
+    await page.goto('/example');
 
     const region = page.getByRole('region', {
-      name: 'Research packages, their token costs and what they include',
+      name: 'Routes to market compared by suitability, requirements and risks',
     });
+    await region.scrollIntoViewIfNeeded();
     await expect(region).toBeVisible();
 
     await region.focus();
@@ -169,11 +177,11 @@ test.describe('layout', () => {
    * phone. It has already been caused once here by a CSS rotation expanding an
    * SVG's bounding box beyond its layout box.
    */
-  for (const width of [360, 390, 768, 1280, 1536]) {
+  for (const width of [320, 360, 390, 768, 1280, 1536]) {
     test(`no horizontal overflow at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
 
-      for (const path of ['/', '/pricing', '/privacy', '/sign-in']) {
+      for (const path of ['/', '/example', '/methodology', '/privacy', '/sign-in']) {
         await page.goto(path);
         await page.waitForTimeout(300);
 

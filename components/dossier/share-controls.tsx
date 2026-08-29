@@ -14,7 +14,18 @@ import { Button } from '@/components/ui/button';
  * common destination is a meeting, and `window.print()` picks up the print
  * stylesheet that turns the obsidian ground white and drops the navigation.
  */
-export function ShareControls({ shareable }: { shareable: boolean }) {
+export function ShareControls({
+  shareable,
+  sourcesHref,
+}: {
+  shareable: boolean;
+  /**
+   * Where to download the evidence register, or null when there is no stored
+   * report behind this view — the worked example is rendered from a fixture and
+   * has no export route to point at.
+   */
+  sourcesHref?: string | null;
+}) {
   const [copied, setCopied] = useState(false);
 
   return (
@@ -41,6 +52,16 @@ export function ShareControls({ shareable }: { shareable: boolean }) {
       <Button variant="ghost" size="sm" onClick={() => window.print()}>
         Print or save as PDF
       </Button>
+      {sourcesHref && (
+        /* A plain link, so it is right-clickable, keyboard-operable and works
+           without JavaScript — the browser downloads it on the strength of the
+           route's Content-Disposition. */
+        <Button variant="ghost" size="sm" asChild>
+          <a href={sourcesHref} download>
+            Download the sources
+          </a>
+        </Button>
+      )}
       <span aria-live="polite" className="sr-only">
         {copied ? 'Share link copied to the clipboard.' : ''}
       </span>

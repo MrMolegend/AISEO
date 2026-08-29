@@ -76,7 +76,12 @@ export function DossierView({
               {BRAND.defaultReportTitle}
               {publicId ? ` · ${publicId}` : ''}
             </Meta>
-            <ShareControls shareable={isOwner && publicId !== null} />
+            <ShareControls
+              shareable={isOwner && publicId !== null}
+              sourcesHref={
+                publicId ? `/api/research/${publicId}/export?kind=sources` : null
+              }
+            />
           </div>
         </Section>
 

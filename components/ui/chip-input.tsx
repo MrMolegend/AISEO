@@ -127,8 +127,11 @@ export function ChipInput({
           error && 'border-copper',
         )}
       >
+        {/* The list is named, because "list with 3 items" tells a
+            screen-reader user nothing about which of the page's several
+            lists they have landed in. */}
         {value.length > 0 && (
-          <ul className="flex flex-wrap gap-2">
+          <ul aria-label={`${label} — added so far`} className="flex flex-wrap gap-2">
             {value.map((entry, index) => (
               <li
                 key={`${entry}-${index}`}

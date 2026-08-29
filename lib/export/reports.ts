@@ -1,5 +1,6 @@
 import type { Competitor, CompanyLead, Creator } from '@/schemas/research/packages';
 import type { StoredSource } from '@/schemas/research/shared';
+import type { MarketEntryReport, MarketSource } from '@/schemas/market-entry/report';
 import { toCsv, type CsvColumn } from './csv';
 
 /**
@@ -14,7 +15,7 @@ import { toCsv, type CsvColumn } from './csv';
  * guessed address, because a column is an invitation to fill it.
  */
 
-export type ExportKind = 'competitors' | 'leads' | 'influencers';
+export type ExportKind = 'competitors' | 'leads' | 'influencers' | 'sources';
 
 /** Turns S-references into the URLs they point at. */
 function sourceUrls(refs: readonly string[], sources: readonly StoredSource[]): string {
@@ -116,6 +117,37 @@ export function creatorColumns(sources: readonly StoredSource[]): CsvColumn<Crea
   ];
 }
 
+/**
+ * The evidence register of a market-entry dossier.
+ *
+ * The one export the new product has, and the right one: a dossier's value is
+ * its sources, and a customer taking a regulatory question to a lawyer or a
+ * distributor question to a broker needs the list in something they can sort.
+ * Every column here answers "should I believe this" — who published it, whether
+ * we opened the page or only read an index summary of it, when it was
+ * published, and whether it is about the right country.
+ */
+function marketSourceColumns(): CsvColumn<MarketSource>[] {
+  return [
+    { header: 'Reference', value: (s) => s.ref },
+    { header: 'Title', value: (s) => s.title ?? '' },
+    { header: 'Publisher', value: (s) => s.publisher ?? '' },
+    { header: 'Category', value: (s) => s.category.replace(/_/g, ' ') },
+    {
+      header: 'How we read it',
+      value: (s) => (s.retrievalMode === 'direct' ? 'Read directly' : 'Index summary'),
+    },
+    { header: 'Published', value: (s) => s.publishedAt ?? '' },
+    {
+      header: 'Geographic relevance',
+      value: (s) => s.geographicRelevance.replace(/-/g, ' '),
+    },
+    { header: 'Confidence', value: (s) => s.confidence },
+    { header: 'Retrieved', value: (s) => s.retrievedAt },
+    { header: 'URL', value: (s) => s.url },
+  ];
+}
+
 /** Which lists a report can export, given what it actually contains. */
 export function availableExports(report: unknown): ExportKind[] {
   if (!report || typeof report !== 'object') return [];
@@ -129,7 +161,23 @@ export function availableExports(report: unknown): ExportKind[] {
   if (Array.isArray(record.creators) && record.creators.length > 0) {
     kinds.push('influencers');
   }
+  if (isMarketEntryReport(record) && record.sources.length > 0) kinds.push('sources');
   return kinds;
+}
+
+/**
+ * Recognised by shape rather than by package id, because this function is given
+ * a report and not a job. `sources` alone is not enough — the legacy shapes
+ * carry one too — so it is `sources` plus the dossier's own `decision`.
+ */
+function isMarketEntryReport(
+  record: Record<string, unknown>,
+): record is Record<string, unknown> & Pick<MarketEntryReport, 'sources'> {
+  return (
+    Array.isArray(record.sources) &&
+    typeof record.decision === 'object' &&
+    record.decision !== null
+  );
 }
 
 /**
@@ -162,9 +210,20 @@ export function renderExport(
       if (!rows?.length) return null;
       return toCsv(rows, creatorColumns(sources));
     }
+    case 'sources': {
+      if (!isMarketEntryReport(record)) return null;
+      const rows = record.sources;
+      if (rows.length === 0) return null;
+      return toCsv(rows, marketSourceColumns());
+    }
   }
 }
 
 export function isExportKind(value: unknown): value is ExportKind {
-  return value === 'competitors' || value === 'leads' || value === 'influencers';
+  return (
+    value === 'competitors' ||
+    value === 'leads' ||
+    value === 'influencers' ||
+    value === 'sources'
+  );
 }
