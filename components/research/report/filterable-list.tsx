@@ -50,7 +50,11 @@ export function FilterableList({
 
   return (
     <div>
-      <div className="border-rule bg-ground-raised/95 sticky top-16 z-10 -mx-1 mb-4 flex flex-wrap items-end gap-3 border-b px-1 py-3 backdrop-blur-sm print:hidden">
+      <div /* Opaque rather than 95% and blurred. A sticky backdrop-filter repaints its
+           whole area on every scroll frame, and at 95% opacity there was nothing
+           behind it to see. */
+        className="border-rule bg-ground-raised sticky top-16 z-10 -mx-1 mb-4 flex flex-wrap items-end gap-3 border-b px-1 py-3 print:hidden"
+      >
         <div className="min-w-[200px] flex-1">
           <label
             htmlFor={searchId}
