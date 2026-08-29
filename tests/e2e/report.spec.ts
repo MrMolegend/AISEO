@@ -92,12 +92,18 @@ test.describe('evidence is labelled, not implied', () => {
   test('distinguishes a page we read from one we only saw summarised', async ({
     page,
   }) => {
-    const drawer = page.getByRole('group').first();
+    /*
+     * Located by element, not by role. Chrome maps `<summary>` to
+     * `DisclosureTriangle` rather than to `button`, so a role query for a
+     * button inside the drawer matches nothing and waits out the timeout.
+     */
+    const drawer = page.locator('details').first();
     await drawer.scrollIntoViewIfNeeded();
-    await drawer.getByRole('button').first().click();
+    await drawer.locator('summary').click();
+    await expect(drawer).toHaveAttribute('open', '');
 
     const text = await drawer.innerText();
-    expect(text).toMatch(/Read directly|Index summary/);
+    expect(text).toMatch(/Read directly|Index summary/i);
   });
 
   test('opens a source drawer with the keyboard and closes it again', async ({
@@ -109,10 +115,10 @@ test.describe('evidence is labelled, not implied', () => {
     await expect(summary).toBeFocused();
 
     await summary.press('Enter');
-    await expect(summary.locator('xpath=..')).toHaveAttribute('open', '');
+    await expect(page.locator('details').first()).toHaveAttribute('open', '');
 
     await summary.press('Enter');
-    await expect(summary.locator('xpath=..')).not.toHaveAttribute('open', '');
+    await expect(page.locator('details').first()).not.toHaveAttribute('open', '');
   });
 
   test('links every cited source to where it came from', async ({ page }) => {
