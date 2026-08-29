@@ -64,8 +64,22 @@ const money = z
     if (value === null) return null;
     if (typeof value === 'string' && value.trim().length === 0) return null;
 
-    const cleaned =
-      typeof value === 'number' ? value : Number(value.replace(/[^\d.-]/g, ''));
+    /*
+     * Strip the currency symbols and thousands separators people type, then
+     * insist on something that was actually a number.
+     *
+     * `Number('')` is 0, so cleaning "about a fiver" down to an empty string
+     * and coercing it would store a unit cost of nothing — and a cost price of
+     * zero is not a missing figure, it is a claim that the product is free,
+     * which then flows straight into a margin the customer might quote.
+     */
+    const stripped = typeof value === 'number' ? String(value) : value.replace(/[^\d.-]/g, '');
+    if (!/\d/.test(stripped)) {
+      ctx.addIssue({ code: 'custom', message: 'Enter an amount, for example 12.50' });
+      return z.NEVER;
+    }
+
+    const cleaned = Number(stripped);
 
     if (!Number.isFinite(cleaned) || cleaned < 0) {
       ctx.addIssue({ code: 'custom', message: 'Enter an amount, for example 12.50' });

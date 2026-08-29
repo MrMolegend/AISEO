@@ -10,7 +10,9 @@ import { countryName } from '@/config/markets';
 import { MARKET_ENTRY_SCHEMA_VERSION } from '@/schemas/market-entry/report';
 import type { MarketEntryReport, MarketSource } from '@/schemas/market-entry/report';
 import type { GradingSource } from '@/schemas/market-entry/evidence';
-import { ALL_FIXTURE_RESULTS } from './search-results';
+import { SearchBudget } from '@/lib/research/budget';
+import { planSearches } from '@/lib/research/plan';
+import { FIXTURE_RESULTS } from './search-results';
 import { FIXTURE_SYNTHESIS } from './synthesis';
 import { EXAMPLE_INPUT } from './case';
 
@@ -62,11 +64,36 @@ const BLOCKED = [
 
 const RESEARCHED_AT = '2026-03-14T09:20:00.000Z';
 
+/**
+ * The sources, in the order the pipeline would register them.
+ *
+ * Order is not cosmetic here — it assigns the S-numbers every citation in the
+ * report points at. Building this list in the order the fixture file happens to
+ * declare its results produced a dossier where S4 was a retailer rather than
+ * the ministry the regulatory claims cited, and every regulatory claim was
+ * silently demoted to unverified as a result.
+ *
+ * So the order comes from the real planner: the granted queries in priority
+ * order, each area's results registered in turn, deduplicated by URL exactly as
+ * the source registry does it.
+ */
 function buildSources(): MarketSource[] {
   const targetName = countryName(EXAMPLE_INPUT.targetCountry);
   const originName = countryName(EXAMPLE_INPUT.originCountry);
 
-  return ALL_FIXTURE_RESULTS.map((result, index) => {
+  const ordered: { url: string; title: string; excerpt: string; publishedDate: string | null }[] = [];
+  const seen = new Set<string>();
+
+  for (const query of planSearches(EXAMPLE_INPUT, new SearchBudget())) {
+    const results = FIXTURE_RESULTS[query.area as keyof typeof FIXTURE_RESULTS] ?? [];
+    for (const result of results) {
+      if (seen.has(result.url)) continue;
+      seen.add(result.url);
+      ordered.push(result);
+    }
+  }
+
+  return ordered.map((result, index) => {
     const direct = DIRECTLY_RETRIEVED.has(result.url);
     return {
       ref: `S${index + 1}`,
