@@ -457,6 +457,20 @@ stay valid — and adds five nullable columns: `source_category`, `retrieval_mod
 Nothing is dropped, renamed or rewritten. Users, wallets, ledger entries,
 previous reports, sources and auth identities are all untouched.
 
+**It is not applied to the live project.** It is the one step of this change
+that touches production data, so it is left for a deliberate hand at deploy
+time — and `supabase/database.types.ts` therefore describes the post-migration
+schema, with a note at the top saying so.
+
+**Ordering.** Apply `0010` before deploying the code. The source-index insert
+names the new columns, so on an unmigrated database it fails — and that failure
+is deliberately not fatal: the sources are embedded in `research_jobs.result` as
+well, so the table is a queryable index rather than the only copy. Deploying in
+the wrong order therefore costs analytics for the jobs run in between, not
+citations and not reports. Fix it by applying the migration; nothing needs
+backfilling for the product to work, though those jobs stay absent from the
+index.
+
 **Recovery path.** Because every column added is nullable and nothing existing
 reads them, rolling back the _application_ alone is already safe: an older build
 simply ignores the new columns, and the widened CHECK accepts everything the old

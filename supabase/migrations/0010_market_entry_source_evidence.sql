@@ -1,7 +1,10 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 -- Market-entry source evidence
 --
--- Applied remotely as `market_entry_source_evidence`.
+-- NOT YET APPLIED to the live project. It is the one step of this change that
+-- touches production data, so it is left for a deliberate hand at deploy time
+-- rather than run ahead of the code that needs it. Apply it as
+-- `market_entry_source_evidence`, then regenerate supabase/database.types.ts.
 --
 -- The one schema change the market-entry transformation needs. Everything else
 -- it required turned out to be free: research_jobs.package_id is plain text
