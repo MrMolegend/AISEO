@@ -50,7 +50,19 @@ export function DossierView({
   return (
     <div
       data-surface="leaf"
-      className="mx-auto grid max-w-[var(--container-page)] gap-10 px-5 py-8 md:px-8 xl:grid-cols-[190px_minmax(0,1fr)] xl:gap-14"
+      /*
+       * `grid-cols-1` is load-bearing, not decoration.
+       *
+       * Below `xl` this grid has no explicit template, so its single implicit
+       * track is sized `auto` — whose minimum is the item's min-content. A
+       * table with a 640px minimum therefore stretched the track, the grid and
+       * the page: the dossier laid out 1,522px wide inside a 390px phone, and
+       * every scrollable table stopped scrolling because its own container had
+       * already grown to fit it. `grid-cols-1` is `repeat(1, minmax(0, 1fr))`,
+       * which caps the track at the container and hands the overflow back to
+       * the scroller that was written to take it.
+       */
+      className="mx-auto grid max-w-[var(--container-page)] grid-cols-1 gap-10 px-5 py-8 md:px-8 xl:grid-cols-[190px_minmax(0,1fr)] xl:gap-14"
     >
       <ContentsNav />
 
@@ -130,12 +142,12 @@ export function DossierView({
               value={report.commercialContext.routePreferenceNote}
             />
             <div>
-              <Meta>Markets</Meta>
-              <p className="text-text mt-1 text-[15px]">
+              <dt className="meta text-text-faint">Markets</dt>
+              <dd className="text-text mt-1.5 text-[15px]">
                 {countryName(decision.originCountry)} →{' '}
                 {countryName(decision.targetCountry)}
                 {decision.targetRegion ? ` · ${decision.targetRegion}` : ''}
-              </p>
+              </dd>
             </div>
           </dl>
 
@@ -157,7 +169,7 @@ export function DossierView({
         </Section>
 
         <Section id="signals" label="Market signals">
-          <div className="grid gap-8 md:grid-cols-[1fr_260px]">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-[1fr_260px]">
             <div className="space-y-8">
               <Group label="Demand">
                 <ClaimList
@@ -535,11 +547,20 @@ function Group({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+/**
+ * One labelled fact inside a `<dl>`.
+ *
+ * `<dt>` and `<dd>`, not a span and a paragraph in a div. A definition list
+ * whose children are not definition terms is a list that announces nothing —
+ * a screen reader reads four unrelated fragments where the markup promised
+ * four label-and-value pairs. axe fails it as `definition-list`, which is how
+ * this was caught.
+ */
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <Meta>{label}</Meta>
-      <p className="text-text measure mt-1.5 text-[15px] leading-relaxed">{value}</p>
+      <dt className="meta text-text-faint">{label}</dt>
+      <dd className="text-text measure mt-1.5 text-[15px] leading-relaxed">{value}</dd>
     </div>
   );
 }

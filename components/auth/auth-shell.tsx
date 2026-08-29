@@ -26,7 +26,7 @@ export function AuthShell({
   footer?: React.ReactNode;
 }) {
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[1fr_minmax(0,520px)]">
+    <div className="grid min-h-dvh grid-cols-1 lg:grid-cols-[1fr_minmax(0,520px)]">
       {/*
        * The left panel is decoration with a job.
        *

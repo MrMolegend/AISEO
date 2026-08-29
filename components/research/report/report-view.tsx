@@ -89,7 +89,7 @@ export function ReportView({
   ].filter((section) => section.present);
 
   return (
-    <div className="mx-auto grid max-w-[1240px] gap-10 px-5 py-10 md:px-8 xl:grid-cols-[220px_minmax(0,1fr)]">
+    <div className="mx-auto grid max-w-[1240px] grid-cols-1 gap-10 px-5 py-10 md:px-8 xl:grid-cols-[220px_minmax(0,1fr)]">
       {/* ── Contents ────────────────────────────────────────────────────── */}
       <nav
         aria-label="Report contents"

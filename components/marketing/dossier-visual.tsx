@@ -136,7 +136,17 @@ export function DossierVisual() {
 
         {/* Market codes, set in mono against the drawing rather than inside it,
             so they stay legible at any width instead of scaling with the SVG. */}
-        <div className="border-rule flex items-stretch border-t">
+        {/*
+         * Two by two on a phone, four across from `sm`.
+         *
+         * Four flex cells of unbreakable text — "Promising", "United Arab
+         * Emirates" — cannot shrink below their min-content, so at 320px the
+         * row pushed the whole page nine pixels wide. Four columns of seventy
+         * pixels would have been unreadable even if it had fitted. The hairlines
+         * are a `gap-px` grid rather than per-cell borders, which is what makes
+         * the internal rules meet correctly in both arrangements.
+         */}
+        <div className="border-rule grid grid-cols-2 gap-px border-t bg-[var(--color-rule)] sm:grid-cols-4">
           <Field label="Origin" value="IE" note="Ireland" />
           <Field label="Target" value="AE" note="United Arab Emirates" />
           <Field label="Sources" value="20" note="6 read directly" />
@@ -163,7 +173,7 @@ function Field({
   accent?: boolean;
 }) {
   return (
-    <div className="border-rule flex-1 border-r px-3 py-3 last:border-r-0">
+    <div className="bg-ground-raised min-w-0 px-3 py-3">
       <Meta>{label}</Meta>
       <p
         className={`mt-1 text-[15px] font-medium ${accent ? 'text-signal' : 'text-text'}`}

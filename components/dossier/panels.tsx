@@ -41,7 +41,7 @@ export function DecisionHeader({ report }: { report: MarketEntryReport }) {
 
   return (
     <Panel edge={VERDICT_TOKEN[decision.verdict]} className="overflow-hidden">
-      <div className="grid gap-px md:grid-cols-[1.5fr_1fr]">
+      <div className="grid grid-cols-1 gap-px md:grid-cols-[1.5fr_1fr]">
         <div className="p-6 md:p-8">
           <Meta>
             {countryName(decision.originCountry)} → {countryName(decision.targetCountry)}

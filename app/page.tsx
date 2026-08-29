@@ -58,7 +58,7 @@ export default async function LandingPage({
 
         {/* ── Hero ─────────────────────────────────────────────────────── */}
         <section className="mx-auto max-w-[var(--container-page)] px-5 pt-16 pb-20 md:px-8 md:pt-24 md:pb-28">
-          <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
             <div>
               <Meta>Market entry intelligence</Meta>
               <h1 className="font-display text-text mt-5 text-[42px] leading-[1.02] tracking-[var(--tracking-display)] sm:text-[56px] lg:text-[64px]">
@@ -246,19 +246,24 @@ export default async function LandingPage({
             title="Every claim says where it came from"
             lede="Five labels, applied by the system rather than chosen by the model, so a sentence can never award itself authority it has not got."
           />
+          {/* The Reveal wrapper is the card itself, not a div around one: a
+              `dl` may contain a `div` holding a dt/dd pair, but not a div
+              holding a div holding them, and axe fails the difference. */}
           <dl className="mt-10 grid gap-px sm:grid-cols-2 lg:grid-cols-5">
             {EVIDENCE_GRADES.map((grade, index) => (
-              <Reveal key={grade} index={index}>
-                <div className="border-rule bg-ground-raised h-full border p-5">
-                  <dt>
-                    <Badge tone="token" token={EVIDENCE_GRADE_TOKEN[grade]}>
-                      {EVIDENCE_GRADE_LABEL[grade]}
-                    </Badge>
-                  </dt>
-                  <dd className="text-text-muted mt-3 text-[13px] leading-relaxed">
-                    {EVIDENCE_GRADE_MEANING[grade]}
-                  </dd>
-                </div>
+              <Reveal
+                key={grade}
+                index={index}
+                className="border-rule bg-ground-raised h-full border p-5"
+              >
+                <dt>
+                  <Badge tone="token" token={EVIDENCE_GRADE_TOKEN[grade]}>
+                    {EVIDENCE_GRADE_LABEL[grade]}
+                  </Badge>
+                </dt>
+                <dd className="text-text-muted mt-3 text-[13px] leading-relaxed">
+                  {EVIDENCE_GRADE_MEANING[grade]}
+                </dd>
               </Reveal>
             ))}
           </dl>
@@ -276,7 +281,7 @@ export default async function LandingPage({
             title="Four stages, about ten minutes"
             lede="No website address, no document uploads, no account questionnaire. What you sell is something you can describe better than a homepage can."
           />
-          <ol className="mt-10 grid gap-px md:grid-cols-4">
+          <ol className="mt-10 grid grid-cols-1 gap-px md:grid-cols-4">
             {STAGE_IDS.map((key, index) => (
               <li key={key} className="border-rule bg-ground-raised border p-5">
                 <Meta className="text-signal">
@@ -419,7 +424,7 @@ function SectionHead({
   lede: string;
 }) {
   return (
-    <div className="grid gap-6 md:grid-cols-[auto_1fr] md:gap-10">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-[auto_1fr] md:gap-10">
       <Meta className="text-signal md:pt-3">{index}</Meta>
       <div>
         <h2 className="font-display text-text max-w-[18ch] text-[30px] leading-[1.1] tracking-[var(--tracking-display)] md:text-[40px]">

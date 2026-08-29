@@ -15,7 +15,7 @@ export function SiteFooter() {
   return (
     <footer className="border-rule mt-24 border-t">
       <div className="mx-auto max-w-[var(--container-page)] px-5 py-12 md:px-8">
-        <div className="grid gap-10 md:grid-cols-[1.4fr_1fr]">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-[1.4fr_1fr]">
           <div>
             <Logo />
             <p className="text-text-muted measure mt-4 text-[14px] leading-relaxed">

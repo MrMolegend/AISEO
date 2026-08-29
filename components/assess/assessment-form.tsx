@@ -459,11 +459,14 @@ function ReviewStage({
               </button>
             </div>
             <Rule className="mt-2" />
-            <dl className="mt-3 space-y-2.5">
-              {summary[key].length === 0 ? (
-                <p className="text-text-faint text-[13px]">Nothing entered.</p>
-              ) : (
-                summary[key].map(({ label, value }) => (
+            {/* The empty case sits outside the list rather than inside it as a
+                stray paragraph: a `dl` may only hold dt/dd pairs and the divs
+                that group them. */}
+            {summary[key].length === 0 ? (
+              <p className="text-text-faint mt-3 text-[13px]">Nothing entered.</p>
+            ) : (
+              <dl className="mt-3 space-y-2.5">
+                {summary[key].map(({ label, value }) => (
                   <div key={label} className="flex flex-col gap-0.5 sm:flex-row sm:gap-4">
                     <dt className="text-text-subtle w-56 shrink-0 text-[13px]">
                       {label}
@@ -472,9 +475,9 @@ function ReviewStage({
                       {value}
                     </dd>
                   </div>
-                ))
-              )}
-            </dl>
+                ))}
+              </dl>
+            )}
           </section>
         ))}
       </div>
