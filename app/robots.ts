@@ -18,7 +18,15 @@ export default function robots(): MetadataRoute.Robots {
          * behind sign-in is excluded because it is per-account and would only
          * ever return a redirect to a crawler anyway.
          */
-        disallow: ['/research/', '/dashboard', '/wallet', '/account', '/auth/', '/api/'],
+        disallow: [
+          '/research/',
+          '/dashboard',
+          '/assess',
+          '/wallet',
+          '/account',
+          '/auth/',
+          '/api/',
+        ],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

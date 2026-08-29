@@ -2,151 +2,135 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { SiteHeader } from '@/components/layout/site-header';
-import { FlashNotice } from '@/components/layout/flash-notice';
 import { SiteFooter } from '@/components/layout/site-footer';
-import { Card, CardBody } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Panel, Rule, Meta } from '@/components/ui/panel';
+import { DossierFilter } from '@/components/dashboard/dossier-filter';
+import { BRAND, pageTitle } from '@/config/brand';
+import { creditsFrom } from '@/config/report';
+import { VERDICT_LABEL, type Verdict } from '@/config/design';
 import { getCurrentUser, signInPath } from '@/lib/auth/server';
 import { getTokenWallet } from '@/lib/tokens';
-import { reportKindLabel } from '@/lib/jobs/labels';
-import { getResearchJobStore } from '@/lib/jobs/store';
-import { BRAND, pageTitle } from '@/config/brand';
-import { formatTokens } from '@/config/tokens';
-import { stageLabel } from '@/lib/jobs/stages';
+import { getResearchJobStore, type ResearchJobRecord } from '@/lib/jobs/store';
+import { reportKindLabel, isLegacyReport, targetMarketLabel } from '@/lib/jobs/labels';
+import { stageLabel, isTerminal } from '@/lib/jobs/stages';
 import { renderErrorCopy } from '@/lib/errors';
 
-/*
- * Never prerendered.
- *
- * This page's output depends on who is asking. Without this, a build that
- * happens to run without Supabase credentials configured resolves the session
- * to "signed out" and bakes the redirect to sign-in into a static page, which
- * would then be served to signed-in users forever.
- */
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: pageTitle('Dashboard'),
+  title: pageTitle('Intelligence Desk'),
   robots: { index: false, follow: false },
 };
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ welcome?: string; 'password-reset'?: string }>;
-}) {
+/**
+ * The Intelligence Desk.
+ *
+ * A working surface rather than a list of purchases: what is running now, what
+ * has been decided, and one way to start the next thing. Deliberately shows no
+ * package cards and no token figure — the customer counts reports, and the
+ * conversion happens here on the server so no token number reaches the browser.
+ */
+export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect(signInPath('/dashboard'));
-
-  // A redirect on its own tells a user nothing. This is how they learn the
-  // sign-in actually worked, and which account they landed in.
-  const params = await searchParams;
-  const notice = params.welcome
-    ? 'welcome'
-    : params['password-reset']
-      ? 'password-reset'
-      : null;
 
   const [wallet, store] = await Promise.all([getTokenWallet(), getResearchJobStore()]);
   const [balance, jobs] = await Promise.all([
     wallet.getBalance(user.id),
-    store.listForUser(user.id, 25),
+    store.listForUser(user.id, 50),
   ]);
+
+  const credits = creditsFrom(balance.available);
+  const active = jobs.filter((job) => !isTerminal(job.status));
+  const finished = jobs.filter((job) => isTerminal(job.status));
 
   return (
     <>
       <SiteHeader />
 
-      <main id="main" className="mx-auto max-w-[1240px] px-5 py-12 md:px-8">
-        {notice && <FlashNotice kind={notice} email={user.email} />}
-
-        <div className="flex flex-wrap items-end justify-between gap-4">
+      <main
+        id="main"
+        className="mx-auto max-w-[var(--container-page)] px-5 py-12 md:px-8"
+      >
+        <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
-            <h1 className="text-text text-[30px] font-semibold tracking-[var(--tracking-display)]">
-              Your research
+            <Meta>Intelligence Desk</Meta>
+            <h1 className="font-display text-text mt-3 text-[32px] leading-tight md:text-[40px]">
+              {jobs.length === 0 ? 'Welcome' : 'Your market assessments'}
             </h1>
-            <p className="text-text-muted mt-1.5 tabular-nums">
-              {formatTokens(balance.available)} {BRAND.currency.plural} available
-              {balance.reserved > 0 && (
-                <span className="text-text-subtle">
-                  {' '}
-                  · {formatTokens(balance.reserved)} held against running reports
-                </span>
-              )}
-            </p>
           </div>
 
-          <Link
-            href="/research/new"
-            className="bg-signal text-text-on-signal hover:bg-signal-dim focus-visible:ring-cobalt inline-flex h-11 items-center rounded-[var(--radius-control)] px-5 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-          >
-            Start new research
-          </Link>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="text-right">
+              <Meta>Beta access</Meta>
+              <p className="text-text mt-1 text-[15px]" data-numeric>
+                {credits} {credits === 1 ? BRAND.credit.singular : BRAND.credit.plural}
+              </p>
+            </div>
+            <Button asChild>
+              <Link href="/assess">Assess a market</Link>
+            </Button>
+          </div>
         </div>
+
+        {credits === 0 && (
+          <Panel edge="copper" className="mt-8">
+            <div className="p-5">
+              <p className="text-text text-[14px] leading-relaxed">
+                You have no {BRAND.credit.plural} left. During the beta they are granted
+                manually — write to {BRAND.supportEmail} and we will sort it out.
+              </p>
+            </div>
+          </Panel>
+        )}
 
         {jobs.length === 0 ? (
           <EmptyState />
         ) : (
-          <ul className="mt-10 space-y-3">
-            {jobs.map((job) => {
-              const kindLabel = reportKindLabel(job.packageId);
-              const isDone = job.status === 'complete';
-              const isFailed = job.status === 'failed' || job.status === 'cancelled';
+          <>
+            {active.length > 0 && (
+              <section aria-labelledby="active-heading" className="mt-14">
+                <h2 id="active-heading" className="sr-only">
+                  Research in progress
+                </h2>
+                <Rule label="In progress" />
+                <ul className="mt-4 space-y-px">
+                  {active.map((job) => (
+                    <ActiveRow key={job.publicId} job={job} />
+                  ))}
+                </ul>
+              </section>
+            )}
 
-              return (
-                <li key={job.publicId}>
-                  <Card>
-                    <CardBody className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h2 className="text-text truncate text-[15px] font-semibold">
-                            {job.subjectName}
-                          </h2>
-                          <StatusBadge job={job} />
-                        </div>
-
-                        <p className="text-text-subtle mt-1 text-sm">
-                          {kindLabel} · {formatTokens(job.tokenCost)}{' '}
-                          {BRAND.currency.plural} ·{' '}
-                          <time dateTime={job.createdAt}>
-                            {new Date(job.createdAt).toLocaleDateString('en-GB', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric',
-                            })}
-                          </time>
-                        </p>
-
-                        {isFailed && job.errorCode && (
-                          <p className="text-text-muted mt-2 max-w-[62ch] text-sm leading-relaxed">
-                            {renderErrorCopy(job.errorCode, job.subjectDomain).body}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="flex shrink-0 items-center gap-2">
-                        {isFailed ? (
-                          <Link
-                            href={`/research/new/${job.packageId}`}
-                            className="border-rule-strong bg-ground-raised text-text hover:bg-ground-raised focus-visible:ring-cobalt inline-flex h-10 items-center rounded-[var(--radius-control)] border px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                          >
-                            Try again
-                          </Link>
-                        ) : (
-                          <Link
-                            href={`/research/${job.publicId}`}
-                            className="border-rule-strong bg-ground-raised text-text hover:bg-ground-raised focus-visible:ring-cobalt inline-flex h-10 items-center rounded-[var(--radius-control)] border px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                          >
-                            {isDone ? 'Open report' : 'View progress'}
-                          </Link>
-                        )}
-                      </div>
-                    </CardBody>
-                  </Card>
-                </li>
-              );
-            })}
-          </ul>
+            <section aria-labelledby="dossiers-heading" id="dossiers" className="mt-14">
+              <h2 id="dossiers-heading" className="sr-only">
+                Completed dossiers
+              </h2>
+              <Rule label={`Dossiers (${finished.length})`} />
+              <div className="mt-4">
+                <DossierFilter
+                  count={finished.length}
+                  rows={finished.map((job) => ({
+                    publicId: job.publicId,
+                    subject: job.subjectName,
+                    market: targetMarketLabel(job) ?? '',
+                    kind: reportKindLabel(job.packageId),
+                    legacy: isLegacyReport(job.packageId),
+                    status: job.status,
+                    updatedAt: job.completedAt ?? job.createdAt,
+                    verdict: verdictOf(job),
+                    confidence: confidenceOf(job),
+                    errorTitle:
+                      job.status === 'failed'
+                        ? renderErrorCopy(job.errorCode ?? 'UNKNOWN', job.subjectName)
+                            .title
+                        : null,
+                  }))}
+                />
+              </div>
+            </section>
+          </>
         )}
       </main>
 
@@ -155,48 +139,67 @@ export default async function DashboardPage({
   );
 }
 
-function StatusBadge({
-  job,
-}: {
-  job: { status: string; stage: string; cachedFromJobId: string | null };
-}) {
-  if (job.status === 'complete') {
-    return (
-      <Badge tone="success" size="sm">
-        Complete
-      </Badge>
-    );
-  }
-  if (job.status === 'failed' || job.status === 'cancelled') {
-    return (
-      <Badge tone="critical" size="sm">
-        {job.status === 'cancelled' ? 'Cancelled' : 'Failed'}
-      </Badge>
-    );
-  }
+/** Reads the verdict off a stored market-entry report without parsing it whole. */
+function verdictOf(job: ResearchJobRecord): Verdict | null {
+  if (isLegacyReport(job.packageId) || job.status !== 'complete') return null;
+  const decision = (job.report as { decision?: { verdict?: string } } | null)?.decision;
+  const verdict = decision?.verdict;
+  return verdict && verdict in VERDICT_LABEL ? (verdict as Verdict) : null;
+}
+
+function confidenceOf(job: ResearchJobRecord): string | null {
+  if (isLegacyReport(job.packageId) || job.status !== 'complete') return null;
+  const decision = (job.report as { decision?: { confidence?: string } } | null)
+    ?.decision;
+  return decision?.confidence ?? null;
+}
+
+function ActiveRow({ job }: { job: ResearchJobRecord }) {
   return (
-    <Badge tone="brand" size="sm">
-      {stageLabel(job.stage as never)}
-    </Badge>
+    <li className="border-rule bg-ground-raised border p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className="bg-signal animate-node inline-block h-2 w-2"
+              aria-hidden="true"
+            />
+            <Meta>{stageLabel(job.stage)}</Meta>
+          </div>
+          <p className="text-text mt-1.5 truncate text-[15px] font-medium">
+            {job.subjectName}
+          </p>
+          {targetMarketLabel(job) && <Meta>{targetMarketLabel(job)}</Meta>}
+        </div>
+        <Button asChild variant="secondary" size="sm">
+          <Link href={`/research/${job.publicId}`}>Watch progress</Link>
+        </Button>
+      </div>
+    </li>
   );
 }
 
 function EmptyState() {
   return (
-    <Card className="mt-10">
-      <CardBody className="py-14 text-center">
-        <h2 className="text-text text-lg font-semibold">No research yet</h2>
-        <p className="text-text-muted mx-auto mt-2 max-w-[52ch] leading-relaxed">
-          Pick a package, tell us about your business, and we will build a report from
-          public sources — with a link behind every claim.
+    <Panel edge="signal" className="mt-14">
+      <div className="p-8 md:p-10">
+        <h2 className="font-display text-text text-[24px] leading-tight">
+          Nothing here yet
+        </h2>
+        <p className="text-text-muted measure mt-3 text-[15px] leading-relaxed">
+          An assessment takes about ten minutes to brief and three to eight to run. You
+          will need to know what you sell, where you want to take it, and what you are
+          trying to decide — there is no website address to find and nothing to upload.
         </p>
-        <Link
-          href="/research/new"
-          className="bg-signal text-text-on-signal hover:bg-signal-dim focus-visible:ring-cobalt mt-6 inline-flex h-11 items-center rounded-[var(--radius-control)] px-5 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-        >
-          Start your first report
-        </Link>
-      </CardBody>
-    </Card>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Button asChild>
+            <Link href="/assess">Assess a market</Link>
+          </Button>
+          <Button asChild variant="secondary">
+            <Link href="/example">Read a worked example first</Link>
+          </Button>
+        </div>
+      </div>
+    </Panel>
   );
 }

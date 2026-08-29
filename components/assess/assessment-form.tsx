@@ -73,14 +73,19 @@ function emptyValues(): Values {
 export function AssessmentForm({
   userId,
   credits,
+  initialValues = null,
 }: {
   userId: string;
   /** Whole report credits available. Never a token count. */
   credits: number;
+  /** Seeded from a previous assessment when retrying one that failed. */
+  initialValues?: Record<string, unknown> | null;
 }) {
   const router = useRouter();
 
-  const [values, setValues] = useState<Values>(emptyValues);
+  const [values, setValues] = useState<Values>(() =>
+    initialValues ? { ...emptyValues(), ...initialValues } : emptyValues(),
+  );
   const [stageIndex, setStageIndex] = useState(0);
   const [phase, setPhase] = useState<'stages' | 'review' | 'submitting'>('stages');
   const [errors, setErrors] = useState<FieldError[]>([]);
@@ -113,6 +118,10 @@ export function AssessmentForm({
    * setState in the same effect with an extra render on top.
    */
   useEffect(() => {
+    // A seeded retry is the intended starting point; a saved draft from an
+    // abandoned assessment must not silently overwrite it.
+    if (initialValues) return;
+
     let saved: string | null = null;
     try {
       saved = window.localStorage.getItem(draftKey(userId));
@@ -133,7 +142,7 @@ export function AssessmentForm({
     } catch {
       // A corrupt draft is discarded rather than repaired.
     }
-  }, [userId]);
+  }, [userId, initialValues]);
 
   useEffect(() => {
     try {
