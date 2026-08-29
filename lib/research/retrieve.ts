@@ -36,6 +36,21 @@ export interface RetrievalOutcome {
 export type PageFetcher = (url: string) => Promise<SafeFetchResult>;
 
 /**
+ * The ceilings a single retrieval pass runs under.
+ *
+ * Structural rather than `typeof RETRIEVAL_BUDGET`, which is a `const` object
+ * and so has literal types — a test that wants to prove the page budget holds
+ * cannot pass `maxFetches: 5` to a parameter whose type is the literal `8`.
+ */
+export interface RetrievalBudget {
+  maxFetches: number;
+  maxTotalBytes: number;
+  maxDurationMs: number;
+  maxPerPublisher: number;
+  concurrency: number;
+}
+
+/**
  * The two network operations retrieval performs, together.
  *
  * Bundled rather than passed separately because they must always be swapped as
@@ -78,7 +93,7 @@ export interface RetrievalTransport {
 export async function retrieveSources(
   urls: readonly string[],
   signal: AbortSignal,
-  options: { transport?: RetrievalTransport; budget?: typeof RETRIEVAL_BUDGET } = {},
+  options: { transport?: RetrievalTransport; budget?: RetrievalBudget } = {},
 ): Promise<RetrievalOutcome> {
   const budget = options.budget ?? RETRIEVAL_BUDGET;
   const transport = options.transport ?? liveTransport;

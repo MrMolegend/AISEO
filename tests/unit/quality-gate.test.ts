@@ -100,7 +100,7 @@ describe('the gate catches a report with nothing in it', () => {
   });
 
   it('does not count sources that are not credible towards the floor', () => {
-    const outcome = evaluate(FIXTURE_SYNTHESIS, sources(20, { category: 'blog' }));
+    const outcome = evaluate(FIXTURE_SYNTHESIS, sources(20, { category: 'other' }));
     expect(outcome.ok).toBe(false);
     expect(outcome.measured.credibleSources).toBe(0);
   });

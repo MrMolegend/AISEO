@@ -12,7 +12,7 @@ export type {
   SearchResponse,
 } from './provider';
 export { MAX_RESULTS_PER_QUERY, NON_CRAWLABLE_HOSTS } from './provider';
-export { FixtureResearchProvider } from './fixture-provider';
+export { FixtureResearchProvider, fixtureRetrieval } from './fixture-provider';
 
 let cached: ResearchProvider | null = null;
 

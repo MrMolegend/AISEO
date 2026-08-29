@@ -81,7 +81,12 @@ function buildSources(): MarketSource[] {
   const targetName = countryName(EXAMPLE_INPUT.targetCountry);
   const originName = countryName(EXAMPLE_INPUT.originCountry);
 
-  const ordered: { url: string; title: string; excerpt: string; publishedDate: string | null }[] = [];
+  const ordered: {
+    url: string;
+    title: string;
+    excerpt: string;
+    publishedDate: string | null;
+  }[] = [];
   const seen = new Set<string>();
 
   for (const query of planSearches(EXAMPLE_INPUT, new SearchBudget())) {

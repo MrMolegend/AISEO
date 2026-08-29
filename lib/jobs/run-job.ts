@@ -23,7 +23,7 @@ import { retrieveSources, prioritiseForRetrieval } from '@/lib/research/retrieve
 import { SourceRegistry } from '@/lib/crawl/source-registry';
 import { summarisePages } from '@/lib/crawl/page-facts';
 import {
-  marketEntryInputSchema,
+  storedMarketEntryInputSchema,
   type MarketEntryInput,
 } from '@/schemas/market-entry/input';
 import {
@@ -151,7 +151,15 @@ export async function runResearchJob(
     /* ── context ─────────────────────────────────────────────────────────── */
     await store.setStage(job.id, 'context');
 
-    const parsed = marketEntryInputSchema.safeParse(job.input);
+    /*
+     * The *stored* schema, not the submission one.
+     *
+     * `create-job` has already normalised money into integer minor units;
+     * re-running the submission schema here would multiply every amount by a
+     * hundred a second time, so a customer's €8.90 shelf price would reach the
+     * model — and the margin scenarios — as €890.
+     */
+    const parsed = storedMarketEntryInputSchema.safeParse(job.input);
     if (!parsed.success) {
       throw new PlatformError('INVALID_INPUT', 'Stored brief no longer validates');
     }

@@ -44,11 +44,13 @@ export class FixtureResearchProvider implements ResearchProvider {
    * to inject an instance — the alternative was a constructor argument threaded
    * through four layers to be used by two tests.
    */
-  static fault: 'unavailable' | 'rate-limited' | 'empty' | null = null;
+  static fault: 'unavailable' | 'rate-limited' | 'empty' | 'single-publisher' | null =
+    null;
 
   static reset(): void {
     FixtureResearchProvider.queries = [];
     FixtureResearchProvider.fault = null;
+    fixtureRetrieval.fault = null;
   }
 
   async search(query: SearchQuery, signal: AbortSignal): Promise<SearchResponse> {
@@ -74,6 +76,31 @@ export class FixtureResearchProvider implements ResearchProvider {
           query: query.query,
           results: [],
           usage: { credits: 0, latencyMs: 0 },
+          provider: this.name,
+        };
+      case 'single-publisher':
+        /*
+         * A market where one content farm has republished everything.
+         *
+         * The search works and returns the usual number of results, so the
+         * report is structurally fine and every citation resolves — but nothing
+         * is corroborated and nothing is authoritative. This is the shape of an
+         * unusable report that still *looks* like a report, which is precisely
+         * what the quality gate exists to catch and refund.
+         */
+        return {
+          query: query.query,
+          results: (
+            (FIXTURE_RESULTS as Record<string, SearchResult[] | undefined>)[
+              query.area ?? ''
+            ] ?? []
+          )
+            .slice(0, query.maxResults)
+            .map((result) => ({
+              ...result,
+              url: `https://one-outlet.example${new URL(result.url).pathname}`,
+            })),
+          usage: { credits: 1, latencyMs: 0 },
           provider: this.name,
         };
       default:
@@ -107,7 +134,23 @@ export class FixtureResearchProvider implements ResearchProvider {
  * that code rot until the first time a customer loses a report to a slow
  * ministry website.
  */
+export const fixtureRetrieval = {
+  /**
+   * Forces every page fetch to fail.
+   *
+   * Exists for one test, and it is the test that guards the product's central
+   * promise: external retrieval is enrichment, never a dependency. Being able
+   * to refuse *everything* is what makes "a report still ships" provable rather
+   * than asserted.
+   */
+  fault: null as 'all-blocked' | null,
+};
+
 export async function fixturePageFetcher(url: string): Promise<SafeFetchResult> {
+  if (fixtureRetrieval.fault === 'all-blocked') {
+    throw new PlatformError('SITE_BLOCKED', 'Injected fault: every page refuses us');
+  }
+
   const page = FIXTURE_PAGES[url];
 
   if (!page) {

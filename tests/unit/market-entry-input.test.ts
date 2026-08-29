@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   marketEntryInputSchema,
+  storedMarketEntryInputSchema,
   STAGE_SCHEMAS,
   STAGE_IDS,
   FIELD_STAGE,
@@ -196,5 +197,60 @@ describe('stage schemas', () => {
       marketReason: 'Two hotel groups approached us at a trade show last spring.',
     });
     expect(stage.success).toBe(true);
+  });
+});
+
+describe('reading a brief back out of storage', () => {
+  /*
+   * The submission schema's money field is a transform, not a check: it
+   * multiplies by a hundred to reach integer minor units. Running it over an
+   * already-stored brief therefore multiplies again, and the runner does
+   * exactly that re-validation on the row it loads.
+   *
+   * It was doing it with the wrong schema, and the effect was invisible: a
+   * customer's €8.90 shelf price reached the model, the pricing section and
+   * every margin scenario as €890. Nothing failed, nothing looked odd, and the
+   * only thing wrong with the report was all of its numbers.
+   */
+  const stored = () => marketEntryInputSchema.parse(EXAMPLE_SUBMISSION);
+
+  it('leaves the amounts exactly as they were stored', () => {
+    const first = stored();
+    const second = storedMarketEntryInputSchema.parse(first);
+
+    expect(second.currentPrice).toBe(first.currentPrice);
+    expect(second.unitCost).toBe(first.unitCost);
+    expect(second.targetPrice).toBe(first.targetPrice);
+    expect(second.launchBudget).toBe(first.launchBudget);
+  });
+
+  it('is a fixed point — re-reading it any number of times changes nothing', () => {
+    let brief = storedMarketEntryInputSchema.parse(stored());
+    for (let pass = 0; pass < 4; pass += 1) {
+      brief = storedMarketEntryInputSchema.parse(brief);
+    }
+    expect(brief.currentPrice).toBe(890);
+    expect(brief.unitCost).toBe(310);
+  });
+
+  it('still rejects a row that is not a valid brief', () => {
+    // It is a re-validation, not a rubber stamp: a corrupt row must not reach
+    // the model just because it came from our own database.
+    expect(
+      storedMarketEntryInputSchema.safeParse({ ...stored(), targetCountry: 'ZZ' })
+        .success,
+    ).toBe(false);
+    expect(
+      storedMarketEntryInputSchema.safeParse({ ...stored(), currency: null }).success,
+    ).toBe(false);
+  });
+
+  it('refuses an amount that is not already in minor units', () => {
+    expect(
+      storedMarketEntryInputSchema.safeParse({ ...stored(), unitCost: '3.10' }).success,
+    ).toBe(false);
+    expect(
+      storedMarketEntryInputSchema.safeParse({ ...stored(), unitCost: 3.1 }).success,
+    ).toBe(false);
   });
 });

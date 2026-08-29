@@ -73,7 +73,8 @@ const money = z
      * zero is not a missing figure, it is a claim that the product is free,
      * which then flows straight into a margin the customer might quote.
      */
-    const stripped = typeof value === 'number' ? String(value) : value.replace(/[^\d.-]/g, '');
+    const stripped =
+      typeof value === 'number' ? String(value) : value.replace(/[^\d.-]/g, '');
     if (!/\d/.test(stripped)) {
       ctx.addIssue({ code: 'custom', message: 'Enter an amount, for example 12.50' });
       return z.NEVER;
@@ -316,12 +317,14 @@ export const FIELD_STAGE: Readonly<Record<string, StageKey>> = Object.freeze(
   ),
 );
 
-export const marketEntryInputSchema = z
+const wholeBrief = z
   .object({ packageId: z.literal(MARKET_ENTRY_PACKAGE_ID) })
   .extend(offerStageSchema.shape)
   .extend(targetStageSchema.shape)
   .extend(commercialStageSchema.shape)
-  .extend(objectivesStageSchema.shape)
+  .extend(objectivesStageSchema.shape);
+
+export const marketEntryInputSchema = wholeBrief
   .refine(
     (input) => input.targetCountry !== input.originCountry || Boolean(input.targetRegion),
     {
@@ -344,6 +347,46 @@ export const marketEntryInputSchema = z
   );
 
 export type MarketEntryInput = z.infer<typeof marketEntryInputSchema>;
+
+/**
+ * The same brief, read back out of storage.
+ *
+ * Necessary because `money` is a *transform*, not a validation: it multiplies
+ * by a hundred to reach integer minor units. Running the submission schema over
+ * an already-stored brief therefore does not merely re-check it — it multiplies
+ * every amount by a hundred again, turning a €8.90 shelf price into €890 and
+ * every margin scenario in the dossier with it. The runner does exactly that
+ * re-validation on the row it loads, which is right (a corrupt row should not
+ * reach the model), so what it needs is a schema whose money fields are already
+ * minor units.
+ *
+ * Same fields, same cross-field rules, one difference: amounts are read, not
+ * converted.
+ */
+const storedMoney = z.number().int().min(0).max(100_000_000_000).nullable().default(null);
+
+export const storedMarketEntryInputSchema = wholeBrief
+  .extend({
+    currentPrice: storedMoney,
+    unitCost: storedMoney,
+    targetPrice: storedMoney,
+    launchBudget: storedMoney,
+  })
+  .refine(
+    (input) => input.targetCountry !== input.originCountry || Boolean(input.targetRegion),
+    {
+      message: 'Stored brief names the same origin and target market',
+      path: ['targetCountry'],
+    },
+  )
+  .refine(
+    (input) =>
+      input.currency !== null ||
+      [input.currentPrice, input.unitCost, input.targetPrice, input.launchBudget].every(
+        (amount) => amount === null,
+      ),
+    { message: 'Stored brief has amounts with no currency', path: ['currency'] },
+  );
 
 /** The subject of a job, for listings, the cache key and the report header. */
 export function subjectOfMarketEntry(input: MarketEntryInput): {

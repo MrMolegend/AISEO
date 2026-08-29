@@ -99,7 +99,7 @@ describe('evidence depth', () => {
   });
 
   it('does not count sources that are not credible', () => {
-    const blog = sources(16, { category: 'blog' });
+    const blog = sources(16, { category: 'other' });
     expect(factorScore(FIXTURE_SYNTHESIS, blog, 'evidenceDepth')).toBeLessThan(
       factorScore(FIXTURE_SYNTHESIS, sources(16), 'evidenceDepth'),
     );
@@ -286,7 +286,7 @@ describe('readiness', () => {
     const unevidenced = readinessFrom(
       computeFactors(
         FIXTURE_SYNTHESIS,
-        sources(2, { category: 'blog', retrievalMode: 'indexed' }),
+        sources(2, { category: 'other', retrievalMode: 'indexed' }),
       ),
     );
     expect(evidenced).toBeGreaterThan(unevidenced);

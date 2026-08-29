@@ -30,15 +30,15 @@ const indexed = (category: GradingSource['category']): GradingSource => ({
 
 describe('the grade is derived, never declared', () => {
   it('reports the customer’s own answers as theirs', () => {
-    expect(deriveEvidenceGrade({ basis: 'provided', sources: [], sensitive: false })).toBe(
-      'provided',
-    );
+    expect(
+      deriveEvidenceGrade({ basis: 'provided', sources: [], sensitive: false }),
+    ).toBe('provided');
   });
 
   it('reports our own arithmetic as modelled', () => {
-    expect(deriveEvidenceGrade({ basis: 'modelled', sources: [], sensitive: false })).toBe(
-      'modelled',
-    );
+    expect(
+      deriveEvidenceGrade({ basis: 'modelled', sources: [], sensitive: false }),
+    ).toBe('modelled');
   });
 
   it('reports reasoning as inference even when sources are attached', () => {
@@ -197,7 +197,8 @@ describe('grading a whole report', () => {
     // The worked example's second benchmark cites a trade-press page that the
     // fixture deliberately fails to retrieve.
     const demoted = Object.entries(EXAMPLE_DOSSIER.grades).filter(
-      ([path, grade]) => path.startsWith('pricing.researchedBenchmarks') && grade === 'unknown',
+      ([path, grade]) =>
+        path.startsWith('pricing.researchedBenchmarks') && grade === 'unknown',
     );
     expect(demoted.length).toBeGreaterThan(0);
   });
