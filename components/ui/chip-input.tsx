@@ -128,10 +128,12 @@ export function ChipInput({
         )}
       >
         {/* The list is named, because "list with 3 items" tells a
-            screen-reader user nothing about which of the page's several
-            lists they have landed in. */}
+            screen-reader user nothing about which of the page's several lists
+            they have landed in. The name deliberately does not repeat the
+            field's own label: a list and an input sharing a name makes every
+            "find the control called X" — a person's, or a test's — ambiguous. */}
         {value.length > 0 && (
-          <ul aria-label={`${label} — added so far`} className="flex flex-wrap gap-2">
+          <ul aria-label="Added so far" className="flex flex-wrap gap-2">
             {value.map((entry, index) => (
               <li
                 key={`${entry}-${index}`}

@@ -47,6 +47,8 @@ const SESSION = {
 /** width, height, and whether the whole scroll height is captured. */
 const DESKTOP = { width: 1440, height: 1000 };
 const MOBILE = { width: 390, height: 844 };
+/** The narrowest width the product claims to support. */
+const NARROW = { width: 320, height: 800 };
 
 const VIEWS = [
   { id: 'home-desktop', path: '/', viewport: DESKTOP, full: true },
@@ -58,6 +60,11 @@ const VIEWS = [
   { id: 'example-desktop', path: '/example', viewport: DESKTOP, full: true },
   { id: 'example-mobile', path: '/example', viewport: MOBILE, full: true },
   { id: 'methodology', path: '/methodology', viewport: DESKTOP, full: true },
+  { id: 'account', path: '/account', viewport: DESKTOP, auth: true, full: true },
+  { id: 'wallet', path: '/wallet', viewport: DESKTOP, auth: true, full: true },
+  { id: 'sign-in', path: '/sign-in', viewport: DESKTOP },
+  { id: 'home-320', path: '/', viewport: NARROW, full: true },
+  { id: 'example-320', path: '/example', viewport: NARROW, full: true },
   {
     id: 'example-print',
     path: '/example',

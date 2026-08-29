@@ -12,7 +12,7 @@ import { FixtureResearchProvider, resetResearchProviderCache } from '@/lib/resea
 import { FixtureSynthesiser } from '@/lib/ai/fixture-synthesiser';
 import { resetRateLimiter } from '@/lib/security/rate-limit';
 import { getEnv, resetEnvCache } from '@/lib/env';
-import { REPORT_TOKEN_COST, SEARCH_BUDGET } from '@/config/report';
+import { REPORT_TOKEN_COST, SEARCH_BUDGET, SYNTHESIS_BUDGET } from '@/config/report';
 import { ERROR_COPY } from '@/lib/errors';
 import { EXAMPLE_SUBMISSION } from '@/fixtures/market-entry/case';
 import type { MarketEntryReport } from '@/schemas/market-entry/report';
@@ -247,5 +247,69 @@ describe('production refuses to run on fixtures', () => {
       delete process.env.VERCEL_ENV;
       resetEnvCache();
     }
+  });
+});
+
+describe('the synthesis budget', () => {
+  it('makes exactly one call when the first report validates', async () => {
+    const created = await submit();
+    await runResearchJob(created.job);
+
+    expect(FixtureSynthesiser.callCount).toBe(1);
+  });
+
+  it('repairs once, and only once', async () => {
+    // A structurally invalid report earns one repair round. A second failure
+    // ends the job — the alternative is an unbounded loop against a paid API.
+    FixtureSynthesiser.fault = 'invalid-shape';
+    const created = await submit();
+    await runResearchJob(created.job);
+
+    expect(FixtureSynthesiser.callCount).toBe(SYNTHESIS_BUDGET.maxRepairAttempts + 1);
+
+    const store = await getResearchJobStore();
+    const job = await store.getForUser(created.job.publicId, USER);
+    expect(job?.status).toBe('failed');
+
+    // Nothing was delivered, so nothing is charged.
+    expect(await balance()).toEqual({ available: 1000, reserved: 0 });
+  });
+
+  it('accepts a repaired report and charges for it', async () => {
+    FixtureSynthesiser.fault = 'fail-then-succeed';
+    const created = await submit();
+    await runResearchJob(created.job);
+
+    expect(FixtureSynthesiser.callCount).toBe(2);
+
+    const store = await getResearchJobStore();
+    expect((await store.getForUser(created.job.publicId, USER))?.status).toBe('complete');
+    expect(await balance()).toEqual({ available: 1000 - COST, reserved: 0 });
+  });
+
+  it('sends the problem list back with the repair, not just the schema again', async () => {
+    FixtureSynthesiser.fault = 'fail-then-succeed';
+    const created = await submit();
+    await runResearchJob(created.job);
+
+    const repair = FixtureSynthesiser.lastInput?.repair;
+    expect(repair, 'the second call was not a repair').toBeTruthy();
+    expect(repair?.repairMessage.length).toBeGreaterThan(0);
+  });
+
+  it('does not repair a report that merely lacks evidence', async () => {
+    // A thin report is structurally fine. Asking the model to try harder would
+    // spend a second call inventing what the research did not find, which is
+    // the one thing this product must not do — the gate refunds instead.
+    FixtureResearchProvider.fault = 'single-publisher';
+    const created = await submit();
+    await runResearchJob(created.job);
+
+    expect(FixtureSynthesiser.callCount).toBe(1);
+
+    const store = await getResearchJobStore();
+    expect((await store.getForUser(created.job.publicId, USER))?.errorCode).toBe(
+      'INSUFFICIENT_MARKET_EVIDENCE',
+    );
   });
 });

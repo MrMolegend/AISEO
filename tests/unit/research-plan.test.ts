@@ -6,6 +6,7 @@ import { SEARCH_BUDGET } from '@/config/report';
 import { marketEntryInputSchema } from '@/schemas/market-entry/input';
 import { EXAMPLE_SUBMISSION } from '@/fixtures/market-entry/case';
 import { ALL_FIXTURE_RESULTS } from '@/fixtures/market-entry/search-results';
+import { prioritiseForRetrieval } from '@/lib/research/retrieve';
 
 const INPUT = marketEntryInputSchema.parse(EXAMPLE_SUBMISSION);
 
@@ -215,5 +216,85 @@ describe('geographic relevance', () => {
         ...context,
       }),
     ).toBe('target-region');
+  });
+});
+
+describe('choosing which sources to spend the retrieval budget on', () => {
+  const candidate = (url: string, category: string, score = 0.5) => ({
+    url,
+    category,
+    score,
+  });
+
+  it('reads authorities before anything else', () => {
+    // The order is the whole point: only a directly-read authority can carry a
+    // regulatory or market-size claim, so the budget goes there first.
+    const order = prioritiseForRetrieval(
+      [
+        candidate('https://blog.example/post', 'other', 0.99),
+        candidate('https://shop.example/salt', 'retailer', 0.98),
+        candidate('https://news.example/story', 'news', 0.97),
+        candidate('https://ministry.gov.example/imports', 'official', 0.1),
+        candidate('https://regulator.gov.example/rules', 'regulator', 0.1),
+      ],
+      5,
+    );
+
+    expect(order.slice(0, 2)).toEqual([
+      'https://ministry.gov.example/imports',
+      'https://regulator.gov.example/rules',
+    ]);
+    expect(order.at(-1)).toBe('https://blog.example/post');
+  });
+
+  it('reaches eight organisations before it reads one site twice', () => {
+    const order = prioritiseForRetrieval(
+      [
+        candidate('https://one.gov.example/a', 'official', 0.9),
+        candidate('https://one.gov.example/b', 'official', 0.89),
+        candidate('https://one.gov.example/c', 'official', 0.88),
+        candidate('https://two.gov.example/a', 'official', 0.5),
+        candidate('https://three.gov.example/a', 'official', 0.4),
+      ],
+      5,
+    );
+
+    // One page per publisher first, then the seconds. Eight fetches that reach
+    // eight organisations beat eight that read one site's sitemap.
+    expect(order.slice(0, 3)).toEqual([
+      'https://one.gov.example/a',
+      'https://two.gov.example/a',
+      'https://three.gov.example/a',
+    ]);
+  });
+
+  it('breaks a tie within a category by the provider’s own relevance', () => {
+    const order = prioritiseForRetrieval(
+      [
+        candidate('https://a.gov.example/x', 'official', 0.2),
+        candidate('https://b.gov.example/x', 'official', 0.8),
+      ],
+      2,
+    );
+    expect(order[0]).toBe('https://b.gov.example/x');
+  });
+
+  it('never returns more than the budget allows', () => {
+    const many = Array.from({ length: 40 }, (_, index) =>
+      candidate(`https://p${index}.gov.example/x`, 'official', 1 - index / 100),
+    );
+    expect(prioritiseForRetrieval(many, 8)).toHaveLength(8);
+  });
+
+  it('is stable — the same candidates always produce the same order', () => {
+    const candidates = [
+      candidate('https://a.gov.example/x', 'official', 0.5),
+      candidate('https://b.gov.example/x', 'regulator', 0.5),
+      candidate('https://c.example/x', 'news', 0.5),
+    ];
+    const runs = Array.from({ length: 5 }, () =>
+      prioritiseForRetrieval(candidates, 3).join('|'),
+    );
+    expect(new Set(runs).size).toBe(1);
   });
 });

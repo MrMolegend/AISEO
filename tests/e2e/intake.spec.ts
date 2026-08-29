@@ -214,10 +214,10 @@ test.describe('the competitor chip input', () => {
   });
 
   const LABEL = 'Competitors or alternatives you already know of';
-  const field = (page: Page) => page.getByLabel(LABEL);
+  const field = (page: Page) => page.getByRole('textbox', { name: LABEL });
   /* Scoped to the chip list: the stage rail and the footer are lists too. */
   const chips = (page: Page) =>
-    page.getByRole('list', { name: `${LABEL} — added so far` }).getByRole('listitem');
+    page.getByRole('list', { name: 'Added so far' }).getByRole('listitem');
 
   test('lets a name contain spaces', async ({ page }) => {
     // The bug this exists for: committing on space turns "Maldon Salt" into two
