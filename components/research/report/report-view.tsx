@@ -337,6 +337,8 @@ export function ReportView({
                 {meta.repairAttempts > 0 && ` · ${meta.repairAttempts} correction pass`}
               </p>
               <p className="text-text-faint mt-2 text-xs leading-relaxed">
+                {/* Legacy reports were produced and charged for in tokens; relabelling
+                    them as report credits afterwards would misdescribe what happened. */}
                 {BRAND.currency.disclaimer}
               </p>
               {isOwner && (

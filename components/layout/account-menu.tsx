@@ -60,11 +60,11 @@ export function AccountMenu({
         onClick={() => setOpen((shown) => !shown)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="border-rule bg-ground-raised text-text hover:border-rule-strong focus-visible:ring-cobalt flex h-9 items-center gap-2 rounded-full border pr-3 pl-1 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+        className="border-rule bg-ground-raised text-text hover:border-rule-strong focus-visible:ring-cobalt flex h-9 items-center gap-2 border pr-3 pl-2.5 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
       >
         <span
           aria-hidden="true"
-          className="bg-signal text-text-on-signal flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-semibold"
+          className="bg-signal text-text-on-signal flex h-5 w-5 items-center justify-center text-[11px] font-semibold"
         >
           {initial}
         </span>
@@ -84,7 +84,7 @@ export function AccountMenu({
         <div
           role="menu"
           aria-label="Account"
-          className="border-rule bg-ground-raised absolute right-0 z-50 mt-2 w-64 rounded-[var(--radius-panel)] border p-1.5 shadow-[var(--shadow-lift)]"
+          className="border-rule bg-ground-raised absolute right-0 z-50 mt-2 w-64 border p-1.5 shadow-[var(--shadow-lift)]"
         >
           <div className="px-3 py-2.5">
             <p className="text-text truncate text-sm font-medium">

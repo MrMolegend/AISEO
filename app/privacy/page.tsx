@@ -18,9 +18,9 @@ export default function PrivacyPage() {
           is by emailed link, so we do not store a password.
         </p>
         <p>
-          Your {BRAND.currency.plural} balance and every movement of it are recorded
-          against your account. That ledger is append-only: it is how we can show you
-          exactly what a report cost and when a refund was issued.
+          Your {BRAND.credit.plural} balance and every movement of it are recorded against
+          your account. That ledger is append-only: it is how we can show you exactly what
+          a report cost and when a refund was issued.
         </p>
       </LegalSection>
 

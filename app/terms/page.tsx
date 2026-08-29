@@ -19,8 +19,8 @@ export default function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection heading={BRAND.currency.name}>
-        <p>{BRAND.currency.disclaimer}</p>
+      <LegalSection heading="Report credits">
+        <p>{BRAND.credit.disclaimer}</p>
         <p>
           Each research package has a fixed cost, shown before you confirm. Running a
           report holds that amount and settles it when the report completes. If the run
@@ -63,7 +63,7 @@ export default function TermsPage() {
         <p>
           The service is provided as-is, without warranty. We may change, limit or
           withdraw it at any time. Where we withdraw it entirely, unused{' '}
-          {BRAND.currency.plural} will not be redeemable for cash.
+          {BRAND.credit.plural} will not be redeemable for cash.
         </p>
       </LegalSection>
     </LegalPage>

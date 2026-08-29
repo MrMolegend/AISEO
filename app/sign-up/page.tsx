@@ -37,7 +37,7 @@ export default async function SignUpPage() {
             Sign in
           </Link>
           <span className="text-text-faint mt-4 block text-xs leading-relaxed">
-            {BRAND.currency.disclaimer}
+            {BRAND.credit.disclaimer}
           </span>
         </>
       }

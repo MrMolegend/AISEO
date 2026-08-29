@@ -70,7 +70,7 @@ export function MobileNav({
         <div
           role="menu"
           aria-label="Site"
-          className="border-rule bg-ground-raised absolute right-0 z-50 mt-2 w-56 rounded-[var(--radius-panel)] border p-1.5 shadow-[var(--shadow-lift)]"
+          className="border-rule bg-ground-raised absolute right-0 z-50 mt-2 w-56 border p-1.5 shadow-[var(--shadow-lift)]"
         >
           {links.map((link) => (
             <Link
