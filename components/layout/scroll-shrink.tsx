@@ -30,7 +30,9 @@ export function ScrollShrink({ children }: { children: React.ReactNode }) {
   return (
     <header
       data-condensed={condensed ? '' : undefined}
-      className="sticky top-0 z-[30] border-b border-transparent transition-[background-color,border-color] duration-[var(--duration-base)] ease-[var(--ease-out-soft)] data-condensed:border-[var(--color-rule)] data-condensed:bg-[var(--color-ground)]"
+      /* Not printed. A navigation bar on paper is an inch of chrome at the top
+         of a document someone is carrying into a meeting. */
+      className="sticky top-0 z-[30] border-b border-transparent transition-[background-color,border-color] duration-[var(--duration-base)] ease-[var(--ease-out-soft)] data-condensed:border-[var(--color-rule)] data-condensed:bg-[var(--color-ground)] print:hidden"
       style={
         {
           '--header-height': condensed ? '3.5rem' : '4.5rem',

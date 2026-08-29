@@ -12,8 +12,13 @@ import { BRAND } from '@/config/brand';
  * technically-compliant that nobody defends afterwards.
  */
 export function SiteFooter() {
+  /*
+   * `print:hidden`: the site footer is chrome, not document. The dossier prints
+   * its own sources and limitations, and a column of site links after them is
+   * noise on paper.
+   */
   return (
-    <footer className="border-rule mt-24 border-t">
+    <footer className="border-rule mt-24 border-t print:hidden">
       <div className="mx-auto max-w-[var(--container-page)] px-5 py-12 md:px-8">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-[1.4fr_1fr]">
           <div>
