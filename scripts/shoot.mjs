@@ -187,7 +187,17 @@ for (const scheme of ['dark', 'light']) {
     const file = `${OUT}/${view.id}-${scheme}.png`;
     await page.screenshot({
       path: file,
-      fullPage: Boolean(view.full),
+      /*
+       * Never full-page under print emulation.
+       *
+       * Chromium relays the document out at the paper width for a full-page
+       * capture in print media, which produces an image of a document squeezed
+       * into a narrow column — an artifact of the capture, not of the page. It
+       * looks exactly like a layout bug and is not one, which makes it worse
+       * than no screenshot. The framed capture shows what print actually does;
+       * the rest is asserted in tests/e2e/report.spec.ts.
+       */
+      fullPage: Boolean(view.full) && view.media !== 'print',
       // A tall document takes real time to encode. The default 30s is a
       // timeout on the encoder, not on anything that could be wrong.
       timeout: 120_000,

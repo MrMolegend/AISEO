@@ -68,7 +68,12 @@ export function DossierView({
        * which caps the track at the container and hands the overflow back to
        * the scroller that was written to take it.
        */
-      className="mx-auto grid max-w-[var(--container-page)] grid-cols-1 gap-10 px-5 py-8 md:px-8 xl:grid-cols-[190px_minmax(0,1fr)] xl:gap-14"
+      /*
+       * `print:block` because the contents rail is `print:hidden` — and a
+       * hidden grid item still holds its 190px track, so a printed page was
+       * losing a fifth of its width to a column with nothing in it.
+       */
+      className="mx-auto grid max-w-[var(--container-page)] grid-cols-1 gap-10 px-5 py-8 md:px-8 xl:grid-cols-[190px_minmax(0,1fr)] xl:gap-14 print:block print:max-w-none print:px-0"
     >
       <ContentsNav />
 
