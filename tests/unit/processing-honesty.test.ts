@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { STAGES, STAGE_IDS, statusForStage, isTerminal } from '@/lib/jobs/stages';
+import { INVESTIGATION_AREAS } from '@/lib/research/plan';
+import { SEARCH_BUDGET } from '@/config/report';
 
 /**
  * The progress screen must not lie.
@@ -64,5 +66,45 @@ describe('there is no invented percentage', () => {
     expect(code).not.toMatch(/percent/i);
     expect(code).not.toMatch(/\/\s*STAGES\.length\s*\)\s*\*\s*100/);
     expect(code).not.toMatch(/role="progressbar"/);
+  });
+});
+
+describe('the marketing copy counts what the code plans', () => {
+  /*
+   * The landing page said "ten investigation areas" while the planner had
+   * twelve, and the list beside the sentence rendered all twelve — so the page
+   * contradicted itself in the same section. A number in prose is the easiest
+   * thing in a product to leave behind, so it is derived here rather than
+   * trusted.
+   */
+  const spelled: Record<number, string> = {
+    8: 'eight',
+    9: 'nine',
+    10: 'ten',
+    11: 'eleven',
+    12: 'twelve',
+    13: 'thirteen',
+  };
+
+  it('names the right number of investigation areas', () => {
+    const expected = spelled[INVESTIGATION_AREAS.length];
+    expect(expected, 'add the spelling for this count').toBeTruthy();
+
+    const page = source('app/page.tsx');
+    const claim = page.match(/(\w+) investigation areas/i);
+    expect(claim, 'the landing page no longer names a count').toBeTruthy();
+    expect(claim![1]!.toLowerCase()).toBe(expected);
+  });
+
+  it('names the right number of searches', () => {
+    // The same trap, on the numbers that cost money.
+    const page = source('app/page.tsx');
+    for (const field of ['advanced', 'basic', 'total'] as const) {
+      expect(page, `the page hard-codes the ${field} search cap`).toContain(
+        `SEARCH_BUDGET.${field}`,
+      );
+    }
+    // And the caps themselves are what the runner enforces.
+    expect(SEARCH_BUDGET.advanced + SEARCH_BUDGET.basic).toBe(SEARCH_BUDGET.total);
   });
 });

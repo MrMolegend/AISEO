@@ -131,7 +131,7 @@ export default async function LandingPage({
           <SectionHead
             index="02"
             title={`What ${BRAND.name} researches`}
-            lede="Ten investigation areas, planned server-side from your brief before a single search runs — so the cost of a report is a budget decision rather than something the model talks itself into."
+            lede="Twelve investigation areas, planned server-side from your brief before a single search runs — so the cost of a report is a budget decision rather than something the model talks itself into."
           />
           <ol className="mt-10 grid gap-x-10 gap-y-px sm:grid-cols-2 lg:grid-cols-3">
             {INVESTIGATION_AREAS.filter((area) => area !== 'key-question').map(
