@@ -153,3 +153,43 @@ describe('administrative controls are not part of the product', () => {
     }
   });
 });
+
+describe('operational cost data stays operational', () => {
+  it('is recorded in the job meta and rendered by no dossier component', () => {
+    /*
+     * The observability record carries what a report cost to produce — how many
+     * searches, how many provider credits, how many tokens were reserved. An
+     * operator needs all of it; a customer needs none of it, and showing a
+     * person the machinery behind a number they paid a flat price for invites
+     * exactly the wrong conversation.
+     */
+    for (const file of walk(join(ROOT, 'components/dossier'), /\.tsx$/).concat(
+      walk(join(ROOT, 'app/example'), /\.tsx$/),
+    )) {
+      const contents = readFileSync(file, 'utf8');
+      for (const field of [
+        'searchCredits',
+        'creditReservedTokens',
+        'searchesAdvanced',
+        'searchesBasic',
+        'qualityGateReasons',
+        'settlement',
+      ]) {
+        expect(contents, `${relative(ROOT, file)} renders ${field}`).not.toContain(field);
+      }
+    }
+  });
+
+  it('exposes no operational field through the public report schema’s coverage panel', async () => {
+    // Coverage is what the *research* found, which a reader needs to judge the
+    // document. It is deliberately not what the research cost.
+    const { EXAMPLE_DOSSIER } = await import('@/fixtures/market-entry/example-dossier');
+    const coverage = Object.keys(EXAMPLE_DOSSIER.coverage);
+
+    for (const key of coverage) {
+      expect(key, `coverage exposes ${key}`).not.toMatch(
+        /credit|token|cost|price|spend|budget/i,
+      );
+    }
+  });
+});
