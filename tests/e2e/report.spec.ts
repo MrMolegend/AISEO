@@ -180,12 +180,16 @@ test.describe('navigating a long document', () => {
 });
 
 test.describe('sharing and printing', () => {
-  test('offers a share link and a print route', async ({ page }) => {
+  test('offers a print route, and no share link for a fixture', async ({ page }) => {
     await page.goto('/example');
-    await expect(page.getByRole('button', { name: /Copy share link/ })).toBeVisible();
     await expect(
       page.getByRole('button', { name: /Print or save as PDF/ }),
     ).toBeVisible();
+
+    // The share control is a capability handover — it copies a URL that grants
+    // access to a stored report. The worked example has none, so offering one
+    // would be a button that hands over nothing.
+    await expect(page.getByRole('button', { name: /Copy share link/ })).toHaveCount(0);
   });
 
   test('drops the navigation chrome in print, and keeps the evidence', async ({
@@ -203,18 +207,25 @@ test.describe('sharing and printing', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 
-  test('opens every source drawer for print, so nothing is lost on paper', async ({
-    page,
-  }) => {
-    // A collapsed drawer prints as a summary line. The evidence behind a claim
-    // is the point of the document, so print expands them.
+  test('shows every source drawer on paper, so nothing is lost', async ({ page }) => {
+    /*
+     * A collapsed drawer prints as a summary line, and the evidence behind a
+     * claim is the point of the document. Asserted on what a reader would see
+     * rather than on the `open` attribute: print reveals the contents through
+     * CSS and deliberately leaves the attribute alone, so someone reading the
+     * same page on screen afterwards finds it as they left it.
+     */
     await page.goto('/example');
-    await page.emulateMedia({ media: 'print' });
 
-    const closed = await page.locator('details:not([open])').count();
-    const anyDetails = await page.locator('details').count();
-    expect(anyDetails).toBeGreaterThan(0);
-    expect(closed).toBe(0);
+    const drawer = page.locator('details').first();
+    await drawer.scrollIntoViewIfNeeded();
+    const contents = drawer.locator('> div');
+    await expect(contents).toBeHidden();
+
+    await page.emulateMedia({ media: 'print' });
+    await expect(contents).toBeVisible();
+
+    expect(await page.locator('details').count()).toBeGreaterThan(0);
   });
 });
 

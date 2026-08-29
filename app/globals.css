@@ -573,6 +573,30 @@
     animation: none !important;
   }
 
+  /*
+   * Every source drawer opens on paper.
+   *
+   * A dossier printed with forty-three collapsed evidence drawers has lost the
+   * thing it is for: the claims survive and the sources behind them do not.
+   * There is no way to undo that with a pen in a meeting.
+   *
+   * Two rules because Chromium changed how it hides the contents mid-2024.
+   * `::details-content` is the modern pseudo-element; the child rule is the
+   * older behaviour and is harmless where the pseudo-element exists. The
+   * `open` attribute is deliberately not touched — the marker keeps pointing
+   * the right way for anyone reading the same page on screen afterwards.
+   */
+  details > *:not(summary) {
+    display: block !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  details::details-content {
+    content-visibility: visible !important;
+    block-size: auto !important;
+  }
+
   /* A page break through a risk row or a plan action makes the table lie. */
   [data-print-keep] {
     break-inside: avoid;
