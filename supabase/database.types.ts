@@ -4,14 +4,6 @@
  * Regenerate after any migration:
  *   npx supabase gen types typescript --project-id <ref> > supabase/database.types.ts
  *
- * EXCEPT, currently, for the five market-entry evidence columns on
- * research_sources. Migration 0010 adds them and has deliberately not been
- * applied to the live project yet — applying a schema change for code that is
- * not merged puts the database ahead of the application for no benefit. The
- * columns below were therefore written by hand so the query that populates them
- * typechecks. Regenerate this file from the live database immediately after
- * 0010 is applied, and this note goes with it.
- *
  * These are wired into lib/storage/supabase-store.ts via createClient<Database>,
  * which is what makes them worth having: a column renamed in a migration but not
  * in the query becomes a typecheck failure rather than a runtime error nobody
@@ -33,7 +25,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -262,16 +254,16 @@ export type Database = {
           content_hash: string | null
           excerpt: string | null
           geographic_relevance: string | null
-          published_at: string | null
-          retrieval_mode: string | null
-          source_category: string | null
-          source_confidence: string | null
           http_status: number | null
           id: number
           job_id: string
           position: number
+          published_at: string | null
           publisher_domain: string | null
+          retrieval_mode: string | null
           retrieved_at: string
+          source_category: string | null
+          source_confidence: string | null
           source_type: string
           title: string | null
         }
@@ -280,16 +272,16 @@ export type Database = {
           content_hash?: string | null
           excerpt?: string | null
           geographic_relevance?: string | null
-          published_at?: string | null
-          retrieval_mode?: string | null
-          source_category?: string | null
-          source_confidence?: string | null
           http_status?: number | null
           id?: number
           job_id: string
           position: number
+          published_at?: string | null
           publisher_domain?: string | null
+          retrieval_mode?: string | null
           retrieved_at?: string
+          source_category?: string | null
+          source_confidence?: string | null
           source_type?: string
           title?: string | null
         }
@@ -298,16 +290,16 @@ export type Database = {
           content_hash?: string | null
           excerpt?: string | null
           geographic_relevance?: string | null
-          published_at?: string | null
-          retrieval_mode?: string | null
-          source_category?: string | null
-          source_confidence?: string | null
           http_status?: number | null
           id?: number
           job_id?: string
           position?: number
+          published_at?: string | null
           publisher_domain?: string | null
+          retrieval_mode?: string | null
           retrieved_at?: string
+          source_category?: string | null
+          source_confidence?: string | null
           source_type?: string
           title?: string | null
         }

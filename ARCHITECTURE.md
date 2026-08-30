@@ -457,10 +457,13 @@ stay valid — and adds five nullable columns: `source_category`, `retrieval_mod
 Nothing is dropped, renamed or rewritten. Users, wallets, ledger entries,
 previous reports, sources and auth identities are all untouched.
 
-**It is not applied to the live project.** It is the one step of this change
-that touches production data, so it is left for a deliberate hand at deploy
-time — and `supabase/database.types.ts` therefore describes the post-migration
-schema, with a note at the top saying so.
+**It is applied to the live project** — recorded in migration history as
+`market_entry_source_evidence`, alongside `0001`–`0009`. Verified afterwards:
+all 45 existing `research_sources` rows intact and unrewritten, the five new
+columns nullable and NULL on every one of them, and the widened CHECK still
+accepting all seven legacy `source_type` values.
+`supabase/database.types.ts` is now generated from that live schema rather
+than hand-edited ahead of it.
 
 **Ordering.** Apply `0010` before deploying the code. The source-index insert
 names the new columns, so on an unmigrated database it fails — and that failure
