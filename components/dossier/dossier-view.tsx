@@ -37,12 +37,17 @@ export function DossierView({
   publicId,
   isOwner,
   illustrative = false,
+  shareToken = null,
+  shareAllowsDownload = false,
 }: {
   report: MarketEntryReport;
   publicId: string | null;
   isOwner: boolean;
   /** Set for the worked example, which is fictional and says so throughout. */
   illustrative?: boolean;
+  /** Present when this render is a shared view, for export authorisation. */
+  shareToken?: string | null;
+  shareAllowsDownload?: boolean;
 }) {
   /*
    * The example page carries its own h1 ("What a market-entry dossier looks
@@ -100,9 +105,13 @@ export function DossierView({
               {publicId ? ` · ${publicId}` : ''}
             </Meta>
             <ShareControls
-              shareable={isOwner && publicId !== null}
+              sharingHref={isOwner && publicId ? `/research/${publicId}/sharing` : null}
               sourcesHref={
-                publicId ? `/api/research/${publicId}/export?kind=sources` : null
+                publicId && isOwner
+                  ? `/api/research/${publicId}/export?kind=sources`
+                  : publicId && shareToken && shareAllowsDownload
+                    ? `/api/research/${publicId}/export?kind=sources&share=${shareToken}`
+                    : null
               }
             />
           </div>

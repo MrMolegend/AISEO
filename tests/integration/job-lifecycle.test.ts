@@ -373,23 +373,19 @@ describe('access', () => {
     expect(await store.getForUser(created.job.publicId, USER)).not.toBeNull();
   });
 
-  it('serves a completed report to anyone holding the link', async () => {
+  it('serves a completed report to a validated share, and only a completed one', async () => {
     await fund(USER, 500);
     const created = await submit();
-    await runResearchJob(created.job);
 
     const store = await getResearchJobStore();
-    const shared = await store.getPublic(created.job.publicId);
+    // Share resolution reads by internal id, once a token has validated.
+    // An unfinished job is not a report and is not served even then.
+    expect(await store.getForShare(created.job.id)).toBeNull();
+
+    await runResearchJob(created.job);
+    const shared = await store.getForShare(created.job.id);
     expect(shared?.publicId).toBe(created.job.publicId);
     expect(shared?.report).toBeTruthy();
-  });
-
-  it('does not expose a job that has not completed', async () => {
-    await fund(USER, 500);
-    const created = await submit();
-
-    const store = await getResearchJobStore();
-    expect(await store.getPublic(created.job.publicId)).toBeNull();
   });
 });
 

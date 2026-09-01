@@ -59,6 +59,16 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        // Shared reports carry a real business's private brief. The page sets
+        // a robots meta too; the header covers responses a crawler reads
+        // without parsing HTML, and the tokened URL must never enter an index.
+        source: '/shared/:path*',
+        headers: [
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' },
+          { key: 'Cache-Control', value: 'private, no-store' },
+        ],
+      },
     ];
   },
 };
