@@ -5,6 +5,7 @@ import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { DossierView } from '@/components/dossier/dossier-view';
 import { VersionRail, type VersionEntry } from '@/components/dossier/version-rail';
+import { OwnerToolbar } from '@/components/dossier/owner-toolbar';
 import { ProcessingScreen } from '@/components/research/processing-screen';
 import { ReportView } from '@/components/research/report/report-view';
 import { Button } from '@/components/ui/button';
@@ -192,6 +193,7 @@ export default async function ReportPage({
       <>
         <SiteHeader />
         <main id="main">
+          {isOwner && <OwnerToolbar publicId={job.publicId} active="" />}
           <VersionRail versions={versions} profileName={profileName} />
           <DossierView report={parsed.data} publicId={job.publicId} isOwner={isOwner} />
         </main>
