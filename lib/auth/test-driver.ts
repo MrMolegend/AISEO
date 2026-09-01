@@ -34,6 +34,7 @@ export const TEST_SESSION_COOKIE = 'e2e-test-session';
 export interface TestSession {
   id: string;
   email: string | null;
+  role?: 'admin';
 }
 
 /** Reads the fake session, or null. Returns null whenever the driver is off. */
@@ -48,10 +49,18 @@ export async function getTestSessionUser(): Promise<AuthenticatedUser | null> {
     const parsed: unknown = JSON.parse(decodeURIComponent(raw));
     if (typeof parsed !== 'object' || parsed === null) return null;
 
-    const { id, email } = parsed as { id?: unknown; email?: unknown };
+    const { id, email, role } = parsed as {
+      id?: unknown;
+      email?: unknown;
+      role?: unknown;
+    };
     if (typeof id !== 'string' || id.length === 0) return null;
 
-    return { id, email: typeof email === 'string' ? email : null };
+    return {
+      id,
+      email: typeof email === 'string' ? email : null,
+      role: role === 'admin' ? 'admin' : null,
+    };
   } catch {
     return null;
   }

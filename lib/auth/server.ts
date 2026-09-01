@@ -27,6 +27,13 @@ import { PlatformError } from '@/lib/errors';
 export interface AuthenticatedUser {
   id: string;
   email: string | null;
+  /**
+   * The server-issued role claim, from the JWT's app_metadata. app_metadata
+   * is writable only through the Auth admin API — never by the user — which
+   * is what makes it usable for authorisation. Anything not exactly 'admin'
+   * is an ordinary customer.
+   */
+  role: 'admin' | null;
 }
 
 /**
@@ -102,12 +109,17 @@ export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
     const { data, error } = await supabase.auth.getClaims();
     if (error || !data?.claims) return null;
 
-    const claims = data.claims as { sub?: unknown; email?: unknown };
+    const claims = data.claims as {
+      sub?: unknown;
+      email?: unknown;
+      app_metadata?: { role?: unknown };
+    };
     if (typeof claims.sub !== 'string' || claims.sub.length === 0) return null;
 
     return {
       id: claims.sub,
       email: typeof claims.email === 'string' ? claims.email : null,
+      role: claims.app_metadata?.role === 'admin' ? 'admin' : null,
     };
   } catch {
     // An expired or malformed token is a logged-out user, not an error page.
