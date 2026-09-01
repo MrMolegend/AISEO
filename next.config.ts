@@ -23,6 +23,23 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
+  /**
+   * Routes the previous product owned.
+   *
+   * Permanent, because these paths are gone rather than moved temporarily, and
+   * server-side rather than a redirecting page so a bookmark never renders a
+   * flash of the old interface. The report URLs are deliberately absent from
+   * this list: /research/[publicId] still serves both eras of report, which is
+   * what keeps every link anyone has already shared working.
+   */
+  async redirects() {
+    return [
+      { source: '/research/new', destination: '/assess', permanent: true },
+      { source: '/research/new/:packageId', destination: '/assess', permanent: true },
+      { source: '/pricing', destination: '/methodology', permanent: true },
+    ];
+  },
+
   async headers() {
     return [
       {

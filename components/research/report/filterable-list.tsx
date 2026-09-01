@@ -50,11 +50,15 @@ export function FilterableList({
 
   return (
     <div>
-      <div className="border-line bg-surface/95 sticky top-16 z-10 -mx-1 mb-4 flex flex-wrap items-end gap-3 border-b px-1 py-3 backdrop-blur-sm print:hidden">
+      <div /* Opaque rather than 95% and blurred. A sticky backdrop-filter repaints its
+           whole area on every scroll frame, and at 95% opacity there was nothing
+           behind it to see. */
+        className="border-rule bg-ground-raised sticky top-16 z-10 -mx-1 mb-4 flex flex-wrap items-end gap-3 border-b px-1 py-3 print:hidden"
+      >
         <div className="min-w-[200px] flex-1">
           <label
             htmlFor={searchId}
-            className="text-ink-subtle mb-1.5 block text-xs font-medium"
+            className="text-text-subtle mb-1.5 block text-xs font-medium"
           >
             Search these {itemNoun}
           </label>
@@ -64,14 +68,14 @@ export function FilterableList({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Name, industry, location…"
-            className="border-line-strong bg-surface text-ink placeholder:text-ink-faint focus:border-brand focus-visible:ring-brand h-10 w-full rounded-[var(--radius-control)] border px-3 text-base transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            className="border-rule-strong bg-ground-raised text-text placeholder:text-text-faint focus:border-cobalt focus-visible:ring-cobalt h-10 w-full rounded-[var(--radius-control)] border px-3 text-base transition-colors focus-visible:ring-2 focus-visible:outline-none"
           />
         </div>
 
         <div>
           <label
             htmlFor={sortId}
-            className="text-ink-subtle mb-1.5 block text-xs font-medium"
+            className="text-text-subtle mb-1.5 block text-xs font-medium"
           >
             Order
           </label>
@@ -79,7 +83,7 @@ export function FilterableList({
             id={sortId}
             value={sort}
             onChange={(event) => setSort(event.target.value as 'rank' | 'score')}
-            className="border-line-strong bg-surface text-ink focus:border-brand focus-visible:ring-brand h-10 rounded-[var(--radius-control)] border px-3 text-base transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            className="border-rule-strong bg-ground-raised text-text focus:border-cobalt focus-visible:ring-cobalt h-10 rounded-[var(--radius-control)] border px-3 text-base transition-colors focus-visible:ring-2 focus-visible:outline-none"
           >
             <option value="rank">As ranked</option>
             <option value="score">Highest scoring first</option>
@@ -88,13 +92,13 @@ export function FilterableList({
 
         {/* Announced, so a screen-reader user learns that typing changed the
             result count rather than discovering it by arrowing through. */}
-        <p aria-live="polite" className="text-ink-subtle pb-2.5 text-sm tabular-nums">
+        <p aria-live="polite" className="text-text-subtle pb-2.5 text-sm tabular-nums">
           {visible.length} of {items.length}
         </p>
       </div>
 
       {visible.length === 0 ? (
-        <p className="text-ink-muted py-10 text-center text-sm">
+        <p className="text-text-muted py-10 text-center text-sm">
           No {itemNoun} match “{query}”.
         </p>
       ) : (

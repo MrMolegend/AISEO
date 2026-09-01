@@ -3,18 +3,13 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
-import { Card, CardBody } from '@/components/ui/card';
+import { Panel, Rule, Meta } from '@/components/ui/panel';
+import { DataTable, Th, Td } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { getCurrentUser, signInPath } from '@/lib/auth/server';
 import { getTokenWallet } from '@/lib/tokens';
 import { BRAND, pageTitle } from '@/config/brand';
-import { PACKAGE_LIST } from '@/config/packages';
-import {
-  BUNDLE_LIST,
-  PURCHASING_ENABLED,
-  formatPrice,
-  formatTokens,
-} from '@/config/tokens';
+import { REPORT_TOKEN_COST, creditsFrom } from '@/config/report';
 import type { TransactionType } from '@/lib/tokens/types';
 
 /*
@@ -28,22 +23,38 @@ import type { TransactionType } from '@/lib/tokens/types';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: pageTitle('Wallet'),
+  title: pageTitle('Credit history'),
   robots: { index: false, follow: false },
 };
 
-/** How each ledger entry reads to a person. */
+/**
+ * Credit history.
+ *
+ * Deliberately not in the navigation. There is nothing to buy during the beta,
+ * so a wallet in the main menu would be a shop with no shelves — it is reached
+ * from the account page by someone who wants to check what happened to a
+ * credit, which is the only question it answers.
+ *
+ * The purchasing catalogue and the bundle pricing are gone from this page but
+ * not from the codebase: the ledger, the grant path and the accounting behind
+ * them are intact and unchanged, so wiring a payment provider later is a
+ * checkout in front of machinery that already works.
+ *
+ * Everything is expressed in report credits. The underlying ledger counts
+ * tokens and always has; the conversion happens here so no token figure reaches
+ * the page.
+ */
 const TYPE_LABEL: Record<TransactionType, string> = {
   admin_grant: 'Granted',
   welcome_credit: 'Welcome credit',
-  reservation: 'Reserved for research',
-  debit: 'Spent',
-  refund: 'Refunded',
+  reservation: 'Reserved for an assessment',
+  debit: 'Spent on a completed report',
+  refund: 'Returned',
   purchase: 'Purchased',
   adjustment: 'Adjustment',
 };
 
-export default async function WalletPage() {
+export default async function CreditHistoryPage() {
   const user = await getCurrentUser();
   if (!user) redirect(signInPath('/wallet'));
 
@@ -53,218 +64,132 @@ export default async function WalletPage() {
     wallet.history(user.id, 50),
   ]);
 
+  const available = creditsFrom(balance.available);
+  const held = creditsFrom(balance.reserved);
+
+  /**
+   * A ledger row, in credits.
+   *
+   * Amounts smaller than one report are shown as a dash rather than as "0",
+   * because a row reading "0 credits" next to a real movement looks like a bug
+   * rather than like an adjustment below the resolution of a credit.
+   */
+  const asCredits = (amount: number): string => {
+    if (amount === 0) return '—';
+    const credits = Math.round((Math.abs(amount) / REPORT_TOKEN_COST) * 10) / 10;
+    if (credits === 0) return '—';
+    return `${amount > 0 ? '+' : '−'}${credits}`;
+  };
+
   return (
     <>
       <SiteHeader />
 
-      <main id="main" className="mx-auto max-w-[900px] px-5 py-12 md:px-8">
-        <h1 className="text-ink text-[30px] font-semibold tracking-[var(--tracking-display)]">
-          Wallet
+      <main
+        id="main"
+        className="mx-auto max-w-[var(--container-narrow)] px-5 py-12 md:px-8 md:py-16"
+      >
+        <Meta>Account</Meta>
+        <h1 className="font-display text-text mt-3 text-[32px] leading-tight md:text-[38px]">
+          Credit history
         </h1>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <Card>
-            <CardBody>
-              <p className="text-ink-subtle text-sm font-medium">Available</p>
-              <p className="text-ink mt-1 text-[36px] leading-none font-semibold tabular-nums">
-                {formatTokens(balance.available)}
+        <div className="mt-8 grid gap-px sm:grid-cols-2">
+          <Panel>
+            <div className="p-5">
+              <Meta>Available</Meta>
+              <p
+                className="font-display text-text mt-2 text-[36px] leading-none"
+                data-numeric
+              >
+                {available}
               </p>
-              <p className="text-ink-faint mt-1.5 text-sm">
-                {BRAND.currency.plural} you can spend now
+              <p className="text-text-muted mt-2 text-[13px]">
+                {available === 1 ? BRAND.credit.singular : BRAND.credit.plural} you can
+                use now
               </p>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardBody>
-              <p className="text-ink-subtle text-sm font-medium">Held</p>
-              <p className="text-ink mt-1 text-[36px] leading-none font-semibold tabular-nums">
-                {formatTokens(balance.reserved)}
+            </div>
+          </Panel>
+          <Panel>
+            <div className="p-5">
+              <Meta>Held</Meta>
+              <p
+                className="font-display text-text mt-2 text-[36px] leading-none"
+                data-numeric
+              >
+                {held}
               </p>
-              <p className="text-ink-faint mt-1.5 text-sm leading-relaxed">
+              <p className="text-text-muted mt-2 text-[13px] leading-relaxed">
                 {balance.reserved > 0
-                  ? 'Reserved against research that is still running. Returned automatically if it fails.'
+                  ? 'Reserved against an assessment that is still running. Returned automatically if it cannot be completed.'
                   : 'Nothing is being held right now'}
               </p>
-            </CardBody>
-          </Card>
+            </div>
+          </Panel>
         </div>
 
-        <p className="text-ink-subtle mt-4 text-sm leading-relaxed">
-          {BRAND.currency.disclaimer}
-        </p>
-
-        {/* ── History ───────────────────────────────────────────────────── */}
         <section aria-labelledby="history-heading" className="mt-12">
-          <h2
-            id="history-heading"
-            className="text-ink text-[20px] font-semibold tracking-[var(--tracking-tight)]"
-          >
-            History
+          <h2 id="history-heading" className="sr-only">
+            Movements
           </h2>
+          <Rule label="Movements" />
 
           {history.length === 0 ? (
-            <Card className="mt-4">
-              <CardBody className="py-10 text-center">
-                <p className="text-ink-muted">
-                  Nothing yet. Every grant, reservation, spend and refund will appear
-                  here.
-                </p>
-              </CardBody>
-            </Card>
+            <p className="text-text-faint mt-4 text-[14px]">Nothing has moved yet.</p>
           ) : (
-            <div
-              // Same reasoning as the pricing table: see app/pricing/page.tsx.
-              role="region"
-              aria-labelledby="history-table-caption"
-              tabIndex={0}
-              className="border-line focus-visible:ring-brand mt-4 overflow-x-auto rounded-[var(--radius-card)] border focus-visible:ring-2 focus-visible:outline-none"
-            >
-              <table className="w-full min-w-[560px] border-collapse text-left">
-                <caption id="history-table-caption" className="sr-only">
-                  Every movement of {BRAND.currency.name} on this account
-                </caption>
+            <div className="mt-4">
+              <DataTable
+                caption="Every movement of report credits on this account"
+                captionId="history-caption"
+                minWidth={520}
+              >
                 <thead>
-                  <tr className="border-line bg-surface-subtle border-b">
-                    <th scope="col" className="text-ink px-4 py-3 text-sm font-semibold">
-                      When
-                    </th>
-                    <th scope="col" className="text-ink px-4 py-3 text-sm font-semibold">
-                      What
-                    </th>
-                    <th
-                      scope="col"
-                      className="text-ink px-4 py-3 text-right text-sm font-semibold"
-                    >
-                      Change
-                    </th>
-                    <th
-                      scope="col"
-                      className="text-ink px-4 py-3 text-right text-sm font-semibold"
-                    >
-                      Balance
-                    </th>
+                  <tr>
+                    <Th scope="col">When</Th>
+                    <Th scope="col">What</Th>
+                    <Th scope="col">Change</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {history.map((entry) => (
-                    <tr key={entry.id} className="border-line border-b last:border-0">
-                      <td className="text-ink-muted px-4 py-3 align-top text-sm whitespace-nowrap tabular-nums">
+                    <tr key={entry.id}>
+                      <Td data-numeric className="whitespace-nowrap">
                         <time dateTime={entry.createdAt}>
-                          {new Date(entry.createdAt).toLocaleDateString('en-GB', {
-                            day: 'numeric',
-                            month: 'short',
-                          })}
+                          {entry.createdAt.slice(0, 10)}
                         </time>
-                      </td>
-                      <td className="px-4 py-3 align-top">
-                        <span className="text-ink block text-sm font-medium">
-                          {TYPE_LABEL[entry.type]}
-                        </span>
-                        <span className="text-ink-subtle block text-sm leading-relaxed">
-                          {entry.description}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right align-top text-sm tabular-nums">
-                        {entry.amount === 0 ? (
-                          <span
-                            className="text-ink-faint"
-                            title="Already deducted when it was reserved"
-                          >
-                            —
-                          </span>
-                        ) : (
-                          <span
-                            className={
-                              entry.amount > 0
-                                ? 'font-medium text-[var(--color-score-good)]'
-                                : 'text-ink font-medium'
-                            }
-                          >
-                            {entry.amount > 0 ? '+' : ''}
-                            {formatTokens(entry.amount)}
-                          </span>
+                      </Td>
+                      <Td>
+                        <span className="text-text">{TYPE_LABEL[entry.type]}</span>
+                        {entry.type === 'refund' && (
+                          <Badge tone="signal" size="sm" className="ml-2">
+                            automatic
+                          </Badge>
                         )}
-                      </td>
-                      <td className="text-ink-muted px-4 py-3 text-right align-top text-sm tabular-nums">
-                        {formatTokens(entry.balanceAfter)}
-                      </td>
+                      </Td>
+                      <Td data-numeric className="whitespace-nowrap">
+                        {asCredits(entry.amount)}
+                      </Td>
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </DataTable>
             </div>
           )}
         </section>
 
-        {/* ── Costs and bundles ─────────────────────────────────────────── */}
-        <section aria-labelledby="costs-heading" className="mt-12">
-          <h2
-            id="costs-heading"
-            className="text-ink text-[20px] font-semibold tracking-[var(--tracking-tight)]"
-          >
-            What things cost
-          </h2>
+        <p className="text-text-subtle mt-10 text-[13px] leading-relaxed">
+          {BRAND.credit.disclaimer} There is nothing to buy during the beta — credits are
+          granted manually. Write to {BRAND.supportEmail} if you need more.
+        </p>
 
-          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-            {PACKAGE_LIST.map((pkg) => (
-              <li
-                key={pkg.id}
-                className="border-line bg-surface flex items-center justify-between rounded-[var(--radius-control)] border px-4 py-3"
-              >
-                <span className="text-ink text-sm">{pkg.name}</span>
-                <span className="text-ink text-sm font-semibold tabular-nums">
-                  {formatTokens(pkg.tokenCost)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section
-          aria-labelledby="topup-heading"
-          className="border-line bg-surface-subtle mt-8 rounded-[var(--radius-card)] border p-6"
-        >
-          <div className="flex flex-wrap items-center gap-3">
-            <h2 id="topup-heading" className="text-ink text-base font-semibold">
-              Adding {BRAND.currency.plural}
-            </h2>
-            {!PURCHASING_ENABLED && (
-              <Badge tone="neutral" size="sm">
-                Coming soon
-              </Badge>
-            )}
-          </div>
-
-          <p className="text-ink-muted mt-2 text-sm leading-relaxed">
-            No payment provider is connected yet, so bundles cannot be bought. These are
-            the provisional prices.
-          </p>
-
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {BUNDLE_LIST.map((bundle) => (
-              <div
-                key={bundle.id}
-                className="border-line bg-surface rounded-[var(--radius-control)] border px-3 py-2.5"
-              >
-                <p className="text-ink-subtle text-xs">{bundle.name}</p>
-                <p className="text-ink text-sm font-semibold tabular-nums">
-                  {formatTokens(bundle.tokens)}
-                </p>
-                <p className="text-ink-muted text-xs tabular-nums">
-                  {formatPrice(bundle.priceMinorUnits)}
-                </p>
-              </div>
-            ))}
-          </div>
-
+        <p className="mt-8">
           <Link
-            href="/pricing"
-            className="text-brand hover:text-brand-hover focus-visible:ring-brand mt-4 inline-block rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+            href="/account"
+            className="text-cobalt text-[14px] underline-offset-4 hover:underline"
           >
-            Pricing details
+            Back to your account
           </Link>
-        </section>
+        </p>
       </main>
 
       <SiteFooter />

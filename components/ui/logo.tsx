@@ -2,12 +2,16 @@ import { BRAND } from '@/config/brand';
 import { cn } from '@/lib/utils';
 
 /**
- * The wordmark.
+ * The mark.
  *
- * Drawn from config/brand.ts rather than an image file, so renaming the product
- * is a one-line change rather than an asset hunt. The monogram is a rounded
- * square with two letters — deliberately plain, because a working title dressed
- * up as a finished identity is harder to replace later.
+ * Two concentric brackets with a route line running between them — an origin
+ * market, a target market, and the corridor between the two. Drawn in SVG from
+ * currentColor rather than shipped as an asset, so it inherits whatever surface
+ * it lands on and a rebrand touches one file.
+ *
+ * The wordmark is set in the display face at a tight tracking, because the
+ * product name is short enough to be a mark in its own right and a monogram
+ * badge beside it would be one graphic too many.
  */
 export function Logo({
   className,
@@ -18,14 +22,37 @@ export function Logo({
 }) {
   return (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
-      <span
+      <svg
         aria-hidden="true"
-        className="bg-brand text-ink-inverse inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] text-[13px] font-semibold tracking-tight tabular-nums"
+        viewBox="0 0 24 24"
+        fill="none"
+        className="h-5 w-5 shrink-0"
       >
-        {BRAND.monogram}
-      </span>
+        {/* Origin bracket */}
+        <path
+          d="M6 4 H3 V20 H6"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="square"
+        />
+        {/* Target bracket */}
+        <path
+          d="M18 4 H21 V20 H18"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="square"
+        />
+        {/* The corridor */}
+        <path
+          d="M7.5 12 H16.5"
+          stroke="var(--color-signal)"
+          strokeWidth="1.5"
+          strokeLinecap="square"
+        />
+        <circle cx="16.5" cy="12" r="2" fill="var(--color-signal)" />
+      </svg>
       {showName && (
-        <span className="text-ink text-[15px] font-semibold tracking-[-0.01em]">
+        <span className="font-display text-[17px] font-semibold tracking-[-0.02em]">
           {BRAND.name}
         </span>
       )}

@@ -25,7 +25,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -253,12 +253,17 @@ export type Database = {
           canonical_url: string
           content_hash: string | null
           excerpt: string | null
+          geographic_relevance: string | null
           http_status: number | null
           id: number
           job_id: string
           position: number
+          published_at: string | null
           publisher_domain: string | null
+          retrieval_mode: string | null
           retrieved_at: string
+          source_category: string | null
+          source_confidence: string | null
           source_type: string
           title: string | null
         }
@@ -266,12 +271,17 @@ export type Database = {
           canonical_url: string
           content_hash?: string | null
           excerpt?: string | null
+          geographic_relevance?: string | null
           http_status?: number | null
           id?: number
           job_id: string
           position: number
+          published_at?: string | null
           publisher_domain?: string | null
+          retrieval_mode?: string | null
           retrieved_at?: string
+          source_category?: string | null
+          source_confidence?: string | null
           source_type?: string
           title?: string | null
         }
@@ -279,12 +289,17 @@ export type Database = {
           canonical_url?: string
           content_hash?: string | null
           excerpt?: string | null
+          geographic_relevance?: string | null
           http_status?: number | null
           id?: number
           job_id?: string
           position?: number
+          published_at?: string | null
           publisher_domain?: string | null
+          retrieval_mode?: string | null
           retrieved_at?: string
+          source_category?: string | null
+          source_confidence?: string | null
           source_type?: string
           title?: string | null
         }

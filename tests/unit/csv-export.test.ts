@@ -7,6 +7,7 @@ import {
   contentDispositionFor,
 } from '@/lib/export/csv';
 import { renderExport, availableExports } from '@/lib/export/reports';
+import { EXAMPLE_DOSSIER } from '@/fixtures/market-entry/example-dossier';
 
 /**
  * CSV export safety.
@@ -234,5 +235,68 @@ describe('report exports', () => {
     expect(renderExport('competitors', report, sources)!).toContain(
       'Not publicly available',
     );
+  });
+});
+
+describe('the dossier’s evidence register', () => {
+  it('is offered for a market-entry report and not for a legacy one', () => {
+    expect(availableExports(EXAMPLE_DOSSIER)).toContain('sources');
+    // A legacy report carries a `sources` array too, so shape alone is not
+    // enough — the dossier is recognised by its `decision` as well.
+    expect(
+      availableExports({ sources: [{ ref: 'S1', url: 'https://a.example' }] }),
+    ).not.toContain('sources');
+    expect(availableExports(null)).toEqual([]);
+  });
+
+  it('carries every column a reader needs to judge a source', () => {
+    const csv = renderExport('sources', EXAMPLE_DOSSIER, []);
+    expect(csv).toBeTruthy();
+
+    // The leading BOM is deliberate — it is what stops Excel mangling the
+    // accented publisher names — so it is stripped here rather than asserted on.
+    const [header] = csv!.replace(/^\ufeff/, '').split('\r\n');
+    expect(header).toBe(
+      'Reference,Title,Publisher,Category,How we read it,Published,Geographic relevance,Confidence,Retrieved,URL',
+    );
+  });
+
+  it('exports one row per source, with its URL intact', () => {
+    const csv = renderExport('sources', EXAMPLE_DOSSIER, [])!;
+    const rows = csv
+      .replace(/^\ufeff/, '')
+      .trim()
+      .split('\r\n');
+
+    expect(rows).toHaveLength(EXAMPLE_DOSSIER.sources.length + 1);
+    for (const source of EXAMPLE_DOSSIER.sources) {
+      expect(csv, `${source.url} is missing from the export`).toContain(source.url);
+    }
+  });
+
+  it('says how each source was read, in words rather than a code', () => {
+    const csv = renderExport('sources', EXAMPLE_DOSSIER, [])!;
+    expect(csv).toContain('Read directly');
+    expect(csv).toContain('Index summary');
+    expect(csv).not.toContain('retrievalMode');
+  });
+
+  it('is refused for a report that has none', () => {
+    expect(renderExport('sources', { decision: {}, sources: [] }, [])).toBeNull();
+    expect(renderExport('sources', { competitors: [] }, [])).toBeNull();
+  });
+
+  it('neutralises a source title that would execute in a spreadsheet', () => {
+    const hostile = {
+      ...EXAMPLE_DOSSIER,
+      sources: [
+        {
+          ...EXAMPLE_DOSSIER.sources[0]!,
+          title: '=HYPERLINK("https://evil.example","Click")',
+        },
+      ],
+    };
+    const csv = renderExport('sources', hostile, [])!;
+    expect(csv).not.toMatch(/(^|,)"?=HYPERLINK/m);
   });
 });

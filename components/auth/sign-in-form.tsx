@@ -92,7 +92,7 @@ export function SignInForm({ next, configured }: { next: string; configured: boo
     return (
       <div className="space-y-5">
         <AuthMessage tone="success" title="Check your inbox">
-          If <strong className="text-ink">{email}</strong> has an account with us, a
+          If <strong className="text-text">{email}</strong> has an account with us, a
           sign-in link is on its way. It works once and lasts an hour.
         </AuthMessage>
 
@@ -116,7 +116,7 @@ export function SignInForm({ next, configured }: { next: string; configured: boo
             setPhase('idle');
             setFailure(undefined);
           }}
-          className="text-brand hover:text-brand-hover focus-visible:ring-brand rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+          className="text-cobalt hover:text-cobalt focus-visible:ring-cobalt rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
         >
           Use a different email
         </button>
@@ -125,12 +125,12 @@ export function SignInForm({ next, configured }: { next: string; configured: boo
   }
 
   const field =
-    'border-line-strong bg-surface text-ink placeholder:text-ink-faint focus:border-brand focus-visible:ring-brand h-12 w-full rounded-[var(--radius-control)] border px-3.5 text-base transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60';
+    'border-rule-strong bg-ground-raised text-text placeholder:text-text-faint focus:border-cobalt focus-visible:ring-cobalt h-12 w-full rounded-[var(--radius-control)] border px-3.5 text-base transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60';
 
   return (
     <form onSubmit={submit} noValidate className="space-y-5">
       <div>
-        <label htmlFor={emailId} className="text-ink mb-1.5 block text-sm font-medium">
+        <label htmlFor={emailId} className="text-text mb-1.5 block text-sm font-medium">
           Email address
         </label>
         <input
@@ -156,12 +156,12 @@ export function SignInForm({ next, configured }: { next: string; configured: boo
       {mode === 'password' && (
         <div>
           <div className="mb-1.5 flex items-baseline justify-between gap-3">
-            <label htmlFor={passwordId} className="text-ink block text-sm font-medium">
+            <label htmlFor={passwordId} className="text-text block text-sm font-medium">
               Password
             </label>
             <Link
               href="/forgot-password"
-              className="text-brand hover:text-brand-hover focus-visible:ring-brand rounded text-sm underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+              className="text-cobalt hover:text-cobalt focus-visible:ring-cobalt rounded text-sm underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
             >
               Forgot password?
             </Link>
@@ -204,7 +204,7 @@ export function SignInForm({ next, configured }: { next: string; configured: boo
           setMode(mode === 'password' ? 'link' : 'password');
           setFailure(undefined);
         }}
-        className="text-brand hover:text-brand-hover focus-visible:ring-brand w-full rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+        className="text-cobalt hover:text-cobalt focus-visible:ring-cobalt w-full rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
       >
         {mode === 'password'
           ? 'Email me a sign-in link instead'

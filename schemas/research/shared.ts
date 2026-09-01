@@ -180,7 +180,20 @@ export const businessProfileSchema = z.object({
 });
 export type BusinessProfile = z.infer<typeof businessProfileSchema>;
 
-/** Model and cost metadata, stored with every report. */
+/**
+ * Model and cost metadata, stored with every report.
+ *
+ * Operational, not customer-facing: nothing here is rendered in the product,
+ * and the report page does not read this object. It exists so that a job can be
+ * accounted for afterwards — what it cost, how much evidence it found, whether
+ * the quality gate passed and how the reservation settled — without keeping a
+ * log line that will rotate away.
+ *
+ * The fields added for market-entry reports are optional so that the two legacy
+ * rows already in production still parse. A stored report from the previous
+ * product is a valid ReportMeta with the new fields absent, which is exactly
+ * what "keep legacy records readable" has to mean in practice.
+ */
 export const reportMetaSchema = z.object({
   model: z.string(),
   promptVersion: z.string(),
@@ -192,6 +205,24 @@ export const reportMetaSchema = z.object({
   outputTokens: z.number().int().min(0),
   repairAttempts: z.number().int().min(0),
   durationMs: z.number().int().min(0),
+
+  // ── Market-entry observability ──────────────────────────────────────────
+  /** Split out because an advanced search costs several times a basic one. */
+  searchesBasic: z.number().int().min(0).optional(),
+  searchesAdvanced: z.number().int().min(0).optional(),
+  /** As reported by the provider, where it reports one. Never estimated. */
+  searchCredits: z.number().min(0).nullable().optional(),
+  sourcesFound: z.number().int().min(0).optional(),
+  sourcesAccepted: z.number().int().min(0).optional(),
+  sourcesRejected: z.number().int().min(0).optional(),
+  sourcesBlocked: z.number().int().min(0).optional(),
+  sourcesDirect: z.number().int().min(0).optional(),
+  authoritativeSources: z.number().int().min(0).optional(),
+  qualityGate: z.enum(['passed', 'failed']).optional(),
+  qualityGateReasons: z.array(z.string().max(200)).max(12).optional(),
+  /** Internal tokens held for this job. Never rendered to a customer. */
+  creditReservedTokens: z.number().int().min(0).optional(),
+  settlement: z.enum(['finalised', 'refunded', 'none']).optional(),
 });
 export type ReportMeta = z.infer<typeof reportMetaSchema>;
 
@@ -204,5 +235,20 @@ export const storedSourceSchema = z.object({
   publisherDomain: z.string().max(255).nullable(),
   retrievedAt: z.string(),
   fetched: z.boolean(),
+
+  /*
+   * Market-entry evidence metadata.
+   *
+   * Optional for the same reason the meta fields above are: the sources
+   * attached to the reports already in production predate all of it, and a
+   * required field here would make an existing report unreadable — the precise
+   * outcome this transformation is not allowed to cause.
+   */
+  category: z.string().max(40).optional(),
+  /** 'direct' if we opened the page ourselves, 'indexed' if we only saw it. */
+  retrievalMode: z.enum(['direct', 'indexed']).optional(),
+  publishedAt: z.string().max(40).nullable().optional(),
+  geographicRelevance: z.string().max(40).optional(),
+  excerpt: z.string().max(1200).nullable().optional(),
 });
 export type StoredSource = z.infer<typeof storedSourceSchema>;

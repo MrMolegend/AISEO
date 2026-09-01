@@ -1,8 +1,16 @@
 import { cn } from '@/lib/utils';
 
 /**
- * One hairline border plus one soft shadow. Two elevation levels exist in the
- * whole product; `raised` is the second and is used sparingly.
+ * The legacy card.
+ *
+ * Kept only because the components that render reports from the previous
+ * product still use it, and those reports remain readable at their original
+ * URLs. Restyled onto the current tokens so a legacy report looks like it
+ * belongs to this application rather than like a preserved fossil of the last
+ * one — but with the radius and the shadow taken out, because the rounded-card
+ * grid is precisely what the new design is not.
+ *
+ * Nothing new should use this. Use Panel.
  */
 export function Card({
   className,
@@ -12,8 +20,8 @@ export function Card({
   return (
     <div
       className={cn(
-        'border-line bg-surface rounded-[var(--radius-card)] border',
-        raised ? 'shadow-[var(--shadow-raised)]' : 'shadow-[var(--shadow-card)]',
+        'border-rule bg-ground-raised border',
+        raised && 'border-rule-strong',
         className,
       )}
       {...props}

@@ -32,7 +32,7 @@ export function ClaimList({
     <ul className={className ?? 'space-y-3'}>
       {claims.map((claim, index) => (
         <li key={`${claim.statement.slice(0, 24)}-${index}`}>
-          <p className="text-ink-muted text-sm leading-relaxed">
+          <p className="text-text-muted text-sm leading-relaxed">
             {claim.statement}
             <Citations refs={claim.sources} sources={sources} />
           </p>
@@ -66,13 +66,15 @@ export function ValueWithBasis({
 
   return (
     <div>
-      <dt className="text-ink-subtle text-xs font-medium tracking-wide uppercase">
+      <dt className="text-text-subtle text-xs font-medium tracking-wide uppercase">
         {label}
       </dt>
       <dd className="mt-1">
         <span
           className={
-            unavailable ? 'text-ink-faint text-sm italic' : 'text-ink text-sm font-medium'
+            unavailable
+              ? 'text-text-faint text-sm italic'
+              : 'text-text text-sm font-medium'
           }
         >
           {unavailable ? 'Not publicly available' : value.value}
@@ -80,7 +82,7 @@ export function ValueWithBasis({
         {!unavailable && <Citations refs={value.sources} sources={sources} />}
 
         {value.note && (
-          <span className="text-ink-faint mt-1 block text-xs leading-relaxed">
+          <span className="text-text-faint mt-1 block text-xs leading-relaxed">
             {value.note}
           </span>
         )}
@@ -110,20 +112,20 @@ export function LimitationsPanel({
   if (limitations.length === 0) return null;
 
   return (
-    <div className="border-line bg-surface-subtle rounded-[var(--radius-card)] border p-5 md:p-6">
-      <h2 className="text-ink text-base font-semibold">What we could not determine</h2>
-      <p className="text-ink-subtle mt-1.5 text-sm leading-relaxed">
+    <div className="border-rule bg-ground-raised rounded-[var(--radius-panel)] border p-5 md:p-6">
+      <h2 className="text-text text-base font-semibold">What we could not determine</h2>
+      <p className="text-text-subtle mt-1.5 text-sm leading-relaxed">
         Public sources only go so far. These are the gaps we know about.
       </p>
 
       <dl className="mt-5 space-y-4">
         {limitations.map((limitation, index) => (
           <div key={`${limitation.area}-${index}`}>
-            <dt className="text-ink text-sm font-medium">{limitation.area}</dt>
-            <dd className="text-ink-muted mt-1 text-sm leading-relaxed">
+            <dt className="text-text text-sm font-medium">{limitation.area}</dt>
+            <dd className="text-text-muted mt-1 text-sm leading-relaxed">
               {limitation.detail}
               {limitation.howToResolve && (
-                <span className="text-ink-subtle mt-1 block">
+                <span className="text-text-subtle mt-1 block">
                   What would answer it: {limitation.howToResolve}
                 </span>
               )}
@@ -152,9 +154,9 @@ export function ConflictsPanel({
   if (conflicts.length === 0) return null;
 
   return (
-    <div className="border-line rounded-[var(--radius-card)] border p-5 md:p-6">
-      <h2 className="text-ink text-base font-semibold">Where sources disagree</h2>
-      <p className="text-ink-subtle mt-1.5 text-sm leading-relaxed">
+    <div className="border-rule rounded-[var(--radius-panel)] border p-5 md:p-6">
+      <h2 className="text-text text-base font-semibold">Where sources disagree</h2>
+      <p className="text-text-subtle mt-1.5 text-sm leading-relaxed">
         We found conflicting accounts of these. Both are shown rather than one being
         chosen for you.
       </p>
@@ -162,12 +164,12 @@ export function ConflictsPanel({
       <div className="mt-5 space-y-5">
         {conflicts.map((conflict, index) => (
           <div key={`${conflict.topic}-${index}`}>
-            <h3 className="text-ink text-sm font-medium">{conflict.topic}</h3>
+            <h3 className="text-text text-sm font-medium">{conflict.topic}</h3>
             <ul className="mt-2 space-y-2">
               {conflict.positions.map((position, positionIndex) => (
                 <li
                   key={positionIndex}
-                  className="border-line-strong text-ink-muted border-l-2 pl-3 text-sm leading-relaxed"
+                  className="border-rule-strong text-text-muted border-l-2 pl-3 text-sm leading-relaxed"
                 >
                   {position.claim}
                   <Citations refs={position.sources} sources={sources} />
@@ -175,7 +177,7 @@ export function ConflictsPanel({
               ))}
             </ul>
             {conflict.note && (
-              <p className="text-ink-subtle mt-2 text-sm leading-relaxed">
+              <p className="text-text-subtle mt-2 text-sm leading-relaxed">
                 {conflict.note}
               </p>
             )}
@@ -190,12 +192,12 @@ export function ConflictsPanel({
 export function ScorePill({ score, band }: { score: number; band: string }) {
   const tone =
     score >= 85
-      ? 'var(--color-score-excellent)'
+      ? 'var(--color-grade-verified)'
       : score >= 70
-        ? 'var(--color-score-good)'
+        ? 'var(--color-verdict-promising)'
         : score >= 55
-          ? 'var(--color-score-mid)'
-          : 'var(--color-score-poor)';
+          ? 'var(--color-verdict-conditional)'
+          : 'var(--color-verdict-risk)';
 
   return (
     <span className="inline-flex items-baseline gap-1.5">
@@ -204,7 +206,7 @@ export function ScorePill({ score, band }: { score: number; band: string }) {
       </span>
       {/* The number alone means nothing without the band, so they always ship
           together and the band is never colour-only. */}
-      <span className="text-ink-subtle text-xs">{band}</span>
+      <span className="text-text-subtle text-xs">{band}</span>
     </span>
   );
 }

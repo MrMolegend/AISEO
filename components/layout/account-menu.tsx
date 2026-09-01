@@ -2,12 +2,11 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { BRAND } from '@/config/brand';
-import { formatTokens } from '@/config/tokens';
 
 /**
  * The signed-in control.
  *
- * Carries the account's identity and its balance, so that on any page — and at
+ * Carries the account's identity and its remaining report credits, so that on
  * any width — there is one obvious place that answers "am I signed in, as whom,
  * and with how many tokens". Previously the balance lived in a chip that
  * disappeared below `sm` and the navigation disappeared below `md`, which left
@@ -20,10 +19,11 @@ import { formatTokens } from '@/config/tokens';
 
 export function AccountMenu({
   email,
-  balance,
+  credits,
 }: {
   email: string | null;
-  balance: { available: number; reserved: number } | null;
+  /** Whole report credits. The token figure never leaves the server. */
+  credits: number;
 }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -60,27 +60,23 @@ export function AccountMenu({
         onClick={() => setOpen((shown) => !shown)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="border-line bg-surface-subtle text-ink hover:border-line-strong focus-visible:ring-brand flex h-9 items-center gap-2 rounded-full border pr-3 pl-1 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+        className="border-rule bg-ground-raised text-text hover:border-rule-strong focus-visible:ring-cobalt flex h-9 items-center gap-2 border pr-3 pl-2.5 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
       >
         <span
           aria-hidden="true"
-          className="bg-brand text-ink-inverse flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-semibold"
+          className="bg-signal text-text-on-signal flex h-5 w-5 items-center justify-center text-[11px] font-semibold"
         >
           {initial}
         </span>
-        {/* The balance sits in the trigger so it survives to the narrowest
-            viewport, where a separate chip would have been hidden. */}
-        {balance && (
-          <span className="text-[13px] font-medium tabular-nums">
-            {formatTokens(balance.available)}
-          </span>
-        )}
+        {/* The credit count sits in the trigger so it survives to the
+            narrowest viewport, where a separate chip would have been hidden. */}
+        <span className="text-[13px] font-medium" data-numeric>
+          {credits}
+        </span>
         <span className="sr-only">
           Account menu
           {email ? ` for ${email}` : ''}
-          {balance
-            ? `. ${formatTokens(balance.available)} ${BRAND.currency.plural} available`
-            : ''}
+          {`. ${credits} ${credits === 1 ? BRAND.credit.singular : BRAND.credit.plural} remaining`}
         </span>
       </button>
 
@@ -88,36 +84,30 @@ export function AccountMenu({
         <div
           role="menu"
           aria-label="Account"
-          className="border-line bg-surface absolute right-0 z-50 mt-2 w-64 rounded-[var(--radius-card)] border p-1.5 shadow-[var(--shadow-raised)]"
+          className="border-rule bg-ground-raised absolute right-0 z-50 mt-2 w-64 border p-1.5 shadow-[var(--shadow-lift)]"
         >
           <div className="px-3 py-2.5">
-            <p className="text-ink truncate text-sm font-medium">
+            <p className="text-text truncate text-sm font-medium">
               {email ?? 'Signed in'}
             </p>
-            {balance && (
-              <p className="text-ink-subtle mt-0.5 text-xs tabular-nums">
-                {formatTokens(balance.available)} {BRAND.currency.plural}
-                {balance.reserved > 0 && ` · ${formatTokens(balance.reserved)} held`}
-              </p>
-            )}
+            <p className="text-text-subtle mt-0.5 text-xs" data-numeric>
+              {credits} {credits === 1 ? BRAND.credit.singular : BRAND.credit.plural}
+            </p>
           </div>
 
-          <div role="none" className="border-line my-1 border-t" />
+          <div role="none" className="border-rule my-1 border-t" />
 
           <MenuLink href="/dashboard" onNavigate={() => setOpen(false)}>
-            Dashboard
+            Intelligence Desk
           </MenuLink>
-          <MenuLink href="/dashboard#reports" onNavigate={() => setOpen(false)}>
-            My reports
-          </MenuLink>
-          <MenuLink href="/wallet" onNavigate={() => setOpen(false)}>
-            {BRAND.currency.name}
+          <MenuLink href="/dashboard#dossiers" onNavigate={() => setOpen(false)}>
+            My dossiers
           </MenuLink>
           <MenuLink href="/account" onNavigate={() => setOpen(false)}>
             Account
           </MenuLink>
 
-          <div role="none" className="border-line my-1 border-t" />
+          <div role="none" className="border-rule my-1 border-t" />
 
           <SignOutMenuItem />
         </div>
@@ -140,7 +130,7 @@ function MenuLink({
       href={href}
       role="menuitem"
       onClick={onNavigate}
-      className="text-ink-muted hover:bg-surface-sunken hover:text-ink focus-visible:ring-brand block rounded-[var(--radius-control)] px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+      className="text-text-muted hover:bg-ground-sunken hover:text-text focus-visible:ring-cobalt block rounded-[var(--radius-control)] px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
     >
       {children}
     </Link>
@@ -154,7 +144,7 @@ export function SignOutMenuItem() {
       <button
         type="submit"
         role="menuitem"
-        className="text-ink-muted hover:bg-surface-sunken hover:text-ink focus-visible:ring-brand block w-full rounded-[var(--radius-control)] px-3 py-2 text-left text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+        className="text-text-muted hover:bg-ground-sunken hover:text-text focus-visible:ring-cobalt block w-full rounded-[var(--radius-control)] px-3 py-2 text-left text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
       >
         Sign out
       </button>

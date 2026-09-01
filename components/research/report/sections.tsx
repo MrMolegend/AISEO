@@ -36,7 +36,7 @@ export function BusinessProfileSection({
   return (
     <Card>
       <CardBody>
-        <h2 className="text-ink text-lg font-semibold">What we understood</h2>
+        <h2 className="text-text text-lg font-semibold">What we understood</h2>
 
         <dl className="mt-4 space-y-4">
           <Detail label="What they sell">
@@ -48,8 +48,8 @@ export function BusinessProfileSection({
         </dl>
 
         {business.scaleSignals.length > 0 && (
-          <div className="border-line mt-5 border-t pt-5">
-            <h3 className="text-ink-subtle text-xs font-medium tracking-wide uppercase">
+          <div className="border-rule mt-5 border-t pt-5">
+            <h3 className="text-text-subtle text-xs font-medium tracking-wide uppercase">
               Signals of scale
             </h3>
             <ClaimList
@@ -78,8 +78,8 @@ export function CompetitorSection({
           <CardBody>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
-                <h3 className="text-ink flex flex-wrap items-center gap-2 text-[17px] font-semibold">
-                  <span className="text-ink-faint tabular-nums">{competitor.rank}.</span>
+                <h3 className="text-text flex flex-wrap items-center gap-2 text-[17px] font-semibold">
+                  <span className="text-text-faint tabular-nums">{competitor.rank}.</span>
                   {competitor.name}
                   <Badge
                     tone={competitor.type === 'direct' ? 'brand' : 'neutral'}
@@ -92,7 +92,7 @@ export function CompetitorSection({
                   href={competitor.website}
                   target="_blank"
                   rel="noopener noreferrer nofollow"
-                  className="text-ink-subtle hover:text-brand focus-visible:ring-brand mt-1 inline-block rounded text-sm break-all underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+                  className="text-text-subtle hover:text-cobalt focus-visible:ring-cobalt mt-1 inline-block rounded text-sm break-all underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
                 >
                   {competitor.website}
                 </a>
@@ -100,7 +100,7 @@ export function CompetitorSection({
               <ConfidenceBadge confidence={competitor.confidence} size="md" />
             </div>
 
-            <p className="text-ink-muted mt-3 text-sm leading-relaxed">
+            <p className="text-text-muted mt-3 text-sm leading-relaxed">
               {competitor.whyRanked}
               <Citations refs={competitor.sources} sources={sources} />
             </p>
@@ -140,8 +140,8 @@ export function CompetitorSection({
               />
             </div>
 
-            <div className="border-line bg-surface-subtle mt-5 rounded-[var(--radius-control)] border p-4">
-              <h4 className="text-ink text-sm font-semibold">Battlecard</h4>
+            <div className="border-rule bg-ground-raised mt-5 rounded-[var(--radius-control)] border p-4">
+              <h4 className="text-text text-sm font-semibold">Battlecard</h4>
               <dl className="mt-3 space-y-3">
                 <Detail label="Their pitch">{competitor.battlecard.theirPitch}</Detail>
                 <Detail label="Where they win">
@@ -177,18 +177,18 @@ export function LeadCard({
       <CardBody>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="text-ink text-[17px] font-semibold">
-              <span className="text-ink-faint tabular-nums">{lead.rank}.</span>{' '}
+            <h3 className="text-text text-[17px] font-semibold">
+              <span className="text-text-faint tabular-nums">{lead.rank}.</span>{' '}
               {lead.name}
             </h3>
-            <p className="text-ink-subtle mt-1 text-sm">
+            <p className="text-text-subtle mt-1 text-sm">
               {[lead.industry, lead.location].filter(Boolean).join(' · ')}
             </p>
             <a
               href={lead.website}
               target="_blank"
               rel="noopener noreferrer nofollow"
-              className="text-ink-subtle hover:text-brand focus-visible:ring-brand mt-1 inline-block rounded text-sm break-all underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+              className="text-text-subtle hover:text-cobalt focus-visible:ring-cobalt mt-1 inline-block rounded text-sm break-all underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
             >
               {lead.website}
             </a>
@@ -202,7 +202,7 @@ export function LeadCard({
           </div>
         </div>
 
-        <p className="text-ink-muted mt-3 text-sm leading-relaxed">
+        <p className="text-text-muted mt-3 text-sm leading-relaxed">
           {lead.publicDescription}
           <Citations refs={lead.sources} sources={sources} />
         </p>
@@ -216,14 +216,14 @@ export function LeadCard({
           />
         </div>
 
-        <div className="border-line mt-5 border-t pt-5">
+        <div className="border-rule mt-5 border-t pt-5">
           <dl className="space-y-3">
             <Detail label="What to pitch">{lead.recommendedPitch}</Detail>
             <Detail label="Opening line">{lead.openingLine}</Detail>
           </dl>
 
           <details className="mt-4">
-            <summary className="text-brand hover:text-brand-hover focus-visible:ring-brand marker:text-ink-faint cursor-pointer rounded text-sm font-medium focus-visible:ring-2 focus-visible:outline-none">
+            <summary className="text-cobalt hover:text-cobalt focus-visible:ring-cobalt marker:text-text-faint cursor-pointer rounded text-sm font-medium focus-visible:ring-2 focus-visible:outline-none">
               Outreach drafts
             </summary>
             <div className="mt-3 space-y-4">
@@ -256,14 +256,14 @@ export function CreatorCard({
       <CardBody>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="text-ink flex flex-wrap items-center gap-2 text-[17px] font-semibold">
-              <span className="text-ink-faint tabular-nums">{creator.rank}.</span>
+            <h3 className="text-text flex flex-wrap items-center gap-2 text-[17px] font-semibold">
+              <span className="text-text-faint tabular-nums">{creator.rank}.</span>
               {creator.name}
               <Badge tone="neutral" size="sm">
                 {creator.platform}
               </Badge>
             </h3>
-            <p className="text-ink-subtle mt-1 text-sm">{creator.niche}</p>
+            <p className="text-text-subtle mt-1 text-sm">{creator.niche}</p>
             <ul className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
               {creator.profileUrls.map((url) => (
                 <li key={url}>
@@ -271,7 +271,7 @@ export function CreatorCard({
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer nofollow"
-                    className="text-ink-subtle hover:text-brand focus-visible:ring-brand rounded text-sm break-all underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+                    className="text-text-subtle hover:text-cobalt focus-visible:ring-cobalt rounded text-sm break-all underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
                   >
                     {shortenUrl(url)}
                   </a>
@@ -308,11 +308,11 @@ export function CreatorCard({
           )}
         </dl>
 
-        <div className="border-line mt-5 border-t pt-5">
+        <div className="border-rule mt-5 border-t pt-5">
           <ClaimGroup title="Evidence" claims={creator.evidence} sources={sources} />
 
           <details className="mt-4">
-            <summary className="text-brand hover:text-brand-hover focus-visible:ring-brand marker:text-ink-faint cursor-pointer rounded text-sm font-medium focus-visible:ring-2 focus-visible:outline-none">
+            <summary className="text-cobalt hover:text-cobalt focus-visible:ring-cobalt marker:text-text-faint cursor-pointer rounded text-sm font-medium focus-visible:ring-2 focus-visible:outline-none">
               Outreach message
             </summary>
             <div className="mt-3 space-y-4">
@@ -338,8 +338,8 @@ export function ActionList({ actions }: { actions: readonly ResearchAction[] }) 
           <Card>
             <CardBody className="p-4 md:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <h3 className="text-ink text-[15px] font-semibold">
-                  <span className="text-ink-faint tabular-nums">{index + 1}.</span>{' '}
+                <h3 className="text-text text-[15px] font-semibold">
+                  <span className="text-text-faint tabular-nums">{index + 1}.</span>{' '}
                   {action.title}
                 </h3>
                 <span className="flex flex-wrap gap-1.5">
@@ -354,7 +354,7 @@ export function ActionList({ actions }: { actions: readonly ResearchAction[] }) 
                   </Badge>
                 </span>
               </div>
-              <p className="text-ink-muted mt-2 text-sm leading-relaxed">
+              <p className="text-text-muted mt-2 text-sm leading-relaxed">
                 {action.detail}
               </p>
             </CardBody>
@@ -370,10 +370,10 @@ export function ActionList({ actions }: { actions: readonly ResearchAction[] }) 
 function Detail({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-ink-subtle text-xs font-medium tracking-wide uppercase">
+      <dt className="text-text-subtle text-xs font-medium tracking-wide uppercase">
         {label}
       </dt>
-      <dd className="text-ink-muted mt-1 text-sm leading-relaxed">{children}</dd>
+      <dd className="text-text-muted mt-1 text-sm leading-relaxed">{children}</dd>
     </div>
   );
 }
@@ -390,7 +390,7 @@ function ClaimGroup({
   if (claims.length === 0) return null;
   return (
     <div>
-      <h4 className="text-ink-subtle text-xs font-medium tracking-wide uppercase">
+      <h4 className="text-text-subtle text-xs font-medium tracking-wide uppercase">
         {title}
       </h4>
       <ClaimList claims={claims} sources={sources} className="mt-2.5 space-y-3" />
@@ -408,10 +408,10 @@ function ClaimGroup({
 function Draft({ label, body }: { label: string; body: string }) {
   return (
     <div>
-      <p className="text-ink-subtle text-xs font-medium tracking-wide uppercase">
+      <p className="text-text-subtle text-xs font-medium tracking-wide uppercase">
         {label}
       </p>
-      <pre className="border-line bg-surface-sunken text-ink-muted mt-1.5 overflow-x-auto rounded-[var(--radius-control)] border p-3 font-mono text-[13px] leading-relaxed whitespace-pre-wrap">
+      <pre className="border-rule bg-ground-sunken text-text-muted mt-1.5 overflow-x-auto rounded-[var(--radius-control)] border p-3 font-mono text-[13px] leading-relaxed whitespace-pre-wrap">
         {body}
       </pre>
     </div>
@@ -435,8 +435,8 @@ function ContactRow({
   const hasSomething = contact.contactPageUrl || contact.publishedEmail;
 
   return (
-    <p className="text-ink-subtle mt-4 text-sm">
-      <span className="text-ink-subtle text-xs font-medium tracking-wide uppercase">
+    <p className="text-text-subtle mt-4 text-sm">
+      <span className="text-text-subtle text-xs font-medium tracking-wide uppercase">
         Contact
       </span>
       <br />
@@ -447,7 +447,7 @@ function ContactRow({
               href={contact.contactPageUrl}
               target="_blank"
               rel="noopener noreferrer nofollow"
-              className="text-brand focus-visible:ring-brand rounded underline underline-offset-4 focus-visible:ring-2 focus-visible:outline-none"
+              className="text-cobalt focus-visible:ring-cobalt rounded underline underline-offset-4 focus-visible:ring-2 focus-visible:outline-none"
             >
               Contact page
             </a>
@@ -456,7 +456,7 @@ function ContactRow({
           {contact.publishedEmail && (
             <a
               href={`mailto:${contact.publishedEmail}`}
-              className="text-brand focus-visible:ring-brand rounded break-all underline underline-offset-4 focus-visible:ring-2 focus-visible:outline-none"
+              className="text-cobalt focus-visible:ring-cobalt rounded break-all underline underline-offset-4 focus-visible:ring-2 focus-visible:outline-none"
             >
               {contact.publishedEmail}
             </a>
@@ -464,7 +464,7 @@ function ContactRow({
           <Citations refs={contact.sources} sources={sources} />
         </>
       ) : (
-        <span className="text-ink-faint italic">
+        <span className="text-text-faint italic">
           No public contact route found. We do not guess addresses.
         </span>
       )}

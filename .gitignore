@@ -51,3 +51,6 @@ supabase/.temp
 # playwright
 /test-results/
 /playwright-report/
+
+# screenshot QA output — regenerate with `npm run shots`
+screenshots/

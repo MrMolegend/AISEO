@@ -29,7 +29,7 @@ export default async function ResetPasswordPage() {
       subtitle={
         user.email ? (
           <>
-            Choose a new password for <strong className="text-ink">{user.email}</strong>.
+            Choose a new password for <strong className="text-text">{user.email}</strong>.
           </>
         ) : (
           'Choose a new password for your account.'

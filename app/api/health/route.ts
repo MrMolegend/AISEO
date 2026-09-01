@@ -5,24 +5,29 @@ import {
   hasUpstash,
   hasAnthropic,
   hasRealResearchProvider,
+  servesRealCustomers,
   usingTestAuthDriver,
 } from '@/lib/env';
 
 /**
  * Health check.
  *
- * Reports which driver is live for each subsystem rather than merely "ok",
+ * Reports which provider is serving each subsystem rather than merely "ok",
  * because the most likely production misconfiguration is not an outage — it is
  * silently running on a development driver. A mock research provider in
  * production is the worst of these: it returns confident, well-shaped, entirely
  * fictional sources, and nothing downstream can tell the difference. So it is
- * reported as a failing state, not a warning.
+ * reported as a failing state, not a warning, and the job pipeline refuses to
+ * start a report under the same condition (see lib/jobs/create-job.ts, which
+ * reads the same predicate rather than repeating the reasoning).
  *
  * Deliberately does not call Anthropic or the research provider. A health check
  * that costs money on every probe is a bad health check, and both are checked
  * by configuration rather than by round trip.
  *
- * Never prints a secret. Only which driver is selected.
+ * Names providers, never credentials. There is no branch here that can print a
+ * key, and the response is a fixed shape rather than a serialised env object,
+ * so a variable added later cannot leak by being included accidentally.
  */
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,7 +35,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   const env = getEnv();
 
-  const drivers = {
+  const providers = {
     storage: hasSupabase(env) ? 'supabase' : 'memory',
     auth: usingTestAuthDriver(env)
       ? 'test-stub'
@@ -41,6 +46,17 @@ export async function GET() {
     ai: hasAnthropic(env) ? 'anthropic' : 'mock',
     research: hasRealResearchProvider(env) ? env.RESEARCH_PROVIDER : 'mock',
     /**
+     * Not integrated, and not planned.
+     *
+     * Reported explicitly rather than omitted because "places" is the kind of
+     * capability an operator goes looking for, and a missing key is a
+     * different question from a deliberate absence. This product reads the
+     * public web; it does not query a places API, does not require
+     * GOOGLE_PLACES_API_KEY, and 'disabled' is a healthy steady state rather
+     * than something to fix.
+     */
+    places: 'disabled',
+    /**
      * Background work runs in-process via Next's after(). Named here so the
      * boundary is visible: if a job provider is introduced later, this is the
      * field that changes and the health check keeps telling the truth.
@@ -49,23 +65,26 @@ export async function GET() {
   } as const;
 
   const problems: string[] = [];
-  if (env.NODE_ENV === 'production') {
-    if (drivers.storage !== 'supabase') problems.push('storage is not Supabase');
-    if (drivers.auth === 'test-stub') {
-      // Unreachable: usingTestAuthDriver() throws under NODE_ENV=production
+
+  if (servesRealCustomers(env)) {
+    if (providers.storage !== 'supabase') problems.push('storage is not Supabase');
+    if (providers.auth === 'test-stub') {
+      // Unreachable: usingTestAuthDriver() throws on a production deployment
       // before this line can run. Listed anyway so the check reads completely,
       // and so it stays correct if that guard is ever relaxed.
       problems.push('authentication is served by the test stub');
     }
-    if (drivers.auth !== 'supabase') problems.push('authentication is not configured');
-    if (drivers.rateLimit !== 'upstash') {
+    if (providers.auth !== 'supabase') problems.push('authentication is not configured');
+    if (providers.rateLimit !== 'upstash') {
       // In-process limits are per-instance, so on more than one instance they
       // are not limits at all.
       problems.push('rate limiting is in-process and does not span instances');
     }
-    if (drivers.ai !== 'anthropic') problems.push('AI provider is the mock');
-    if (drivers.research === 'mock') {
-      problems.push('research provider is the mock and would fabricate sources');
+    if (providers.ai !== 'anthropic') {
+      problems.push('synthesis provider is the mock; reports would be fabricated');
+    }
+    if (providers.research === 'mock') {
+      problems.push('research provider is the mock; sources would be fabricated');
     }
   }
 
@@ -75,7 +94,7 @@ export async function GET() {
     {
       status: healthy ? 'ok' : 'degraded',
       environment: env.NODE_ENV,
-      drivers,
+      providers,
       problems,
     },
     {

@@ -38,6 +38,16 @@ export interface SearchQuery {
    * deep searches cost more and most queries do not need one.
    */
   depth?: 'basic' | 'advanced';
+  /**
+   * Which investigation area asked this question.
+   *
+   * Advisory metadata that live providers ignore — it is not sent to Tavily and
+   * has no effect on a real search. It exists so the deterministic fixture
+   * provider can answer a real twelve-query plan with twelve different result
+   * sets rather than returning one canned list twelve times, which would make
+   * source deduplication look like it worked when it had never been exercised.
+   */
+  area?: string;
 }
 
 export interface SearchResult {

@@ -40,7 +40,7 @@ export function Citations({
           target="_blank"
           rel="noopener noreferrer nofollow"
           title={source.title ? `${source.title} — ${source.url}` : source.url}
-          className="border-line bg-surface-sunken text-ink-subtle hover:border-brand-line hover:text-brand focus-visible:ring-brand inline-flex items-center rounded border px-1.5 py-px text-[11px] font-medium tabular-nums transition-colors focus-visible:ring-2 focus-visible:outline-none"
+          className="border-rule bg-ground-sunken text-text-subtle hover:border-cobalt-line hover:text-cobalt focus-visible:ring-cobalt inline-flex items-center rounded border px-1.5 py-px text-[11px] font-medium tabular-nums transition-colors focus-visible:ring-2 focus-visible:outline-none"
         >
           {source.ref}
           <span className="sr-only">
@@ -68,7 +68,7 @@ export function SourceList({ sources }: { sources: readonly StoredSource[] }) {
     <ol className="space-y-2">
       {sources.map((source) => (
         <li key={source.ref} className="flex gap-3 text-sm">
-          <span className="text-ink-faint w-9 shrink-0 pt-px font-medium tabular-nums">
+          <span className="text-text-faint w-9 shrink-0 pt-px font-medium tabular-nums">
             {source.ref}
           </span>
           <span className="min-w-0">
@@ -76,14 +76,14 @@ export function SourceList({ sources }: { sources: readonly StoredSource[] }) {
               href={source.url}
               target="_blank"
               rel="noopener noreferrer nofollow"
-              className="text-ink hover:text-brand focus-visible:ring-brand rounded font-medium break-words underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+              className="text-text hover:text-cobalt focus-visible:ring-cobalt rounded font-medium break-words underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
             >
               {source.title || source.url}
             </a>
-            <span className="text-ink-faint mt-0.5 block text-xs break-all">
+            <span className="text-text-faint mt-0.5 block text-xs break-all">
               {source.url}
             </span>
-            <span className="text-ink-faint mt-0.5 block text-xs">
+            <span className="text-text-faint mt-0.5 block text-xs">
               {source.fetched ? 'Read directly' : 'Seen in search results'} ·{' '}
               <time dateTime={source.retrievedAt}>
                 {new Date(source.retrievedAt).toLocaleDateString('en-GB', {

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { ResearchInput } from '@/schemas/research/inputs';
+import type { StoredInput } from './store';
 
 /**
  * The cache key for a research job.
@@ -39,7 +39,7 @@ function canonicalise(value: unknown): unknown {
   return value;
 }
 
-export function computeInputHash(input: ResearchInput): string {
+export function computeInputHash(input: StoredInput): string {
   return createHash('sha256')
     .update(JSON.stringify(canonicalise(input)))
     .digest('hex');

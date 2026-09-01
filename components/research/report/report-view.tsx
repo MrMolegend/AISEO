@@ -89,13 +89,13 @@ export function ReportView({
   ].filter((section) => section.present);
 
   return (
-    <div className="mx-auto grid max-w-[1240px] gap-10 px-5 py-10 md:px-8 xl:grid-cols-[220px_minmax(0,1fr)]">
+    <div className="mx-auto grid max-w-[1240px] grid-cols-1 gap-10 px-5 py-10 md:px-8 xl:grid-cols-[220px_minmax(0,1fr)]">
       {/* ── Contents ────────────────────────────────────────────────────── */}
       <nav
         aria-label="Report contents"
         className="hidden xl:sticky xl:top-24 xl:block xl:self-start print:hidden"
       >
-        <p className="text-ink-subtle mb-3 text-xs font-medium tracking-wide uppercase">
+        <p className="text-text-subtle mb-3 text-xs font-medium tracking-wide uppercase">
           Contents
         </p>
         <ul className="space-y-0.5">
@@ -103,7 +103,7 @@ export function ReportView({
             <li key={section.id}>
               <a
                 href={`#${section.id}`}
-                className="text-ink-muted hover:bg-surface-sunken hover:text-ink focus-visible:ring-brand block rounded-[var(--radius-control)] px-3 py-1.5 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="text-text-muted hover:bg-ground-sunken hover:text-text focus-visible:ring-cobalt block rounded-[var(--radius-control)] px-3 py-1.5 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
               >
                 {section.label}
               </a>
@@ -126,11 +126,11 @@ export function ReportView({
             )}
           </div>
 
-          <h1 className="text-ink mt-3 text-[32px] leading-tight font-semibold tracking-[var(--tracking-display)]">
+          <h1 className="text-text mt-3 text-[32px] leading-tight font-semibold tracking-[var(--tracking-display)]">
             {subject}
           </h1>
 
-          <p className="text-ink-subtle mt-2 text-sm">
+          <p className="text-text-subtle mt-2 text-sm">
             Generated{' '}
             <time dateTime={completedAt}>
               {new Date(completedAt).toLocaleDateString('en-GB', {
@@ -149,7 +149,7 @@ export function ReportView({
 
           {/* The disclaimer is above the fold rather than buried in a footer.
               It changes how the whole page should be read. */}
-          <p className="border-line bg-surface-subtle text-ink-muted mt-5 rounded-[var(--radius-control)] border px-4 py-3 text-sm leading-relaxed">
+          <p className="border-rule bg-ground-raised text-text-muted mt-5 rounded-[var(--radius-control)] border px-4 py-3 text-sm leading-relaxed">
             Built entirely from public web sources. Every factual claim links to where we
             found it — follow the numbered references to check anything before you act on
             it. Nothing here is confidential or non-public information.
@@ -161,7 +161,7 @@ export function ReportView({
                 <a
                   key={kind}
                   href={`/api/research/${publicId}/export?kind=${kind}`}
-                  className="border-line-strong bg-surface text-ink hover:bg-surface-subtle focus-visible:ring-brand inline-flex h-10 items-center rounded-[var(--radius-control)] border px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  className="border-rule-strong bg-ground-raised text-text hover:bg-ground-raised focus-visible:ring-cobalt inline-flex h-10 items-center rounded-[var(--radius-control)] border px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
                 >
                   Download {kind} CSV
                 </a>
@@ -174,17 +174,17 @@ export function ReportView({
           {/* ── Summary ─────────────────────────────────────────────────── */}
           <Section id="summary" title="Summary">
             {typeof report.headline === 'string' && (
-              <p className="text-ink max-w-[68ch] text-lg leading-relaxed font-medium">
+              <p className="text-text max-w-[68ch] text-lg leading-relaxed font-medium">
                 {report.headline}
               </p>
             )}
             {typeof report.executiveSummary === 'string' && (
-              <p className="text-ink-muted mt-4 max-w-[68ch] leading-relaxed">
+              <p className="text-text-muted mt-4 max-w-[68ch] leading-relaxed">
                 {report.executiveSummary}
               </p>
             )}
             {typeof report.marketOverview === 'string' && (
-              <p className="text-ink-muted mt-4 max-w-[68ch] leading-relaxed">
+              <p className="text-text-muted mt-4 max-w-[68ch] leading-relaxed">
                 {report.marketOverview}
               </p>
             )}
@@ -262,8 +262,8 @@ export function ReportView({
               {typeof report.recommendedPositioning === 'string' && (
                 <Card>
                   <CardBody>
-                    <h3 className="text-ink text-base font-semibold">Positioning</h3>
-                    <p className="text-ink-muted mt-2 max-w-[68ch] leading-relaxed">
+                    <h3 className="text-text text-base font-semibold">Positioning</h3>
+                    <p className="text-text-muted mt-2 max-w-[68ch] leading-relaxed">
                       {report.recommendedPositioning}
                     </p>
                   </CardBody>
@@ -273,8 +273,8 @@ export function ReportView({
               {typeof report.recommendedOffer === 'string' && (
                 <Card>
                   <CardBody>
-                    <h3 className="text-ink text-base font-semibold">Offer</h3>
-                    <p className="text-ink-muted mt-2 max-w-[68ch] leading-relaxed">
+                    <h3 className="text-text text-base font-semibold">Offer</h3>
+                    <p className="text-text-muted mt-2 max-w-[68ch] leading-relaxed">
                       {report.recommendedOffer}
                     </p>
                   </CardBody>
@@ -329,20 +329,22 @@ export function ReportView({
 
           {/* ── Provenance ──────────────────────────────────────────────── */}
           {meta && (
-            <footer className="border-line border-t pt-6">
-              <p className="text-ink-faint text-xs leading-relaxed tabular-nums">
+            <footer className="border-rule border-t pt-6">
+              <p className="text-text-faint text-xs leading-relaxed tabular-nums">
                 {pkg.name} · {meta.searchQueries} searches · {meta.pagesRead} pages ·{' '}
                 {meta.sourceCount} sources · prompt {meta.promptVersion} ·{' '}
                 {Math.round(meta.durationMs / 1000)}s
                 {meta.repairAttempts > 0 && ` · ${meta.repairAttempts} correction pass`}
               </p>
-              <p className="text-ink-faint mt-2 text-xs leading-relaxed">
+              <p className="text-text-faint mt-2 text-xs leading-relaxed">
+                {/* Legacy reports were produced and charged for in tokens; relabelling
+                    them as report credits afterwards would misdescribe what happened. */}
                 {BRAND.currency.disclaimer}
               </p>
               {isOwner && (
                 <Link
                   href="/dashboard"
-                  className="text-brand hover:text-brand-hover focus-visible:ring-brand mt-4 inline-block rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none print:hidden"
+                  className="text-cobalt hover:text-cobalt focus-visible:ring-cobalt mt-4 inline-block rounded text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none print:hidden"
                 >
                   Back to your dashboard
                 </Link>
@@ -368,7 +370,7 @@ function Section({
     <section id={id} aria-labelledby={`${id}-heading`} className="scroll-mt-24">
       <h2
         id={`${id}-heading`}
-        className="text-ink mb-5 text-[22px] font-semibold tracking-[var(--tracking-tight)]"
+        className="text-text mb-5 text-[22px] font-semibold tracking-[var(--tracking-tight)]"
       >
         {title}
       </h2>
@@ -390,7 +392,7 @@ function ClaimGroupCard({
   return (
     <Card>
       <CardBody>
-        <h3 className="text-ink text-base font-semibold">{title}</h3>
+        <h3 className="text-text text-base font-semibold">{title}</h3>
         <ClaimList claims={claims} sources={sources} className="mt-3 space-y-4" />
       </CardBody>
     </Card>
@@ -423,37 +425,39 @@ function IdealCustomer({ report }: { report: AnyReport }) {
     <div className="space-y-4">
       <Card>
         <CardBody>
-          <p className="text-ink-muted max-w-[68ch] leading-relaxed">{icp.description}</p>
+          <p className="text-text-muted max-w-[68ch] leading-relaxed">
+            {icp.description}
+          </p>
 
           <dl className="mt-5 grid gap-4 sm:grid-cols-3">
             <div>
-              <dt className="text-ink-subtle text-xs font-medium tracking-wide uppercase">
+              <dt className="text-text-subtle text-xs font-medium tracking-wide uppercase">
                 Size
               </dt>
-              <dd className="text-ink-muted mt-1 text-sm">{icp.companySize || '—'}</dd>
+              <dd className="text-text-muted mt-1 text-sm">{icp.companySize || '—'}</dd>
             </div>
             <div>
-              <dt className="text-ink-subtle text-xs font-medium tracking-wide uppercase">
+              <dt className="text-text-subtle text-xs font-medium tracking-wide uppercase">
                 Geography
               </dt>
-              <dd className="text-ink-muted mt-1 text-sm">{icp.geography || '—'}</dd>
+              <dd className="text-text-muted mt-1 text-sm">{icp.geography || '—'}</dd>
             </div>
             <div>
-              <dt className="text-ink-subtle text-xs font-medium tracking-wide uppercase">
+              <dt className="text-text-subtle text-xs font-medium tracking-wide uppercase">
                 Buying trigger
               </dt>
-              <dd className="text-ink-muted mt-1 text-sm">{icp.buyingTrigger || '—'}</dd>
+              <dd className="text-text-muted mt-1 text-sm">{icp.buyingTrigger || '—'}</dd>
             </div>
           </dl>
 
           {icp.disqualifiers.length > 0 && (
-            <div className="border-line mt-5 border-t pt-5">
-              <h3 className="text-ink-subtle text-xs font-medium tracking-wide uppercase">
+            <div className="border-rule mt-5 border-t pt-5">
+              <h3 className="text-text-subtle text-xs font-medium tracking-wide uppercase">
                 Not a fit
               </h3>
               <ul className="mt-2 space-y-1">
                 {icp.disqualifiers.map((item) => (
-                  <li key={item} className="text-ink-muted text-sm leading-relaxed">
+                  <li key={item} className="text-text-muted text-sm leading-relaxed">
                     {item}
                   </li>
                 ))}
@@ -466,24 +470,24 @@ function IdealCustomer({ report }: { report: AnyReport }) {
       {segments.map((segment) => (
         <Card key={segment.name}>
           <CardBody>
-            <h3 className="text-ink text-base font-semibold">{segment.name}</h3>
-            <p className="text-ink-muted mt-2 text-sm leading-relaxed">
+            <h3 className="text-text text-base font-semibold">{segment.name}</h3>
+            <p className="text-text-muted mt-2 text-sm leading-relaxed">
               {segment.description}
             </p>
             <dl className="mt-4 space-y-3">
               <div>
-                <dt className="text-ink-subtle text-xs font-medium tracking-wide uppercase">
+                <dt className="text-text-subtle text-xs font-medium tracking-wide uppercase">
                   Why they buy
                 </dt>
-                <dd className="text-ink-muted mt-1 text-sm leading-relaxed">
+                <dd className="text-text-muted mt-1 text-sm leading-relaxed">
                   {segment.whyTheyBuy}
                 </dd>
               </div>
               <div>
-                <dt className="text-ink-subtle text-xs font-medium tracking-wide uppercase">
+                <dt className="text-text-subtle text-xs font-medium tracking-wide uppercase">
                   Where to find them
                 </dt>
-                <dd className="text-ink-muted mt-1 text-sm leading-relaxed">
+                <dd className="text-text-muted mt-1 text-sm leading-relaxed">
                   {segment.whereToFindThem}
                 </dd>
               </div>
@@ -504,17 +508,17 @@ function AcquisitionChannels({ report }: { report: AnyReport }) {
   return (
     <Card>
       <CardBody>
-        <h3 className="text-ink text-base font-semibold">Acquisition channels</h3>
+        <h3 className="text-text text-base font-semibold">Acquisition channels</h3>
         <ul className="mt-3 space-y-4">
           {channels.map((channel) => (
             <li key={channel.channel}>
               <div className="flex flex-wrap items-center gap-2">
-                <h4 className="text-ink text-sm font-medium">{channel.channel}</h4>
+                <h4 className="text-text text-sm font-medium">{channel.channel}</h4>
                 <Badge tone="neutral" size="sm">
                   {channel.effort} effort
                 </Badge>
               </div>
-              <p className="text-ink-muted mt-1 text-sm leading-relaxed">
+              <p className="text-text-muted mt-1 text-sm leading-relaxed">
                 {channel.rationale}
               </p>
             </li>
@@ -548,24 +552,24 @@ function PlanSection({ report }: { report: AnyReport }) {
     <div className="space-y-8">
       {firstTen && firstTen.length > 0 && (
         <div>
-          <h3 className="text-ink mb-3 text-base font-semibold">Start with these</h3>
+          <h3 className="text-text mb-3 text-base font-semibold">Start with these</h3>
           <ActionList actions={firstTen} />
         </div>
       )}
 
       {nextActions && nextActions.length > 0 && (
         <div>
-          <h3 className="text-ink mb-3 text-base font-semibold">Next actions</h3>
+          <h3 className="text-text mb-3 text-base font-semibold">Next actions</h3>
           <ActionList actions={nextActions} />
         </div>
       )}
 
       {plan?.map((phase) => (
         <div key={phase.phase}>
-          <h3 className="text-ink text-base font-semibold">
+          <h3 className="text-text text-base font-semibold">
             {PHASE_LABEL[phase.phase] ?? phase.phase}
           </h3>
-          <p className="text-ink-muted mt-1 mb-3 text-sm leading-relaxed">
+          <p className="text-text-muted mt-1 mb-3 text-sm leading-relaxed">
             {phase.focus}
           </p>
           <ActionList actions={phase.actions} />

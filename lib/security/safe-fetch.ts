@@ -39,8 +39,15 @@ export const FETCH_LIMITS = {
   totalTimeoutMs: 15_000,
 } as const;
 
+/**
+ * Identifies us honestly, and says how to stop us.
+ *
+ * A crawler that disguises itself as a browser is a crawler whose operator has
+ * already decided robots.txt is optional. This one names itself, points at a
+ * page explaining what it does, and is refused by name if a site wants that.
+ */
 export const USER_AGENT =
-  'ResearchSuiteBot/1.0 (+https://research-suite.example/bot; automated business research; bounded crawl)';
+  'CorridorBot/1.0 (+https://corridor.example/bot; market-entry research; bounded retrieval)';
 
 const ACCEPTED_CONTENT_TYPES = ['text/html', 'application/xhtml+xml'];
 

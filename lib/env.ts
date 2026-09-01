@@ -212,6 +212,31 @@ export function hasRealResearchProvider(env: ServerEnv = getEnv()): boolean {
   return env.RESEARCH_PROVIDER === 'tavily' && Boolean(env.TAVILY_API_KEY);
 }
 
+/**
+ * Whether this deployment is one real customers reach.
+ *
+ * Not `NODE_ENV` alone: `next start` sets that to 'production' for the
+ * end-to-end suite too, which runs deliberately on fixtures. The platform's own
+ * signal is the one that means "real people, real money", and either being true
+ * is enough — a production build without VERCEL_ENV should still refuse to
+ * serve fabricated research.
+ */
+export function servesRealCustomers(env: ServerEnv = getEnv()): boolean {
+  return env.VERCEL_ENV === 'production' || (isProduction(env) && !env.AUTH_TEST_DRIVER);
+}
+
+/**
+ * Whether both research providers are real.
+ *
+ * The single predicate behind two rules that must never disagree: the health
+ * endpoint reports the deployment unhealthy, and the job pipeline refuses to
+ * start a customer's report. A deployment that says it is degraded while
+ * quietly producing fabricated dossiers is worse than one that is simply down.
+ */
+export function researchProvidersReady(env: ServerEnv = getEnv()): boolean {
+  return hasRealResearchProvider(env) && hasAnthropic(env);
+}
+
 export function isProduction(env: ServerEnv = getEnv()): boolean {
   return env.NODE_ENV === 'production';
 }

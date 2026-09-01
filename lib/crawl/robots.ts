@@ -16,7 +16,7 @@ import { request } from 'undici';
  * a page may be fetched. It is not a general-purpose robots parser.
  */
 
-export const OUR_AGENT_TOKEN = 'researchsuitebot';
+export const OUR_AGENT_TOKEN = 'corridorbot';
 
 export interface RobotsResult {
   found: boolean;

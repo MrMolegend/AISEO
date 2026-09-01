@@ -3,7 +3,9 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { nanoid } from 'nanoid';
 import type { Database, Json } from '@/supabase/database.types';
 import type { ResearchPackageId } from '@/config/packages';
+import type { MarketEntryPackageId } from '@/config/report';
 import type { ResearchInput } from '@/schemas/research/inputs';
+import type { MarketEntryInput } from '@/schemas/market-entry/input';
 import type { StoredSource, ReportMeta } from '@/schemas/research/shared';
 import { PlatformError, isErrorCode, type ErrorCode } from '@/lib/errors';
 import { getEnv, hasSupabase } from '@/lib/env';
@@ -14,6 +16,7 @@ import {
   stageIndex,
   type JobStatus,
   type StageId,
+  type StoredStageId,
 } from './stages';
 
 /**
@@ -36,18 +39,30 @@ import {
 /** ~95 bits. The only identifier that reaches a browser or a shared link. */
 const PUBLIC_ID_LENGTH = 16;
 
+/**
+ * Every package id that may appear in a stored row.
+ *
+ * Only `market-entry` can be created now. The four legacy ids remain in the
+ * type because rows carrying them are still in the database and still readable
+ * at their original URLs — narrowing this to the current product would make
+ * reading one of those rows a type error, which is the same mistake as
+ * narrowing the stage union.
+ */
+export type StoredPackageId = ResearchPackageId | MarketEntryPackageId;
+export type StoredInput = ResearchInput | MarketEntryInput;
+
 export interface ResearchJobRecord {
   id: string;
   publicId: string;
   userId: string;
-  packageId: ResearchPackageId;
+  packageId: StoredPackageId;
   tokenCost: number;
-  input: ResearchInput;
+  input: StoredInput;
   inputHash: string;
   subjectName: string;
   subjectDomain: string | null;
   status: JobStatus;
-  stage: StageId;
+  stage: StoredStageId;
   stageIndex: number;
   errorCode: ErrorCode | null;
   report: unknown;
@@ -61,9 +76,9 @@ export interface ResearchJobRecord {
 
 export interface CreateJobInput {
   userId: string;
-  packageId: ResearchPackageId;
+  packageId: StoredPackageId;
   tokenCost: number;
-  input: ResearchInput;
+  input: StoredInput;
   inputHash: string;
   subjectName: string;
   subjectDomain: string | null;
@@ -75,6 +90,14 @@ export interface CompleteJobInput {
   report: unknown;
   sources: StoredSource[];
   meta: ReportMeta;
+  /**
+   * Which report shape `report` is.
+   *
+   * Stored rather than inferred, so a renderer can dispatch on a number instead
+   * of sniffing for the presence of a key. Version 1 is the previous product's
+   * four-package output; version 2 is the market-entry dossier.
+   */
+  schemaVersion: number;
 }
 
 export interface ResearchJobStore {
@@ -110,6 +133,21 @@ export function newPublicId(): string {
  * Unparseable values pass through untouched so a corrupt row stays a rejected
  * row rather than a crash.
  */
+/**
+ * A publication date, as a `date` column will accept it.
+ *
+ * Providers report publication dates in whatever shape the page carried, and
+ * Postgres will reject most of them. An unparseable date is dropped rather than
+ * guessed: knowing when a source was published is useful, and inventing it is
+ * the same class of error as inventing a tariff rate.
+ */
+function normalisePublicationDate(value: string | null): string | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString().slice(0, 10);
+}
+
 function toIsoUtc(value: string): string {
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString();
@@ -139,7 +177,7 @@ function rowToRecord(row: JobRow, sources: StoredSource[]): ResearchJobRecord {
     subjectName: row.subject_name,
     subjectDomain: row.subject_domain,
     status: isJobStatus(row.status) ? row.status : 'failed',
-    stage: isStageId(row.stage) ? row.stage : 'validating',
+    stage: isStageId(row.stage) ? row.stage : 'context',
     stageIndex: row.stage_index,
     errorCode: isErrorCode(row.error_code) ? row.error_code : null,
     report: result?.report ?? null,
@@ -177,7 +215,7 @@ export class SupabaseResearchJobStore implements ResearchJobStore {
         subject_name: input.subjectName,
         subject_domain: input.subjectDomain,
         status: 'queued',
-        stage: 'validating',
+        stage: 'context',
         stage_index: 0,
         cached_from_job_id: input.cachedFromJobId ?? null,
       })
@@ -201,7 +239,7 @@ export class SupabaseResearchJobStore implements ResearchJobStore {
         stage,
         stage_index: stageIndex(stage),
         status: statusForStage(stage),
-        ...(stage === 'understanding' ? { started_at: new Date().toISOString() } : {}),
+        ...(stage === 'mapping' ? { started_at: new Date().toISOString() } : {}),
       })
       .eq('id', jobId)
       /*
@@ -227,10 +265,10 @@ export class SupabaseResearchJobStore implements ResearchJobStore {
       .from('research_jobs')
       .update({
         status: 'complete',
-        stage: 'settling',
-        stage_index: stageIndex('settling'),
+        stage: 'dossier',
+        stage_index: stageIndex('dossier'),
         result: toJson({ report: input.report, meta: input.meta }),
-        schema_version: 1,
+        schema_version: input.schemaVersion,
         completed_at: new Date().toISOString(),
       })
       .eq('id', input.jobId);
@@ -248,7 +286,19 @@ export class SupabaseResearchJobStore implements ResearchJobStore {
           position: source.position,
           canonical_url: source.url,
           title: source.title,
-          source_type: 'web_page',
+          /*
+           * The document kind and the publisher kind are different questions.
+           *
+           * source_type used to be hardcoded to 'web_page' here, which made the
+           * column say nothing at all. It now records how the source reached
+           * us; source_category records who stands behind it, and only the
+           * second decides whether a regulatory claim may rest on it.
+           */
+          source_type: source.retrievalMode === 'direct' ? 'web_page' : 'search_result',
+          source_category: source.category ?? null,
+          retrieval_mode: source.retrievalMode ?? null,
+          geographic_relevance: source.geographicRelevance ?? null,
+          published_at: normalisePublicationDate(source.publishedAt ?? null),
           publisher_domain: source.publisherDomain,
           retrieved_at: source.retrievedAt,
         })),
@@ -365,7 +415,7 @@ interface MemoryState {
   jobs: Map<string, ResearchJobRecord>;
 }
 
-const MEMORY_KEY = Symbol.for('research-suite.job-store');
+const MEMORY_KEY = Symbol.for('corridor.job-store');
 
 function memory(): MemoryState {
   const holder = globalThis as unknown as Record<symbol, MemoryState | undefined>;
@@ -393,7 +443,7 @@ export class MemoryResearchJobStore implements ResearchJobStore {
       subjectName: input.subjectName,
       subjectDomain: input.subjectDomain,
       status: 'queued',
-      stage: 'validating',
+      stage: 'context',
       stageIndex: 0,
       errorCode: null,
       report: null,
@@ -422,7 +472,7 @@ export class MemoryResearchJobStore implements ResearchJobStore {
     job.stage = stage;
     job.stageIndex = stageIndex(stage);
     job.status = statusForStage(stage);
-    if (stage === 'understanding' && !job.startedAt) {
+    if (stage === 'mapping' && !job.startedAt) {
       job.startedAt = new Date().toISOString();
     }
   }
@@ -431,8 +481,8 @@ export class MemoryResearchJobStore implements ResearchJobStore {
     const job = this.byId(input.jobId);
     if (!job) throw new PlatformError('STORAGE_ERROR', 'Job vanished before completion');
     job.status = 'complete';
-    job.stage = 'settling';
-    job.stageIndex = stageIndex('settling');
+    job.stage = 'dossier';
+    job.stageIndex = stageIndex('dossier');
     job.report = input.report;
     job.sources = input.sources;
     job.meta = input.meta;

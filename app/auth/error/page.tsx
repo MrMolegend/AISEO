@@ -66,7 +66,7 @@ export default async function AuthErrorPage({
           Need a different address?{' '}
           <Link
             href="/sign-up"
-            className="text-brand hover:text-brand-hover focus-visible:ring-brand rounded font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+            className="text-cobalt hover:text-cobalt focus-visible:ring-cobalt rounded font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
           >
             Create an account
           </Link>

@@ -55,13 +55,13 @@ export function MobileNav({
         onClick={() => setOpen((shown) => !shown)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="border-line bg-surface text-ink hover:border-line-strong focus-visible:ring-brand flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+        className="border-rule bg-ground-raised text-text hover:border-rule-strong focus-visible:ring-cobalt flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
       >
         {/* Two bars rather than three: the icon is decorative, the label is the
             accessible name. */}
         <span aria-hidden="true" className="flex w-4 flex-col gap-[5px]">
-          <span className="bg-ink block h-[1.5px] w-full rounded-full" />
-          <span className="bg-ink block h-[1.5px] w-full rounded-full" />
+          <span className="bg-ground block h-[1.5px] w-full rounded-full" />
+          <span className="bg-ground block h-[1.5px] w-full rounded-full" />
         </span>
         <span className="sr-only">{open ? 'Close menu' : 'Open menu'}</span>
       </button>
@@ -70,7 +70,7 @@ export function MobileNav({
         <div
           role="menu"
           aria-label="Site"
-          className="border-line bg-surface absolute right-0 z-50 mt-2 w-56 rounded-[var(--radius-card)] border p-1.5 shadow-[var(--shadow-raised)]"
+          className="border-rule bg-ground-raised absolute right-0 z-50 mt-2 w-56 border p-1.5 shadow-[var(--shadow-lift)]"
         >
           {links.map((link) => (
             <Link
@@ -78,7 +78,7 @@ export function MobileNav({
               href={link.href}
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="text-ink-muted hover:bg-surface-sunken hover:text-ink focus-visible:ring-brand block rounded-[var(--radius-control)] px-3 py-2.5 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              className="text-text-muted hover:bg-ground-sunken hover:text-text focus-visible:ring-cobalt block rounded-[var(--radius-control)] px-3 py-2.5 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
             >
               {link.label}
             </Link>
@@ -86,12 +86,12 @@ export function MobileNav({
 
           {signedIn ? (
             <>
-              <div role="none" className="border-line my-1 border-t" />
+              <div role="none" className="border-rule my-1 border-t" />
               <Link
                 href="/account"
                 role="menuitem"
                 onClick={() => setOpen(false)}
-                className="text-ink-muted hover:bg-surface-sunken hover:text-ink focus-visible:ring-brand block rounded-[var(--radius-control)] px-3 py-2.5 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="text-text-muted hover:bg-ground-sunken hover:text-text focus-visible:ring-cobalt block rounded-[var(--radius-control)] px-3 py-2.5 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
               >
                 Account
               </Link>
@@ -99,14 +99,14 @@ export function MobileNav({
             </>
           ) : (
             <>
-              <div role="none" className="border-line my-1 border-t" />
+              <div role="none" className="border-rule my-1 border-t" />
               <Link
-                href="/sign-up"
+                href="/assess"
                 role="menuitem"
                 onClick={() => setOpen(false)}
-                className="text-brand hover:bg-surface-sunken focus-visible:ring-brand block rounded-[var(--radius-control)] px-3 py-2.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="text-cobalt hover:bg-ground-sunken focus-visible:ring-cobalt block rounded-[var(--radius-control)] px-3 py-2.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
               >
-                Create account
+                Start report
               </Link>
             </>
           )}

@@ -2,32 +2,50 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 /**
- * Severity and status are always rendered as a tinted chip *with a text label*.
- * Colour alone is never the carrier of meaning — that is both an accessibility
- * requirement and the reason these read as restrained rather than as a traffic
- * light.
+ * A status chip.
+ *
+ * Every one of these is rendered with its meaning as text. Colour is a second
+ * signal for someone scanning a page, never the carrier of the meaning — which
+ * is both an accessibility requirement and the reason a report full of these
+ * reads as restrained rather than as a traffic light.
+ *
+ * Square-cornered, hairline-bounded, uppercase mono. It looks like a label
+ * stamped on a document rather than a pill from a component library, and that
+ * is the entire intent.
  */
 const badgeVariants = cva(
-  'inline-flex items-center gap-1.5 rounded-full border font-medium whitespace-nowrap',
+  'meta inline-flex items-center gap-1.5 border whitespace-nowrap rounded-[var(--radius-hair)]',
   {
     variants: {
       tone: {
-        neutral: 'border-line bg-surface-sunken text-ink-muted',
-        brand: 'border-brand-line bg-brand-subtle text-brand-hover',
-        critical:
-          'border-[var(--color-severity-critical-line)] bg-[var(--color-severity-critical-bg)] text-[var(--color-severity-critical)]',
-        high: 'border-[var(--color-severity-high-line)] bg-[var(--color-severity-high-bg)] text-[var(--color-severity-high)]',
-        medium:
-          'border-[var(--color-severity-medium-line)] bg-[var(--color-severity-medium-bg)] text-[var(--color-severity-medium)]',
-        low: 'border-[var(--color-severity-low-line)] bg-[var(--color-severity-low-bg)] text-[var(--color-severity-low)]',
-        /* Confidence and provenance. Distinct from severity, which reads as a
-           warning — a high-confidence finding is not an alarm. */
-        success:
-          'border-[var(--color-score-good-bg)] bg-[var(--color-score-good-bg)] text-[var(--color-score-good)]',
+        neutral: 'border-rule bg-ground-sunken text-text-subtle',
+        signal: 'border-signal/40 bg-signal-surface text-signal',
+        cobalt: 'border-cobalt-line bg-cobalt-surface text-cobalt',
+        copper: 'border-copper-line bg-copper-surface text-copper',
+        /** Evidence grades and verdicts pass their own token through `style`. */
+        token: 'bg-transparent',
+
+        /*
+         * Legacy tones.
+         *
+         * The reports produced by the previous product are still readable at
+         * their original URLs, and the components that render them still ask
+         * for these names. Rather than fork the badge — or, worse, leave those
+         * pages calling a variant that no longer exists — the old names are
+         * mapped onto the new palette. A legacy report therefore renders in the
+         * current design system rather than in a preserved copy of the old one,
+         * which is the version of "still readable" worth having.
+         */
+        brand: 'border-cobalt-line bg-cobalt-surface text-cobalt',
+        success: 'border-rule bg-ground-sunken text-verdict-promising',
+        critical: 'border-copper-line bg-copper-surface text-copper',
+        high: 'border-copper-line bg-copper-surface text-copper',
+        medium: 'border-cobalt-line bg-cobalt-surface text-cobalt',
+        low: 'border-rule bg-ground-sunken text-text-subtle',
       },
       size: {
-        sm: 'px-2 py-0.5 text-[11px]',
-        md: 'px-2.5 py-1 text-xs',
+        sm: 'px-1.5 py-0.5 text-[10px]',
+        md: 'px-2 py-1 text-[11px]',
       },
     },
     defaultVariants: { tone: 'neutral', size: 'md' },
@@ -35,8 +53,25 @@ const badgeVariants = cva(
 );
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof badgeVariants> {}
+  extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof badgeVariants> {
+  /** A `--color-*` token name. Only meaningful with `tone="token"`. */
+  token?: string;
+}
 
-export function Badge({ className, tone, size, ...props }: BadgeProps) {
-  return <span className={cn(badgeVariants({ tone, size }), className)} {...props} />;
+export function Badge({ className, tone, size, token, style, ...props }: BadgeProps) {
+  return (
+    <span
+      className={cn(badgeVariants({ tone, size }), className)}
+      style={
+        token
+          ? {
+              color: `var(--color-${token})`,
+              borderColor: `color-mix(in oklab, var(--color-${token}) 45%, transparent)`,
+              ...style,
+            }
+          : style
+      }
+      {...props}
+    />
+  );
 }
