@@ -12,17 +12,18 @@ import { AxeBuilder } from '@axe-core/playwright';
  * completing four.
  */
 
-const SESSION = { id: '11111111-1111-4111-8111-111111111111', email: 'sam@example.com' };
 const ADMIN = {
   id: '99999999-9999-4999-8999-999999999999',
   email: 'ops@example.com',
   role: 'admin' as const,
 };
 
+/** Default: a fresh account per sign-in, so no test inherits another's
+ * profiles, drafts, reports or cached runs from the shared server process. */
 async function signIn(
   context: BrowserContext,
   baseURL: string,
-  session: object = SESSION,
+  session: object = { id: crypto.randomUUID(), email: 'sam@example.com' },
 ) {
   await context.addCookies([
     {
