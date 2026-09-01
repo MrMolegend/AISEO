@@ -187,12 +187,32 @@ test.describe('moving through the stages', () => {
     await page.getByLabel('Business or brand name').fill('Ardmore Sea Salt');
     await page.getByLabel('Product or service name').blur();
 
+    // The draft is server-backed now: wait for the autosave to land, so the
+    // reload reads the durable copy rather than racing the debounce.
+    await expect(page.locator('[data-save-state="saved"]')).toBeVisible({
+      timeout: 10_000,
+    });
+
     await page.reload();
 
     await expect(page.getByLabel('Business or brand name')).toHaveValue(
       'Ardmore Sea Salt',
     );
-    await expect(page.getByRole('status')).toContainText('restored');
+    await expect(
+      page.getByRole('status').filter({ hasText: /saved draft|restored/ }),
+    ).toBeVisible();
+  });
+
+  test('announces every autosave state in words, not colour', async ({ page }) => {
+    // Nothing typed yet: an untouched form must not create a draft or claim
+    // to have saved one.
+    await expect(page.locator('[data-save-state]')).toHaveCount(0);
+
+    await page.getByLabel('Business or brand name').fill('Ardmore');
+    await expect(page.locator('[data-save-state="saved"]')).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.locator('[data-save-state="saved"]')).toHaveText('Saved');
   });
 
   test('moves focus to the new stage heading, so a screen reader follows', async ({

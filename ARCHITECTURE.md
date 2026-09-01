@@ -436,6 +436,12 @@ intact; nothing in this codebase reads them any more.
 | `0008_select_outstanding_reservation_directly`  | `created_at` ties inside one transaction made "the latest reservation" non-deterministic                                          |
 | `0009_index_research_jobs_cached_from`          | Unindexed foreign key                                                                                                             |
 | `0010_market_entry_source_evidence`             | Widens the `research_sources` type CHECK and adds five nullable evidence columns                                                  |
+| `0011_business_profiles`                        | The reusable business profile — structured fields, optional `website_url`, archive-not-delete                                     |
+| `0012_research_drafts`                          | Server-backed intake drafts with an optimistic-concurrency `revision`                                                             |
+| `0013_report_lineage`                           | `research_jobs.profile_id`, saved Scenario Lab assumptions, one revisable feedback verdict per user per report                    |
+| `0014_action_workspace`                         | Editable action rows with a partial unique index making plan imports idempotent                                                   |
+| `0015_share_links`                              | Deliberate sharing: SHA-256 token digests (never raw tokens), expiry, revocation, and an audit trail                              |
+| `0016_job_recovery`                             | `attempt_count`, `heartbeat_at` and the partial stall-sweep index on `research_jobs`                                              |
 
 Four of those were found by _executing_ the functions against a live database
 rather than reading them. None was visible to `tsc`.
@@ -482,28 +488,197 @@ one did. If the columns themselves must go, the migration ships with a commented
 original. Run it only after the application has been rolled back, and regenerate
 `supabase/database.types.ts` afterwards either way.
 
+### The product-depth migrations (`0011`–`0016`)
+
+**They are not applied to the live project.** They ship with the product-depth
+change and are applied at deploy time, after `0010`, in numeric order. All six
+are additive: no existing row, column or constraint is dropped or rewritten,
+every new table hangs off `auth.users` with `ON DELETE CASCADE`, RLS is enabled
+with no policies (deny-all; access is the server's least-privileged
+service_role, ownership enforced inside every store query), and each file
+carries a commented `down` block.
+
+Apply, from the repo root with the project linked:
+
+    supabase db push
+
+Then regenerate `supabase/database.types.ts` from the live schema — its header
+currently says the 0011–0016 types were written by hand from the migration
+files, and instructs exactly this.
+
+Verification queries, after applying:
+
+    -- Six new relations, all with RLS enabled and zero policies.
+    select relname, relrowsecurity from pg_class
+     where relname in ('business_profiles','research_drafts','report_scenarios',
+                       'report_feedback','action_items','share_links','share_events');
+
+    -- research_jobs gained exactly three columns.
+    select column_name from information_schema.columns
+     where table_name = 'research_jobs'
+       and column_name in ('profile_id','attempt_count','heartbeat_at');
+
+    -- The import-idempotency and stall-sweep indexes exist.
+    select indexname from pg_indexes
+     where indexname in ('action_items_import_unique','research_jobs_stall_sweep_idx');
+
+    -- No customer row was touched: counts on the pre-existing tables are
+    -- unchanged from before the deploy.
+
+Rollback: each file's commented `down` block, in reverse order `0016` → `0011`.
+Safe while nothing has written to the new tables; `0013`'s job column must go
+before `0011`'s table.
+
+## The workspace layer
+
+Everything a returning customer keeps lives in domain stores that mirror the
+jobs/tokens pattern — a memory driver for tests and credential-less dev, a
+Supabase driver in production, and the ownership filter inside every query so
+a row that is not the caller's never leaves the database.
+
+- **Profiles** (`lib/profiles/`) hold the durable description of the business.
+  `website_url` is nullable and stays nullable: when present it enters the
+  research as ONE candidate source (category `company`, registered after the
+  evidence floor so it cannot prop up an empty search phase), and its absence
+  or unreachability is a recorded limitation, never a failure. The brief
+  schema itself remains URL-free, held there by the guard test.
+- **Drafts** (`lib/drafts/`) replace localStorage-only intake progress. Every
+  save is a compare-and-set on `revision`; the stale writer gets
+  `DRAFT_CONFLICT` and a banner, never a silent merge. Payloads are sanitised
+  to the intake's own fields, bounded, 32KB ceiling. Submission freezes the
+  draft with a pointer to the job it became.
+- **Lineage** — a profile's completed runs are its versions, numbered by
+  position at read time. `lib/market-entry/compare.ts` diffs two stored
+  reports structurally: verdict, readiness and per-factor deltas, verbatim
+  headline claims, keyed add/remove/change lists. No model writes any of it.
+- **Scenario Lab** (`lib/market-entry/scenario-lab.ts`) is pure integer
+  arithmetic over assumptions the customer controls; every output carries its
+  formula in words and every missing input yields a named gap. Risk tolerance
+  selects a point WITHIN the customer's own demand range. Saved scenarios
+  store assumptions only — results recompute, so a saved scenario can never
+  disagree with its own arithmetic.
+- **Actions** (`lib/actions/`) materialise the report's 30/60/90 plan into
+  editable rows. The partial unique index over (user, job, source action id)
+  makes the import structurally idempotent; customer edits survive re-imports.
+- **The evidence index** (`lib/market-entry/evidence-index.ts`) inverts the
+  claims' own source refs into "which sections cite this source". The runner
+  fills `supports` at assembly; older reports get the same index recomputed at
+  read time.
+
+## Sharing
+
+The public id stopped being a capability. A report is private to its owner;
+`/research/[publicId]` requires the owner's session, and the store no longer
+has a public read at all. Sharing mints links at `/shared/[token]`:
+
+- 256-bit CSPRNG tokens, stored ONLY as SHA-256 digests. The raw token exists
+  in the minting response and nowhere else — not in the database, not in a log
+  line, not re-displayable.
+- Links carry an optional label, optional expiry, revocation, a use count and
+  an audit trail (`created`/`viewed`/`denied`/`revoked`, with the viewer's
+  salted IP hash).
+- Every dead token — unknown, expired, revoked, malformed — answers the same
+  `SHARE_LINK_INVALID`, so failures teach a guesser nothing. Resolution is
+  rate limited per presenting address before any storage read.
+- The shared page renders the report alone under a guest header: no owner
+  navigation, no workspace, no account surface. `robots` meta plus an
+  `X-Robots-Tag: noindex` and `no-store` header pair on `/shared/*`.
+- Exports: the owner always; a visitor only via `?share=<token>` on a live
+  link minted with `allow_download`, checked against the report the link
+  names (`lib/share/authorize.ts`).
+
+## Job recovery
+
+The runner touches `heartbeat_at` at every stage transition. A non-terminal
+job whose last pulse is older than `JOB_STALL_MINUTES` is dead — the process
+running it is gone — and repair settles it exactly like any other failure:
+`failed` with the refundable `JOB_STALLED` code, credit returned through the
+ledger's idempotent refund key. Repairing twice, or racing a late settlement
+from the dying run, replays the key and moves nothing twice.
+
+Two triggers: the owner opening their own stalled job (repaired on sight, so
+what renders is the honest failure page with the refund confirmation), and
+the admin console's confirmed, rate-limited, logged sweep. A duplicate-active
+guard in `create-job` completes the picture: the same brief submitted while
+its research runs joins the running job instead of reserving twice.
+
+## Admin authorisation
+
+`requireAdmin()` (`lib/auth/admin.ts`) accepts exactly one thing: a verified
+session whose JWT `app_metadata.role` is `'admin'`. `app_metadata` is issued
+by the Auth server and writable only through its admin API — a user cannot
+edit their own — which is the whole difference between a role claim and an
+email string. There is no environment allowlist and nothing client-side in
+the decision. A non-admin gets a 404, not a 403: an admin page that answers
+"forbidden" has confirmed it exists.
+
+Granting, from a privileged connection (never request-handling code):
+
+    update auth.users
+       set raw_app_meta_data = raw_app_meta_data || '{"role":"admin"}'
+     where id = '<user uuid>';
+
+The user signs out and in again to pick up the claim. The `/admin` console
+shows operational metadata only — provider names and states, job health,
+stall repair, feedback aggregates, share audit events — never keys, prompts,
+raw provider payloads or full customer content. Token grants remain the
+separate secret-gated API route.
+
+## Privacy: export and deletion
+
+`/api/account/export` streams one JSON file: profiles, drafts, assessments
+with reports and sources, scenarios, actions, feedback, share-link metadata
+(never token hashes) and the full credit ledger.
+
+Deletion is a typed-phrase confirmation. Order matters: every live share link
+is revoked (and audited) first, then the auth user is deleted through the
+Auth admin API and the schema's cascades take everything else. Retention,
+truthfully: **the ledger deletes with the account** — the deliberate decision
+migration `0006` encoded — and operational logs never contained identifying
+values to anonymise (the logger redacts; rate limiting stores salted hashes).
+
+## Research caching
+
+Two different things, deliberately separated:
+
+- **First-party result caching** exists and stays: a completed report
+  satisfies an identical brief from the same user within
+  `RESEARCH_CACHE_TTL_HOURS`, free and labelled as cached. User-scoped by
+  query, so one customer's inputs can never surface another's report.
+- **Provider-response caching does not exist and remains off.** Tavily's
+  current terms could not be verified from the build environment (egress to
+  tavily.com is blocked), and the rule for that situation is to document the
+  decision rather than guess. What the pipeline persists today is already the
+  conservative shape: source identifiers, bounded excerpts (≤1200 chars),
+  retrieval metadata and timestamps — never complete raw provider responses.
+  Anyone enabling reuse later must first confirm the terms permit durable
+  storage of the content class in question, and scope any cache per user.
+
 ## Deployment checklist
 
 Environment variables — names only, values never printed anywhere:
 
-| Variable                                                 | Needed for                                             |
-| -------------------------------------------------------- | ------------------------------------------------------ |
-| `NEXT_PUBLIC_SITE_URL`                                   | Canonical URLs, auth redirects                         |
-| `NEXT_PUBLIC_SUPABASE_URL`                               | Auth and storage                                       |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `…_ANON_KEY`) | Browser auth client                                    |
-| `SUPABASE_SERVICE_ROLE_KEY`                              | Server-side storage. Never in a browser bundle         |
-| `ANTHROPIC_API_KEY`, `AI_PROVIDER=anthropic`, `AI_MODEL` | Report synthesis                                       |
-| `RESEARCH_PROVIDER=tavily`, `TAVILY_API_KEY`             | Finding public sources                                 |
-| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`     | Limits that span instances                             |
-| `IP_HASH_SALT`                                           | Hashing IPs. Raw addresses are never stored            |
-| `RESEARCH_DAILY_GLOBAL_CAP`                              | The cost ceiling. **Set before the first public link** |
-| `ADMIN_GRANT_SECRET`                                     | The grant route. Absent ⇒ route disabled. Min 24 chars |
-| `WELCOME_TOKEN_GRANT`                                    | Leave at `0` in production                             |
+| Variable                                                 | Needed for                                                          |
+| -------------------------------------------------------- | ------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SITE_URL`                                   | Canonical URLs, auth redirects                                      |
+| `NEXT_PUBLIC_SUPABASE_URL`                               | Auth and storage                                                    |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `…_ANON_KEY`) | Browser auth client                                                 |
+| `SUPABASE_SERVICE_ROLE_KEY`                              | Server-side storage. Never in a browser bundle                      |
+| `ANTHROPIC_API_KEY`, `AI_PROVIDER=anthropic`, `AI_MODEL` | Report synthesis                                                    |
+| `RESEARCH_PROVIDER=tavily`, `TAVILY_API_KEY`             | Finding public sources                                              |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`     | Limits that span instances                                          |
+| `IP_HASH_SALT`                                           | Hashing IPs. Raw addresses are never stored                         |
+| `RESEARCH_DAILY_GLOBAL_CAP`                              | The cost ceiling. **Set before the first public link**              |
+| `ADMIN_GRANT_SECRET`                                     | The grant route. Absent ⇒ route disabled. Min 24 chars              |
+| `WELCOME_TOKEN_GRANT`                                    | Leave at `0` in production                                          |
+| `JOB_STALL_MINUTES`                                      | Optional. Heartbeat age before a run counts as stalled (default 15) |
 
 Steps:
 
-1. Apply `supabase/migrations/0004`–`0010` in order, then regenerate
-   `supabase/database.types.ts` from the live schema.
+1. Apply `supabase/migrations/0004`–`0016` in order (`0004`–`0010` are already
+   on the live project; `0011`–`0016` are not), then regenerate
+   `supabase/database.types.ts` from the live schema and run the verification
+   queries under **The product-depth migrations** above.
 2. Enable email sign-in in Supabase Auth and add
    `${NEXT_PUBLIC_SITE_URL}/auth/confirm` to the allowed redirect URLs — then
    follow **Supabase dashboard checklist** above for the rest of it. That step
@@ -520,6 +695,8 @@ Steps:
 5. Grant yourself credit via `POST /api/admin/grant-tokens` (100 tokens is one
    report credit) and run one real assessment end to end.
 6. Set Anthropic and Tavily spend alerts.
+7. Grant your operator account the admin role (see **Admin authorisation**),
+   sign out and in, and check `/admin` loads for you and 404s for a customer.
 
 There is no Google configuration to do. `GOOGLE_PLACES_API_KEY` is not read and
 must not be set; `/api/health` reporting `places: "disabled"` is the correct,

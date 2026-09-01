@@ -63,6 +63,17 @@ const VIEWS = [
   { id: 'account', path: '/account', viewport: DESKTOP, auth: true, full: true },
   { id: 'wallet', path: '/wallet', viewport: DESKTOP, auth: true, full: true },
   { id: 'sign-in', path: '/sign-in', viewport: DESKTOP },
+  { id: 'profiles', path: '/profiles', viewport: DESKTOP, auth: true, full: true },
+  { id: 'profile-new', path: '/profiles/new', viewport: DESKTOP, auth: true, full: true },
+  {
+    id: 'profile-new-mobile',
+    path: '/profiles/new',
+    viewport: MOBILE,
+    auth: true,
+    full: true,
+  },
+  { id: 'actions', path: '/actions', viewport: DESKTOP, auth: true, full: true },
+  { id: 'actions-mobile', path: '/actions', viewport: MOBILE, auth: true, full: true },
   { id: 'home-320', path: '/', viewport: NARROW, full: true },
   { id: 'example-320', path: '/example', viewport: NARROW, full: true },
   {

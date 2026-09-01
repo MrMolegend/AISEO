@@ -56,6 +56,21 @@ export async function getTestSessionUser(): Promise<AuthenticatedUser | null> {
     };
     if (typeof id !== 'string' || id.length === 0) return null;
 
+    /*
+     * Real sign-in bootstraps the wallet in the auth-confirm route; the
+     * driver bypasses that route, so it mirrors the bootstrap here.
+     * Idempotent (the wallet replays the welcome grant's key), and the
+     * amount comes from the same env knob production uses — the e2e config
+     * sets it explicitly, defaults grant nothing.
+     */
+    const { getTokenWallet } = await import('@/lib/tokens');
+    const { getEnv, welcomeTokenGrant } = await import('@/lib/env');
+    await (
+      await getTokenWallet()
+    )
+      .bootstrap(id, { welcomeTokens: welcomeTokenGrant(getEnv()) })
+      .catch(() => {});
+
     return {
       id,
       email: typeof email === 'string' ? email : null,
