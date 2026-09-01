@@ -261,7 +261,44 @@ describe('a research job that fails', () => {
 });
 
 describe('duplicate submissions', () => {
-  it('charges one click once, however many times it arrives', async () => {
+  it('joins the running job instead of charging a second time', async () => {
+    await fund(USER, 500);
+
+    const first = await createResearchJob({
+      userId: USER,
+      body: BRIEF(),
+      submissionId: newSubmissionId(),
+      ipHash: null,
+    });
+
+    /*
+     * The same brief again while the first run is still active — a second
+     * tab, a refresh, a double-click that minted a fresh submission id. The
+     * guard hands back the job already doing the work, flagged as a
+     * duplicate so the route knows not to start the pipeline again.
+     */
+    const second = await createResearchJob({
+      userId: USER,
+      body: BRIEF(),
+      submissionId: newSubmissionId(),
+      ipHash: null,
+    });
+
+    expect(second.duplicate).toBe(true);
+    expect(second.job.id).toBe(first.job.id);
+
+    // One hold, not two.
+    expect(await balanceOf(USER)).toEqual({
+      available: 500 - COST,
+      reserved: COST,
+    });
+
+    // One row, not a runnable orphan.
+    const store = await getResearchJobStore();
+    expect(await store.listForUser(USER, 10)).toHaveLength(1);
+  });
+
+  it('still absorbs a replayed submission id behind the active guard', async () => {
     await fund(USER, 500);
     const submissionId = newSubmissionId();
 
@@ -272,22 +309,24 @@ describe('duplicate submissions', () => {
       ipHash: null,
     });
 
+    /*
+     * Fail the first job so the active guard no longer matches, then replay
+     * the identical click. The reservation's idempotency is the last line:
+     * the replay is refused and the balance does not move again. (The failed
+     * job was never settled here, so its hold is still open — the point is
+     * that the replay adds nothing on top.)
+     */
+    const store = await getResearchJobStore();
+    await store.fail(first.job.id, 'JOB_TIMEOUT');
+
     await expect(
       createResearchJob({ userId: USER, body: BRIEF(), submissionId, ipHash: null }),
     ).rejects.toMatchObject({ code: 'DUPLICATE_SUBMISSION' });
 
-    // One hold, not two.
     expect(await balanceOf(USER)).toEqual({
       available: 500 - COST,
       reserved: COST,
     });
-
-    // And the orphaned second row is failed rather than left runnable.
-    const store = await getResearchJobStore();
-    const jobs = await store.listForUser(USER, 10);
-    expect(jobs).toHaveLength(2);
-    expect(jobs.filter((job) => job.status === 'failed')).toHaveLength(1);
-    expect(jobs.find((job) => job.id === first.job.id)?.status).toBe('queued');
   });
 });
 
