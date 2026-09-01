@@ -34,6 +34,7 @@ export const TEST_SESSION_COOKIE = 'e2e-test-session';
 export interface TestSession {
   id: string;
   email: string | null;
+  role?: 'admin';
 }
 
 /** Reads the fake session, or null. Returns null whenever the driver is off. */
@@ -48,10 +49,33 @@ export async function getTestSessionUser(): Promise<AuthenticatedUser | null> {
     const parsed: unknown = JSON.parse(decodeURIComponent(raw));
     if (typeof parsed !== 'object' || parsed === null) return null;
 
-    const { id, email } = parsed as { id?: unknown; email?: unknown };
+    const { id, email, role } = parsed as {
+      id?: unknown;
+      email?: unknown;
+      role?: unknown;
+    };
     if (typeof id !== 'string' || id.length === 0) return null;
 
-    return { id, email: typeof email === 'string' ? email : null };
+    /*
+     * Real sign-in bootstraps the wallet in the auth-confirm route; the
+     * driver bypasses that route, so it mirrors the bootstrap here.
+     * Idempotent (the wallet replays the welcome grant's key), and the
+     * amount comes from the same env knob production uses — the e2e config
+     * sets it explicitly, defaults grant nothing.
+     */
+    const { getTokenWallet } = await import('@/lib/tokens');
+    const { getEnv, welcomeTokenGrant } = await import('@/lib/env');
+    await (
+      await getTokenWallet()
+    )
+      .bootstrap(id, { welcomeTokens: welcomeTokenGrant(getEnv()) })
+      .catch(() => {});
+
+    return {
+      id,
+      email: typeof email === 'string' ? email : null,
+      role: role === 'admin' ? 'admin' : null,
+    };
   } catch {
     return null;
   }

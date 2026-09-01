@@ -76,6 +76,9 @@ export default defineConfig({
        * process for the stub to stand in front of.
        */
       AUTH_TEST_DRIVER: '1',
+      // Three report credits, granted by the same welcome-grant path real
+      // sign-in uses, so the journey suite can actually submit a brief.
+      WELCOME_TOKEN_GRANT: '300',
       LOG_LEVEL: 'warn',
     },
   },

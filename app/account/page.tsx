@@ -4,6 +4,7 @@ import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { Panel, Rule, Meta } from '@/components/ui/panel';
 import { SignOutButton } from '@/components/auth/sign-out-button';
+import { DataControls } from '@/components/account/data-controls';
 import { getCurrentUser, signInPath } from '@/lib/auth/server';
 import { getResearchJobStore } from '@/lib/jobs/store';
 import { getTokenWallet } from '@/lib/tokens';
@@ -112,12 +113,14 @@ export default async function AccountPage() {
               by this application in any form.
             </p>
             <p>
-              Deleting your account removes your profile, your credit history and every
-              assessment. It cannot be undone, and shared report links stop working
-              immediately. Write to {BRAND.supportEmail} and we will do it.
+              Business profiles, saved drafts, scenarios, actions and feedback belong to
+              your account alone, and everything below travels with it: exportable in one
+              file, deleted with one deliberate act.
             </p>
           </div>
         </section>
+
+        <DataControls />
 
         <div className="border-rule mt-12 border-t pt-8">
           <SignOutButton />

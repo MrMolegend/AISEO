@@ -186,10 +186,9 @@ test.describe('sharing and printing', () => {
       page.getByRole('button', { name: /Print or save as PDF/ }),
     ).toBeVisible();
 
-    // The share control is a capability handover — it copies a URL that grants
-    // access to a stored report. The worked example has none, so offering one
-    // would be a button that hands over nothing.
-    await expect(page.getByRole('button', { name: /Copy share link/ })).toHaveCount(0);
+    // Sharing is managed per stored report; the worked example has none, so
+    // there is nothing to manage and no control offering to.
+    await expect(page.getByRole('link', { name: /Manage sharing/ })).toHaveCount(0);
   });
 
   test('drops the navigation chrome in print, and keeps the evidence', async ({
@@ -199,7 +198,7 @@ test.describe('sharing and printing', () => {
     await page.emulateMedia({ media: 'print' });
 
     // Controls that do nothing on paper are hidden; the document is not.
-    await expect(page.getByRole('button', { name: /Copy share link/ })).toBeHidden();
+    await expect(page.getByRole('button', { name: /Print or save as PDF/ })).toBeHidden();
     await expect(
       page.getByRole('navigation', { name: 'Report contents' }).first(),
     ).toBeHidden();

@@ -24,6 +24,13 @@ export const ERROR_CODES = [
   'DUPLICATE_SUBMISSION',
   'RATE_LIMITED',
   'CAPACITY',
+  // A draft write carried a stale revision: another tab or device saved since
+  // this one last loaded. The losing writer is told, never silently merged.
+  'DRAFT_CONFLICT',
+  // One code for every way a share link can not work — unknown, expired,
+  // revoked. Distinguishing them for the visitor would tell a token-guesser
+  // which failures were near-misses.
+  'SHARE_LINK_INVALID',
 
   // ── Authentication ──────────────────────────────────────────────────────
   // These carry the copy a user reads when a sign-in attempt fails. They exist
@@ -78,6 +85,9 @@ export const ERROR_CODES = [
   // ── Infrastructure ──────────────────────────────────────────────────────
   'STORAGE_ERROR',
   'JOB_TIMEOUT',
+  // A run died between stages — no heartbeat past the stall threshold. Our
+  // failure, so it refunds like one.
+  'JOB_STALLED',
   'EXPORT_FAILED',
   'UNKNOWN',
 ] as const;
@@ -154,6 +164,20 @@ export const ERROR_COPY: Record<ErrorCode, ErrorCopy> = {
     retryable: false,
     status: 503,
     refundsTokens: true,
+  },
+  DRAFT_CONFLICT: {
+    title: 'This draft changed somewhere else',
+    body: 'A newer version of this draft was saved from another tab or device. Reload to pick up the latest copy — nothing you saved elsewhere has been lost.',
+    retryable: false,
+    status: 409,
+    refundsTokens: false,
+  },
+  SHARE_LINK_INVALID: {
+    title: 'This link no longer opens anything',
+    body: 'The share link is not valid — it may have expired or been withdrawn by the report owner. Ask them for a fresh link.',
+    retryable: false,
+    status: 404,
+    refundsTokens: false,
   },
 
   // ── Authentication ──────────────────────────────────────────────────────
@@ -436,6 +460,13 @@ export const ERROR_COPY: Record<ErrorCode, ErrorCopy> = {
     body: 'The job exceeded the time we allow for a single report. Your tokens have been returned.',
     retryable: true,
     status: 504,
+    refundsTokens: true,
+  },
+  JOB_STALLED: {
+    title: 'This report stopped unexpectedly',
+    body: 'The research run for {subject} stopped before it could finish. Your report credit has been returned — you can start the research again whenever you like.',
+    retryable: true,
+    status: 500,
     refundsTokens: true,
   },
   EXPORT_FAILED: {

@@ -155,7 +155,9 @@ export function ReportView({
             it. Nothing here is confidential or non-public information.
           </p>
 
-          {(exports.length > 0 || isOwner) && (
+          {/* Exports are the owner's: the export route enforces the same
+              rule, so hiding them here avoids offering a link that 404s. */}
+          {isOwner && exports.length > 0 && (
             <div className="mt-5 flex flex-wrap gap-2 print:hidden">
               {exports.map((kind) => (
                 <a

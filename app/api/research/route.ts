@@ -36,8 +36,9 @@ export async function POST(request: Request) {
       ipHash: hashIp(clientIpFrom(request.headers)),
     });
 
-    // A cache hit has nothing to run.
-    if (!result.cached) {
+    // A cache hit has nothing to run; a duplicate's original is already
+    // running and must not be started a second time.
+    if (!result.cached && !result.duplicate) {
       after(async () => {
         try {
           await runResearchJob(result.job);
