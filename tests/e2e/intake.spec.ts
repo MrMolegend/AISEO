@@ -15,13 +15,22 @@ import { AxeBuilder } from '@axe-core/playwright';
  * guards the data model — this guards the screen.
  */
 
-const SESSION = { id: '11111111-1111-4111-8111-111111111111', email: 'sam@example.com' };
-
+/**
+ * A fresh identity per sign-in.
+ *
+ * Drafts are server-backed now, and the dev server outlives every browser
+ * context — a shared user id would leak one test's draft into the next
+ * test's intake, which is exactly the durability the product wants and
+ * exactly the isolation a test suite needs. A random id gives each test a
+ * clean account with its own welcome grant.
+ */
 async function signIn(context: BrowserContext, baseURL: string) {
   await context.addCookies([
     {
       name: 'e2e-test-session',
-      value: encodeURIComponent(JSON.stringify(SESSION)),
+      value: encodeURIComponent(
+        JSON.stringify({ id: crypto.randomUUID(), email: 'sam@example.com' }),
+      ),
       url: baseURL,
     },
   ]);
