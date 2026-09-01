@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { DossierView } from '@/components/dossier/dossier-view';
@@ -13,7 +13,7 @@ import { Panel, Meta } from '@/components/ui/panel';
 import { BRAND, pageTitle } from '@/config/brand';
 import { isResearchPackageId } from '@/config/packages';
 import { renderErrorCopy } from '@/lib/errors';
-import { getCurrentUser } from '@/lib/auth/server';
+import { getCurrentUser, signInPath } from '@/lib/auth/server';
 import { getResearchJobStore } from '@/lib/jobs/store';
 import { reportKindLabel, isLegacyReport } from '@/lib/jobs/labels';
 import { isTerminal } from '@/lib/jobs/stages';
@@ -25,18 +25,19 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: pageTitle('Report'),
   // Reports concern real businesses and carry the customer's own brief. They
-  // are shared by capability link, not published.
+  // are private to their owner; sharing goes through /shared/[token].
   robots: { index: false, follow: false },
 };
 
 /**
  * One URL, two eras of report.
  *
- * Reports produced by the previous product are still readable at the addresses
- * they were shared with — that is what "legacy reports remain readable" has to
- * mean in practice, and it is why this page dispatches on the stored package id
- * rather than the new product having its own route. Nothing anyone has already
- * sent to a colleague stops working.
+ * Reports produced by the previous product are still readable at the
+ * addresses they were written with, for their owner — this page dispatches on
+ * the stored package id rather than the new product having its own route, so
+ * an owner's old bookmarks keep working. Third parties holding an old
+ * capability URL no longer get in; the owner shares deliberately now, via
+ * revocable links.
  */
 export default async function ReportPage({
   params,
@@ -47,12 +48,22 @@ export default async function ReportPage({
   const user = await getCurrentUser();
   const store = await getResearchJobStore();
 
-  const ownedJob = user ? await store.getForUser(publicId, user.id) : null;
-  const job = ownedJob ?? (await store.getPublic(publicId));
+  /*
+   * Owner-only, deliberately.
+   *
+   * The public id used to be a capability: sixteen characters of entropy,
+   * and holding them was access. That made sharing free and un-sharing
+   * impossible — a link once sent could never expire or be revoked. Reports
+   * are now private to their owner, and sharing goes through minted links at
+   * /shared/[token], which the owner can time-limit and withdraw. A visitor
+   * holding an old capability URL sees the same 404 as a guesser.
+   */
+  if (!user) redirect(signInPath(`/research/${publicId}`));
 
+  const job = await store.getForUser(publicId, user.id);
   if (!job) notFound();
 
-  const isOwner = Boolean(ownedJob);
+  const isOwner = true;
   const kindLabel = reportKindLabel(job.packageId);
 
   /* ── Failed ──────────────────────────────────────────────────────────── */

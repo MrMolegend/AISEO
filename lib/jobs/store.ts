@@ -31,9 +31,10 @@ import {
  *   · A private read requires the owner's id, and the query filters on it. Not
  *     "fetch then compare" — the row never leaves the database unless it
  *     belongs to the caller, so a forgotten comparison cannot leak it.
- *   · A public read matches on public_id alone, which is a 16-character
- *     capability. That is the sharing mechanism, and it is why public_id is
- *     high-entropy and the uuid primary key never leaves the server.
+ *   · There is no public read. The public id is an opaque address, not a
+ *     capability: a visitor without the owner's session or a live share
+ *     token reads nothing. Share resolution reads by internal id, after the
+ *     token has been validated against stored hashes.
  */
 
 /** ~95 bits. The only identifier that reaches a browser or a shared link. */
@@ -115,8 +116,13 @@ export interface ResearchJobStore {
   fail(jobId: string, code: ErrorCode): Promise<void>;
   /** Owner-scoped read. Returns null for anyone else's job. */
   getForUser(publicId: string, userId: string): Promise<ResearchJobRecord | null>;
-  /** Capability read, by public id alone. Only ever returns a complete job. */
-  getPublic(publicId: string): Promise<ResearchJobRecord | null>;
+  /**
+   * Read by internal id, complete jobs only. For exactly one caller: share
+   * resolution, where a validated share token IS the authorisation and
+   * carries the job's internal id. Never expose this to anything that takes
+   * an id from a request.
+   */
+  getForShare(jobId: string): Promise<ResearchJobRecord | null>;
   listForUser(userId: string, limit?: number): Promise<ResearchJobRecord[]>;
   /** A recent completed job of this user's with identical inputs. */
   findCached(
@@ -378,11 +384,11 @@ export class SupabaseResearchJobStore implements ResearchJobStore {
     return data ? rowToRecord(data, []) : null;
   }
 
-  async getPublic(publicId: string): Promise<ResearchJobRecord | null> {
+  async getForShare(jobId: string): Promise<ResearchJobRecord | null> {
     const { data, error } = await this.client
       .from('research_jobs')
       .select('*')
-      .eq('public_id', publicId)
+      .eq('id', jobId)
       .eq('status', 'complete')
       .maybeSingle<JobRow>();
 
@@ -606,11 +612,9 @@ export class MemoryResearchJobStore implements ResearchJobStore {
     return null;
   }
 
-  async getPublic(publicId: string): Promise<ResearchJobRecord | null> {
-    for (const job of memory().jobs.values()) {
-      if (job.publicId === publicId && job.status === 'complete') return job;
-    }
-    return null;
+  async getForShare(jobId: string): Promise<ResearchJobRecord | null> {
+    const job = memory().jobs.get(jobId);
+    return job && job.status === 'complete' ? job : null;
   }
 
   async listForUser(userId: string, limit = 25): Promise<ResearchJobRecord[]> {
