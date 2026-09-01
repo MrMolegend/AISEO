@@ -6,20 +6,15 @@ import { Rule, Meta } from '@/components/ui/panel';
 import { TextField, TextAreaField, RadioCards } from '@/components/ui/field';
 import { ChipInput } from '@/components/ui/chip-input';
 import { Combobox } from '@/components/ui/combobox';
+import { emptyProfileValues, type ProfileFormValues } from '@/lib/profiles/form-values';
 import { COUNTRIES } from '@/config/markets';
 import {
   BUSINESS_MODELS,
   BUSINESS_MODEL_LABEL,
   PRICE_POSITIONS,
   PRICE_POSITION_LABEL,
-  type BusinessModel,
-  type PricePosition,
 } from '@/schemas/business-profile';
-import {
-  BUSINESS_STATUSES,
-  BUSINESS_STATUS_LABEL,
-  type BusinessStatus,
-} from '@/schemas/market-entry/input';
+import { BUSINESS_STATUSES, BUSINESS_STATUS_LABEL } from '@/schemas/market-entry/input';
 
 /**
  * The business profile form.
@@ -38,96 +33,9 @@ const COUNTRY_OPTIONS = COUNTRIES.map((country) => ({
   label: country.name,
 }));
 
-export interface ProfileFormValues {
-  name: string;
-  websiteUrl: string;
-  description: string;
-  homeCountry: string | null;
-  industry: string;
-  offerings: string[];
-  targetCustomers: string[];
-  buyerRoles: string[];
-  businessModel: BusinessModel | null;
-  pricePositioning: PricePosition | null;
-  salesChannels: string[];
-  tractionStage: BusinessStatus | null;
-  teamCapacity: string;
-  differentiators: string[];
-  constraintsNotes: string;
-  goals: string[];
-  knownCompetitors: string[];
-  customerEvidence: string;
-}
-
-export function emptyProfileValues(): ProfileFormValues {
-  return {
-    name: '',
-    websiteUrl: '',
-    description: '',
-    homeCountry: null,
-    industry: '',
-    offerings: [],
-    targetCustomers: [],
-    buyerRoles: [],
-    businessModel: null,
-    pricePositioning: null,
-    salesChannels: [],
-    tractionStage: null,
-    teamCapacity: '',
-    differentiators: [],
-    constraintsNotes: '',
-    goals: [],
-    knownCompetitors: [],
-    customerEvidence: '',
-  };
-}
-
 interface FieldError {
   field: string;
   message: string;
-}
-
-/** A stored record, reshaped for the form's controlled inputs. */
-export function toProfileFormValues(record: {
-  name: string;
-  websiteUrl: string | null;
-  description: string | null;
-  homeCountry: string | null;
-  industry: string | null;
-  offerings: string[];
-  targetCustomers: string[];
-  buyerRoles: string[];
-  businessModel: BusinessModel | null;
-  pricePositioning: PricePosition | null;
-  salesChannels: string[];
-  tractionStage: BusinessStatus | null;
-  teamCapacity: string | null;
-  differentiators: string[];
-  constraintsNotes: string | null;
-  goals: string[];
-  knownCompetitors: string[];
-  customerEvidence: string | null;
-}): ProfileFormValues {
-  return {
-    name: record.name,
-    websiteUrl: record.websiteUrl ?? '',
-    description: record.description ?? '',
-    homeCountry: record.homeCountry,
-    industry: record.industry ?? '',
-    offerings: record.offerings,
-    targetCustomers: record.targetCustomers,
-    buyerRoles: record.buyerRoles,
-    businessModel: record.businessModel,
-    pricePositioning: record.pricePositioning,
-    salesChannels: record.salesChannels,
-    tractionStage: record.tractionStage,
-    teamCapacity: record.teamCapacity ?? '',
-    differentiators: record.differentiators,
-    constraintsNotes: record.constraintsNotes ?? '',
-    goals: record.goals,
-    knownCompetitors: record.knownCompetitors,
-    customerEvidence: record.customerEvidence ?? '',
-  };
 }
 
 export function ProfileForm({

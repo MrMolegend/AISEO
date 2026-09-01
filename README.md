@@ -118,6 +118,33 @@ becomes its idempotency key, so re-running a command does not stack credit.
 `WELCOME_TOKEN_GRANT` defaults to `0`. Leave it there in production: an account
 that silently receives spendable credit is a cost leak.
 
+## The workspace around a report
+
+A report is the middle of the product, not the end of it:
+
+- **Business profiles** (`/profiles`) describe what you sell once; every new
+  brief starts prefilled from one. The website field is optional everywhere —
+  when present it is one research seed among many, and a site that cannot be
+  read is a recorded limitation, never a failed report.
+- **Drafts** save server-side as you type, with a visible Saving/Saved state,
+  and survive devices and sessions. Two tabs cannot silently overwrite each
+  other — the stale one is told.
+- **Versions**: a new run for the same profile is a new version, and any two
+  versions compare structurally — verdict, readiness, factors, risks,
+  requirements, plan — computed, not paraphrased.
+- **Scenario Lab** (`/research/<id>/scenarios`): deterministic what-ifs on
+  your own numbers, every figure carrying its formula, presets that never
+  invent a demand range for you.
+- **Actions** (`/actions`): the report's 30/60/90 plan as an editable
+  workspace, imported exactly once however often you press the button.
+- **Evidence** (`/research/<id>/evidence`): every source, filterable by
+  publisher kind, retrieval mode, confidence, section and competitor, with
+  what could not be read listed as limitations.
+- **Sharing** (`/research/<id>/sharing`): reports are private by default.
+  Sharing mints revocable, optionally expiring links; the server keeps only a
+  hash of each token.
+- **Your data** (`/account`): one-file export, typed-phrase deletion.
+
 ## The research, in outline
 
 1. **Four-stage intake** — what you sell, where you want to go, your commercial

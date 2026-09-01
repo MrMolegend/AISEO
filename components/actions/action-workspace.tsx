@@ -91,6 +91,22 @@ export function ActionWorkspace({
 }) {
   const router = useRouter();
   const [actions, setActions] = useState<WorkspaceAction[]>(initialActions);
+
+  /*
+   * Adopt fresh server data when it arrives.
+   *
+   * router.refresh() after an import re-renders the server page with the
+   * imported rows, but useState keeps its mount-time value — the classic way
+   * a refresh changes nothing on screen. The server list is authoritative,
+   * so when the prop identity changes (every server render produces a new
+   * array), it wins. This is React's documented adjust-state-during-render
+   * pattern, not an effect.
+   */
+  const [adopted, setAdopted] = useState(initialActions);
+  if (initialActions !== adopted) {
+    setAdopted(initialActions);
+    setActions(initialActions);
+  }
   const [expanded, setExpanded] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
