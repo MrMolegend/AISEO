@@ -35,7 +35,8 @@ export async function SiteHeader() {
     ? [
         { href: '/dashboard', label: 'Intelligence Desk' },
         { href: '/assess', label: 'Assess a market' },
-        { href: '/methodology', label: 'Methodology' },
+        { href: '/profiles', label: 'Profiles' },
+        { href: '/actions', label: 'Actions' },
       ]
     : [
         { href: '/#how-it-works', label: 'How it works' },

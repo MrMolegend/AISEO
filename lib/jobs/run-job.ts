@@ -285,6 +285,56 @@ export async function runResearchJob(
       );
     }
 
+    /* ── the profile's website, as one optional seed ─────────────────────── */
+
+    /*
+     * When the brief came from a profile that names a website, that page joins
+     * the pool as one more candidate source — labelled as the company's own
+     * site, never as an authority, and registered after the source floor so it
+     * cannot prop up a search phase that found nothing real. Everything that
+     * can go wrong with it — robots refusal, timeout, a site that is a single
+     * image — is the retrieval stage's ordinary best-effort behaviour, which
+     * records a limitation and moves on. A missing or unreadable website can
+     * not fail a report; that is this product's standing promise.
+     */
+    if (job.profileId) {
+      const { getBusinessProfileStore } = await import('@/lib/profiles/store');
+      const profile = await getBusinessProfileStore()
+        .then((profiles) => profiles.getForUser(job.profileId!, job.userId))
+        .catch(() => null);
+
+      if (profile?.websiteUrl) {
+        const registered = registry.register({
+          url: profile.websiteUrl,
+          title: `${input.businessName} — own website`,
+          type: 'search_result',
+          fetched: false,
+        });
+        if (registered && !sources.has(registered.ref)) {
+          sourcesFound += 1;
+          sources.set(registered.ref, {
+            ref: registered.ref,
+            position: registered.position,
+            url: registered.url,
+            title: registered.title,
+            publisher: publisherOf(registered.url),
+            // The customer's own site: company evidence by definition, and the
+            // grade derivation already refuses to let 'company' carry a
+            // regulatory or market-size claim.
+            category: 'company',
+            retrievalMode: 'indexed',
+            retrievedAt: registered.retrievedAt,
+            publishedAt: null,
+            geographicRelevance: 'origin-market',
+            excerpt: null,
+            confidence: 'medium',
+            supports: [],
+            score: 0.6,
+          });
+        }
+      }
+    }
+
     /* ── retrieval: best-effort, never fatal ─────────────────────────────── */
     const shortlist = prioritiseForRetrieval(
       [...sources.values()].map((source) => ({
