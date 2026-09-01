@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { DossierView } from '@/components/dossier/dossier-view';
+import { VersionRail, type VersionEntry } from '@/components/dossier/version-rail';
 import { ProcessingScreen } from '@/components/research/processing-screen';
 import { ReportView } from '@/components/research/report/report-view';
 import { Button } from '@/components/ui/button';
@@ -163,10 +164,35 @@ export default async function ReportPage({
     const parsed = marketEntryReportSchema.safeParse(job.report);
     if (!parsed.success) notFound();
 
+    /*
+     * The version rail: this profile's other runs, owner-only.
+     *
+     * Loaded here rather than inside the dossier so the document component
+     * stays a pure renderer of one report. A report with no profile, or a
+     * profile with one run, renders no rail at all.
+     */
+    let versions: VersionEntry[] = [];
+    let profileName: string | null = null;
+
+    if (isOwner && user && job.profileId) {
+      const { versionsFrom } = await import('@/lib/lineage/versions');
+      const siblings = await store.listForProfile(user.id, job.profileId);
+      versions = versionsFrom(siblings, job.publicId);
+
+      const { getBusinessProfileStore } = await import('@/lib/profiles/store');
+      profileName = await (
+        await getBusinessProfileStore()
+      )
+        .getForUser(job.profileId, user.id)
+        .then((profile) => profile?.name ?? null)
+        .catch(() => null);
+    }
+
     return (
       <>
         <SiteHeader />
         <main id="main">
+          <VersionRail versions={versions} profileName={profileName} />
           <DossierView report={parsed.data} publicId={job.publicId} isOwner={isOwner} />
         </main>
         <SiteFooter />
