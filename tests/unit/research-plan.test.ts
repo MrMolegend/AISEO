@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { SearchBudget } from '@/lib/research/budget';
-import { proposeQueries, planSearches, INVESTIGATION_AREAS } from '@/lib/research/plan';
+import {
+  proposeQueries,
+  planSearches,
+  INVESTIGATION_AREAS,
+  AREA_LABEL,
+} from '@/lib/research/plan';
+import { marketEntryReportSchema } from '@/schemas/market-entry/report';
 import { classifySource, geographicRelevanceOf } from '@/lib/research/classify';
 import { SEARCH_BUDGET } from '@/config/report';
 import { marketEntryInputSchema } from '@/schemas/market-entry/input';
@@ -296,5 +302,26 @@ describe('choosing which sources to spend the retrieval budget on', () => {
       prioritiseForRetrieval(candidates, 3).join('|'),
     );
     expect(new Set(runs).size).toBe(1);
+  });
+});
+
+describe('coverage caps track the area vocabulary', () => {
+  it('the report schema can hold every investigation area', () => {
+    // Twelve areas exist; a coverage list capped below that turns a
+    // wide-plan report into one that fails its own schema at read time.
+    const coverage = marketEntryReportSchema.shape.coverage;
+    const full = coverage.safeParse({
+      sourcesFound: 1,
+      sourcesAccepted: 1,
+      sourcesRejected: 0,
+      directlyRetrieved: 0,
+      fromIndexOnly: 1,
+      authoritative: 0,
+      distinctPublishers: 1,
+      blocked: [],
+      areasCovered: INVESTIGATION_AREAS.map((area) => AREA_LABEL[area]),
+      areasThin: [],
+    });
+    expect(full.success).toBe(true);
   });
 });

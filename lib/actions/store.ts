@@ -19,14 +19,22 @@ import { getEnv, hasSupabase } from '@/lib/env';
  * Retrying a half-failed import completes it; it cannot double it.
  */
 
-export const ACTION_PHASES = ['days-1-30', 'days-31-60', 'days-61-90', 'later'] as const;
-export type ActionPhase = (typeof ACTION_PHASES)[number];
-
-export const ACTION_STATUSES = ['todo', 'in-progress', 'done', 'deferred'] as const;
-export type ActionStatus = (typeof ACTION_STATUSES)[number];
-
-export const ACTION_PRIORITIES = ['critical', 'high', 'normal'] as const;
-export type ActionPriority = (typeof ACTION_PRIORITIES)[number];
+export {
+  ACTION_PHASES,
+  ACTION_STATUSES,
+  ACTION_PRIORITIES,
+  type ActionPhase,
+  type ActionStatus,
+  type ActionPriority,
+} from '@/schemas/action-item';
+import {
+  ACTION_PHASES,
+  ACTION_STATUSES,
+  ACTION_PRIORITIES,
+  type ActionPhase,
+  type ActionStatus,
+  type ActionPriority,
+} from '@/schemas/action-item';
 
 /** A pointer from an action back to what justified it. */
 export interface ActionEvidenceLink {
