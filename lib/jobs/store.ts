@@ -145,6 +145,11 @@ export interface ResearchJobStore {
    * pulsed) is older than the cutoff. The repair path acts on these.
    */
   listStale(cutoffIso: string, limit?: number): Promise<ResearchJobRecord[]>;
+  /**
+   * Recent jobs across every user. The admin console's read and nothing
+   * else's; every caller must have passed requireAdmin() first.
+   */
+  listRecentAll(limit?: number): Promise<ResearchJobRecord[]>;
 }
 
 export function newPublicId(): string {
@@ -511,6 +516,21 @@ export class SupabaseResearchJobStore implements ResearchJobStore {
     }
     return (data ?? []).map((row) => rowToRecord(row as JobRow, []));
   }
+
+  async listRecentAll(limit = 50): Promise<ResearchJobRecord[]> {
+    const { data, error } = await this.client
+      .from('research_jobs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(Math.min(limit, 100));
+
+    if (error) {
+      throw new PlatformError('STORAGE_ERROR', 'Could not list jobs', {
+        cause: error,
+      });
+    }
+    return (data ?? []).map((row) => rowToRecord(row as JobRow, []));
+  }
 }
 
 /* ─────────────────────────── In-memory driver ─────────────────────────────── */
@@ -681,6 +701,12 @@ export class MemoryResearchJobStore implements ResearchJobStore {
       })
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
       .slice(0, Math.min(limit, 50));
+  }
+
+  async listRecentAll(limit = 50): Promise<ResearchJobRecord[]> {
+    return [...memory().jobs.values()]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, Math.min(limit, 100));
   }
 }
 

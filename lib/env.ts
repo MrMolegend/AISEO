@@ -60,6 +60,12 @@ const serverEnvSchema = z.object({
   RESEARCH_DAILY_GLOBAL_CAP: z.coerce.number().int().positive().default(200),
   /** How long a completed report satisfies an identical request, in hours. */
   RESEARCH_CACHE_TTL_HOURS: z.coerce.number().int().positive().default(24),
+  /**
+   * Minutes without a stage-transition heartbeat before a running job counts
+   * as stalled and eligible for repair (fail + idempotent refund). Well above
+   * the longest legitimate gap between stages.
+   */
+  JOB_STALL_MINUTES: z.coerce.number().int().min(5).default(15),
 
   // ── Tokens ──────────────────────────────────────────────────────────────
   /**

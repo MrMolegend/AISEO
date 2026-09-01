@@ -6,6 +6,7 @@ import { SiteFooter } from '@/components/layout/site-footer';
 import { DossierView } from '@/components/dossier/dossier-view';
 import { VersionRail, type VersionEntry } from '@/components/dossier/version-rail';
 import { OwnerToolbar } from '@/components/dossier/owner-toolbar';
+import { FeedbackControl } from '@/components/dossier/feedback-control';
 import { ProcessingScreen } from '@/components/research/processing-screen';
 import { ReportView } from '@/components/research/report/report-view';
 import { Button } from '@/components/ui/button';
@@ -155,6 +156,23 @@ export default async function ReportPage({
     // one into someone's account activity.
     if (!isOwner) notFound();
 
+    /*
+     * Repair on sight.
+     *
+     * A run whose heartbeat is older than the stall threshold is dead — the
+     * process running it is gone, and polling it forever is the worst thing
+     * this page could show. The owner opening their own stalled job is the
+     * natural repair trigger: settle it as failed with the refundable
+     * JOB_STALLED code (the ledger's idempotent refund makes double repair
+     * harmless) and re-read, so what renders is the honest failure page with
+     * the credit confirmation on it.
+     */
+    const { isStalled, repairStalledJob } = await import('@/lib/jobs/recovery');
+    if (isStalled(job)) {
+      await repairStalledJob(job);
+      redirect(`/research/${job.publicId}`);
+    }
+
     return (
       <>
         <SiteHeader />
@@ -200,6 +218,13 @@ export default async function ReportPage({
         .catch(() => null);
     }
 
+    const { getReportFeedbackStore } = await import('@/lib/feedback/store');
+    const feedback = await (
+      await getReportFeedbackStore()
+    )
+      .getForUser(user.id, job.id)
+      .catch(() => null);
+
     return (
       <>
         <SiteHeader />
@@ -207,6 +232,20 @@ export default async function ReportPage({
           {isOwner && <OwnerToolbar publicId={job.publicId} active="" />}
           <VersionRail versions={versions} profileName={profileName} />
           <DossierView report={parsed.data} publicId={job.publicId} isOwner={isOwner} />
+          <div className="mx-auto max-w-[var(--container-page)] px-5 pb-12 md:px-8">
+            <FeedbackControl
+              publicId={job.publicId}
+              initial={
+                feedback
+                  ? {
+                      useful: feedback.useful,
+                      category: feedback.category,
+                      comment: feedback.comment,
+                    }
+                  : null
+              }
+            />
+          </div>
         </main>
         <SiteFooter />
       </>
