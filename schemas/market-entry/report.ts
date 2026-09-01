@@ -408,9 +408,17 @@ export const coverageSchema = z.object({
   authoritative: z.number().int().min(0),
   distinctPublishers: z.number().int().min(0),
   blocked: z.array(blockedSourceSchema).max(30),
-  /** Which of the ten investigation areas produced usable evidence. */
-  areasCovered: z.array(z.string().max(60)).max(10),
-  areasThin: z.array(z.string().max(60)).max(10),
+  /**
+   * Which investigation areas produced usable evidence.
+   *
+   * The cap tracks lib/research/plan.ts's INVESTIGATION_AREAS — twelve, not
+   * the ten this comment once claimed. The mismatch was a live bug: a plan
+   * spanning eleven areas produced a stored report that failed its own
+   * schema at read time, and the page answered 404 for a report that
+   * existed. tests/unit/research-plan.test.ts pins the two counts together.
+   */
+  areasCovered: z.array(z.string().max(60)).max(12),
+  areasThin: z.array(z.string().max(60)).max(12),
 });
 
 /**
