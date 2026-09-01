@@ -4,6 +4,16 @@
  * Regenerate after any migration:
  *   npx supabase gen types typescript --project-id <ref> > supabase/database.types.ts
  *
+ * EXCEPT, currently, for the product-depth tables added by migrations
+ * 0011–0016 (business_profiles, research_drafts, report_scenarios,
+ * report_feedback, action_items, share_links, share_events, and the
+ * profile_id / attempt_count / heartbeat_at columns on research_jobs). Those
+ * migrations have deliberately not been applied to the live project yet —
+ * applying schema for unmerged code puts the database ahead of the
+ * application for no benefit — so their types below were written by hand from
+ * the migration files. Regenerate this file from the live database
+ * immediately after 0011–0016 are applied, and this note goes with it.
+ *
  * These are wired into lib/storage/supabase-store.ts via createClient<Database>,
  * which is what makes them worth having: a column renamed in a migration but not
  * in the query becomes a typecheck failure rather than a runtime error nobody
@@ -29,6 +39,84 @@ export type Database = {
   }
   public: {
     Tables: {
+      action_items: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          due_date: string | null
+          evidence: Json
+          id: string
+          job_id: string | null
+          notes: string | null
+          owner_label: string | null
+          phase: string
+          priority: string
+          profile_id: string | null
+          rationale: string | null
+          sort_order: number
+          source_action_id: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          evidence?: Json
+          id?: string
+          job_id?: string | null
+          notes?: string | null
+          owner_label?: string | null
+          phase?: string
+          priority?: string
+          profile_id?: string | null
+          rationale?: string | null
+          sort_order?: number
+          source_action_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          evidence?: Json
+          id?: string
+          job_id?: string | null
+          notes?: string | null
+          owner_label?: string | null
+          phase?: string
+          priority?: string
+          profile_id?: string | null
+          rationale?: string | null
+          sort_order?: number
+          source_action_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_items_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "research_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "action_items_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_events: {
         Row: {
           audit_id: string
@@ -130,6 +218,84 @@ export type Database = {
         }
         Relationships: []
       }
+      business_profiles: {
+        Row: {
+          archived_at: string | null
+          business_model: string | null
+          buyer_roles: string[]
+          constraints_notes: string | null
+          created_at: string
+          customer_evidence: string | null
+          description: string | null
+          differentiators: string[]
+          goals: string[]
+          home_country: string | null
+          id: string
+          industry: string | null
+          known_competitors: string[]
+          name: string
+          offerings: string[]
+          price_positioning: string | null
+          sales_channels: string[]
+          target_customers: string[]
+          team_capacity: string | null
+          traction_stage: string | null
+          updated_at: string
+          user_id: string
+          website_url: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          business_model?: string | null
+          buyer_roles?: string[]
+          constraints_notes?: string | null
+          created_at?: string
+          customer_evidence?: string | null
+          description?: string | null
+          differentiators?: string[]
+          goals?: string[]
+          home_country?: string | null
+          id?: string
+          industry?: string | null
+          known_competitors?: string[]
+          name: string
+          offerings?: string[]
+          price_positioning?: string | null
+          sales_channels?: string[]
+          target_customers?: string[]
+          team_capacity?: string | null
+          traction_stage?: string | null
+          updated_at?: string
+          user_id: string
+          website_url?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          business_model?: string | null
+          buyer_roles?: string[]
+          constraints_notes?: string | null
+          created_at?: string
+          customer_evidence?: string | null
+          description?: string | null
+          differentiators?: string[]
+          goals?: string[]
+          home_country?: string | null
+          id?: string
+          industry?: string | null
+          known_competitors?: string[]
+          name?: string
+          offerings?: string[]
+          price_positioning?: string | null
+          sales_channels?: string[]
+          target_customers?: string[]
+          team_capacity?: string | null
+          traction_stage?: string | null
+          updated_at?: string
+          user_id?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           audit_id: string | null
@@ -174,16 +340,149 @@ export type Database = {
           },
         ]
       }
+      report_feedback: {
+        Row: {
+          category: string | null
+          comment: string | null
+          created_at: string
+          job_id: string
+          updated_at: string
+          useful: boolean
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          comment?: string | null
+          created_at?: string
+          job_id: string
+          updated_at?: string
+          useful: boolean
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          comment?: string | null
+          created_at?: string
+          job_id?: string
+          updated_at?: string
+          useful?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_feedback_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "research_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_scenarios: {
+        Row: {
+          assumptions: Json
+          created_at: string
+          id: string
+          job_id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assumptions?: Json
+          created_at?: string
+          id?: string
+          job_id: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assumptions?: Json
+          created_at?: string
+          id?: string
+          job_id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_scenarios_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "research_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      research_drafts: {
+        Row: {
+          autosaved_at: string
+          created_at: string
+          id: string
+          payload: Json
+          profile_id: string | null
+          revision: number
+          status: string
+          submitted_job_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          autosaved_at?: string
+          created_at?: string
+          id?: string
+          payload?: Json
+          profile_id?: string | null
+          revision?: number
+          status?: string
+          submitted_job_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          autosaved_at?: string
+          created_at?: string
+          id?: string
+          payload?: Json
+          profile_id?: string | null
+          revision?: number
+          status?: string
+          submitted_job_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "research_drafts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "research_drafts_submitted_job_id_fkey"
+            columns: ["submitted_job_id"]
+            isOneToOne: false
+            referencedRelation: "research_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       research_jobs: {
         Row: {
+          attempt_count: number
           cached_from_job_id: string | null
           completed_at: string | null
           created_at: string
           error_code: string | null
+          heartbeat_at: string | null
           id: string
           input: Json
           input_hash: string
           package_id: string
+          profile_id: string | null
           public_id: string
           result: Json | null
           schema_version: number | null
@@ -197,14 +496,17 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attempt_count?: number
           cached_from_job_id?: string | null
           completed_at?: string | null
           created_at?: string
           error_code?: string | null
+          heartbeat_at?: string | null
           id?: string
           input: Json
           input_hash: string
           package_id: string
+          profile_id?: string | null
           public_id: string
           result?: Json | null
           schema_version?: number | null
@@ -218,14 +520,17 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attempt_count?: number
           cached_from_job_id?: string | null
           completed_at?: string | null
           created_at?: string
           error_code?: string | null
+          heartbeat_at?: string | null
           id?: string
           input?: Json
           input_hash?: string
           package_id?: string
+          profile_id?: string | null
           public_id?: string
           result?: Json | null
           schema_version?: number | null
@@ -244,6 +549,13 @@ export type Database = {
             columns: ["cached_from_job_id"]
             isOneToOne: false
             referencedRelation: "research_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "research_jobs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -306,6 +618,88 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "research_sources_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "research_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      share_events: {
+        Row: {
+          created_at: string
+          event: string
+          id: number
+          ip_hash: string | null
+          share_id: string
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: number
+          ip_hash?: string | null
+          share_id: string
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: number
+          ip_hash?: string | null
+          share_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_events_share_id_fkey"
+            columns: ["share_id"]
+            isOneToOne: false
+            referencedRelation: "share_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      share_links: {
+        Row: {
+          allow_download: boolean
+          created_at: string
+          expires_at: string | null
+          id: string
+          job_id: string
+          label: string | null
+          last_used_at: string | null
+          revoked_at: string | null
+          token_hash: string
+          use_count: number
+          user_id: string
+        }
+        Insert: {
+          allow_download?: boolean
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          job_id: string
+          label?: string | null
+          last_used_at?: string | null
+          revoked_at?: string | null
+          token_hash: string
+          use_count?: number
+          user_id: string
+        }
+        Update: {
+          allow_download?: boolean
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          job_id?: string
+          label?: string | null
+          last_used_at?: string | null
+          revoked_at?: string | null
+          token_hash?: string
+          use_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_links_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "research_jobs"
