@@ -571,6 +571,19 @@ export async function runResearchJob(
       },
     };
 
+    /*
+     * supports declares itself "computed, not declared" — this is the
+     * computation, previously missing: each source records which sections
+     * cite it, inverted from the claims' own refs.
+     */
+    {
+      const { buildEvidenceIndex } = await import('@/lib/market-entry/evidence-index');
+      const index = buildEvidenceIndex(stored);
+      for (const source of stored.sources) {
+        source.supports = (index.supports.get(source.ref) ?? []).slice(0, 24);
+      }
+    }
+
     await store.complete({
       jobId: job.id,
       report: stored,
