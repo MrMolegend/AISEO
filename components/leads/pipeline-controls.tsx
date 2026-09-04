@@ -94,7 +94,9 @@ export function PipelineControls({
         >
           Pipeline stage
         </label>
-        <div className="flex items-center gap-2">
+        {/* Wraps: on a phone the note input takes its own line instead of
+            overflowing the row and sitting over the Move button. */}
+        <div className="flex flex-wrap items-center gap-2">
           <select
             id="pipeline-stage"
             value={stage}
@@ -113,7 +115,7 @@ export function PipelineControls({
             onChange={(event) => setNote(event.target.value)}
             maxLength={1000}
             placeholder="Why (kept in history)"
-            className="border-rule-strong bg-ground-raised text-text w-52 border px-3 py-2 text-[13px]"
+            className="border-rule-strong bg-ground-raised text-text w-52 max-w-full border px-3 py-2 text-[13px]"
           />
           <Button
             variant="secondary"
@@ -134,7 +136,7 @@ export function PipelineControls({
           >
             Playbook
           </label>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <select
               id="playbook-key"
               value={playbookKey}
