@@ -820,6 +820,87 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_connections: {
+        Row: {
+          display_name: string | null
+          email: string | null
+          external_id: string | null
+          granted_scopes: string[]
+          linked_at: string
+          provider: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          display_name?: string | null
+          email?: string | null
+          external_id?: string | null
+          granted_scopes?: string[]
+          linked_at?: string
+          provider: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          display_name?: string | null
+          email?: string | null
+          external_id?: string | null
+          granted_scopes?: string[]
+          linked_at?: string
+          provider?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      relationships: {
+        Row: {
+          confidence: string
+          confirmed_at: string | null
+          confirmed_by: string | null
+          contact_id: string
+          created_at: string
+          employee_id: string
+          expires_on: string | null
+          id: string
+          note: string | null
+          provenance: string
+          state: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          confidence?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          contact_id: string
+          created_at?: string
+          employee_id: string
+          expires_on?: string | null
+          id?: string
+          note?: string | null
+          provenance?: string
+          state: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          confidence?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          contact_id?: string
+          created_at?: string
+          employee_id?: string
+          expires_on?: string | null
+          id?: string
+          note?: string | null
+          provenance?: string
+          state?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
       report_feedback: {
         Row: {
           category: string | null

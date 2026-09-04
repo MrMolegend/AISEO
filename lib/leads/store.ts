@@ -132,6 +132,7 @@ export interface LeadStore {
 
   addContact(contact: NewLeadContact): Promise<LeadContactRecord>;
   listContacts(accountId: string): Promise<LeadContactRecord[]>;
+  getContact(id: string): Promise<LeadContactRecord | null>;
   countContacts(accountId: string): Promise<number>;
 
   merge(
@@ -449,6 +450,20 @@ export class SupabaseLeadStore implements LeadStore {
     return (data ?? []).map((row) => contactRowToRecord(row as ContactRow));
   }
 
+  async getContact(id: string): Promise<LeadContactRecord | null> {
+    const { data, error } = await this.client
+      .from('lead_contacts')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle<ContactRow>();
+    if (error) {
+      throw new PlatformError('STORAGE_ERROR', 'Could not read the contact', {
+        cause: error,
+      });
+    }
+    return data ? contactRowToRecord(data) : null;
+  }
+
   async countContacts(accountId: string): Promise<number> {
     const { count, error } = await this.client
       .from('lead_contacts')
@@ -682,6 +697,14 @@ export class MemoryLeadStore implements LeadStore {
 
   async listContacts(accountId: string): Promise<LeadContactRecord[]> {
     return [...(memory().contacts.get(accountId) ?? [])];
+  }
+
+  async getContact(id: string): Promise<LeadContactRecord | null> {
+    for (const list of memory().contacts.values()) {
+      const found = list.find((contact) => contact.id === id);
+      if (found) return found;
+    }
+    return null;
   }
 
   async countContacts(accountId: string): Promise<number> {

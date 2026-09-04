@@ -5,6 +5,9 @@ import { WorkspaceShell } from '@/components/layout/workspace-shell';
 import { Panel, Rule, Meta } from '@/components/ui/panel';
 import { AccountActions } from '@/components/leads/account-actions';
 import { MergePanel } from '@/components/leads/merge-panel';
+import { RelationshipConfirm } from '@/components/leads/relationship-confirm';
+import { getRelationshipStore } from '@/lib/relationships/store';
+import { warmPathSentence } from '@/schemas/relationship';
 import { pageTitle } from '@/config/brand';
 import { requireWorkspacePage } from '@/lib/auth/workspace';
 import { getLeadStore, type LeadClaimRecord } from '@/lib/leads/store';
@@ -77,6 +80,16 @@ export default async function AccountPage({
   ]);
   const territoryName = new Map(territories.map((t) => [t.key, t.name]));
   const memberName = new Map(members.map((m) => [m.userId, m.displayName]));
+
+  const relationshipStore = await getRelationshipStore();
+  const edgesByContact = new Map(
+    await Promise.all(
+      contacts.map(
+        async (contact) =>
+          [contact.id, await relationshipStore.forContact(contact.id)] as const,
+      ),
+    ),
+  );
 
   const identity = claims.filter((claim) => claim.kind === 'identity');
   const fit = claims.filter((claim) => claim.kind === 'fit');
@@ -195,6 +208,29 @@ export default async function AccountPage({
                   </span>
                 )}
               </div>
+              {canWork && (
+                <RelationshipConfirm
+                  contactId={contact.id}
+                  ownState={
+                    edgesByContact
+                      .get(contact.id)
+                      ?.find((edge) => edge.employeeId === membership.user.id)?.state ??
+                    null
+                  }
+                  sentences={(edgesByContact.get(contact.id) ?? [])
+                    .filter(
+                      (edge) =>
+                        edge.visibility === 'workspace' &&
+                        edge.state !== 'rejected_or_stale',
+                    )
+                    .map((edge) =>
+                      warmPathSentence(
+                        edge.state,
+                        memberName.get(edge.employeeId) ?? 'a colleague',
+                      ),
+                    )}
+                />
+              )}
             </li>
           ))}
         </ul>
