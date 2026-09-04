@@ -6,7 +6,10 @@ import { Panel, Rule, Meta } from '@/components/ui/panel';
 import { AccountActions } from '@/components/leads/account-actions';
 import { MergePanel } from '@/components/leads/merge-panel';
 import { RelationshipConfirm } from '@/components/leads/relationship-confirm';
+import { ScorePanel } from '@/components/leads/score-panel';
 import { getRelationshipStore } from '@/lib/relationships/store';
+import { getScoreStore } from '@/lib/scoring/store';
+import { matchBrands } from '@/lib/scoring/matching';
 import { warmPathSentence } from '@/schemas/relationship';
 import { pageTitle } from '@/config/brand';
 import { requireWorkspacePage } from '@/lib/auth/workspace';
@@ -80,6 +83,10 @@ export default async function AccountPage({
   ]);
   const territoryName = new Map(territories.map((t) => [t.key, t.name]));
   const memberName = new Map(members.map((m) => [m.userId, m.displayName]));
+
+  const scoreStore = await getScoreStore();
+  const [score, brands] = await Promise.all([scoreStore.get(id), config.listBrands()]);
+  const matches = brands.length > 0 ? matchBrands(account, claims, brands) : [];
 
   const relationshipStore = await getRelationshipStore();
   const edgesByContact = new Map(
@@ -163,6 +170,30 @@ export default async function AccountPage({
             {account.fitRationale}
           </p>
         </Panel>
+      )}
+
+      {canWork && (
+        <ScorePanel
+          accountId={account.id}
+          canOverride={['super_admin', 'sales_manager'].includes(membership.member.role)}
+          score={
+            score
+              ? {
+                  total: score.total,
+                  components: score.components,
+                  computedAt: score.computedAt,
+                  overrideTotal: score.overrideTotal,
+                  overrideReason: score.overrideReason,
+                }
+              : null
+          }
+          matches={matches.map((match) => ({
+            brandId: match.brandId,
+            brandName: match.brandName,
+            verdict: match.verdict,
+            explanation: match.explanation,
+          }))}
+        />
       )}
 
       <Rule label="Decision-makers" className="mt-12" />

@@ -120,6 +120,42 @@ export type Database = {
           },
         ]
       }
+      account_scores: {
+        Row: {
+          account_id: string
+          components: Json
+          computed_at: string
+          overridden_at: string | null
+          overridden_by: string | null
+          override_reason: string | null
+          override_total: number | null
+          total: number
+          weights_used: Json
+        }
+        Insert: {
+          account_id: string
+          components?: Json
+          computed_at?: string
+          overridden_at?: string | null
+          overridden_by?: string | null
+          override_reason?: string | null
+          override_total?: number | null
+          total: number
+          weights_used?: Json
+        }
+        Update: {
+          account_id?: string
+          components?: Json
+          computed_at?: string
+          overridden_at?: string | null
+          overridden_by?: string | null
+          override_reason?: string | null
+          override_total?: number | null
+          total?: number
+          weights_used?: Json
+        }
+        Relationships: []
+      }
       account_merges: {
         Row: {
           created_at: string
