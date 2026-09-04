@@ -120,6 +120,99 @@ export type Database = {
           },
         ]
       }
+      alt_brands: {
+        Row: {
+          active: boolean
+          categories: string[]
+          created_at: string
+          created_by: string | null
+          exclusivity_notes: string | null
+          id: string
+          name: string
+          positioning: string | null
+          recorded_on: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          categories?: string[]
+          created_at?: string
+          created_by?: string | null
+          exclusivity_notes?: string | null
+          id?: string
+          name: string
+          positioning?: string | null
+          recorded_on?: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          categories?: string[]
+          created_at?: string
+          created_by?: string | null
+          exclusivity_notes?: string | null
+          id?: string
+          name?: string
+          positioning?: string | null
+          recorded_on?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      alt_config: {
+        Row: {
+          key: string
+          source: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          source?: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          source?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+      alt_territories: {
+        Row: {
+          active: boolean
+          created_at: string
+          key: string
+          kind: string
+          name: string
+          parent_key: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          key: string
+          kind: string
+          name: string
+          parent_key?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          key?: string
+          kind?: string
+          name?: string
+          parent_key?: string | null
+        }
+        Relationships: []
+      }
       audit_events: {
         Row: {
           audit_id: string
@@ -296,6 +389,54 @@ export type Database = {
           updated_at?: string
           user_id?: string
           website_url?: string | null
+        }
+        Relationships: []
+      }
+      icps: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          criteria: Json
+          id: string
+          max_accounts: number
+          max_contacts_per_account: number
+          min_evidence_level: string
+          name: string
+          research_budget_units: number
+          segment_keys: string[]
+          territory_keys: string[]
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          id?: string
+          max_accounts?: number
+          max_contacts_per_account?: number
+          min_evidence_level?: string
+          name: string
+          research_budget_units?: number
+          segment_keys?: string[]
+          territory_keys?: string[]
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          id?: string
+          max_accounts?: number
+          max_contacts_per_account?: number
+          min_evidence_level?: string
+          name?: string
+          research_budget_units?: number
+          segment_keys?: string[]
+          territory_keys?: string[]
+          updated_at?: string
         }
         Relationships: []
       }

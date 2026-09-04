@@ -47,8 +47,12 @@ export async function SiteHeader() {
         { href: '/relationships', label: 'Relationships' },
         { href: '/territories', label: 'Territories' },
         { href: '/intelligence', label: 'Intelligence' },
+        { href: '/icps', label: 'Ideal customer profiles' },
         ...(role === 'super_admin' || role === 'sales_manager'
-          ? [{ href: '/team', label: 'Team' }]
+          ? [
+              { href: '/commercial', label: 'Commercial configuration' },
+              { href: '/team', label: 'Team' },
+            ]
           : []),
         ...(role === 'super_admin' ? [{ href: '/admin', label: 'Admin' }] : []),
       ]

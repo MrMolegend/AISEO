@@ -67,8 +67,8 @@ export default async function CommandCenterPage() {
               step="01"
               title="Confirm the commercial profile"
               body="Territories, segments, the brand catalogue and approved proof points drive discovery and outreach. Facts seeded from the build carry their source and date — review them before the first campaign."
-              href="/admin"
-              cta="Open admin"
+              href="/commercial"
+              cta="Commercial configuration"
             />
           )}
           <StepCard
