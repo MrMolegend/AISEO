@@ -30,11 +30,27 @@ export interface AuthenticatedUser {
   /**
    * The server-issued role claim, from the JWT's app_metadata. app_metadata
    * is writable only through the Auth admin API — never by the user — which
-   * is what makes it usable for authorisation. Anything not exactly 'admin'
-   * is an ordinary customer.
+   * is what makes it carryable at all.
+   *
+   * For the workspace this claim is BOOTSTRAP ONLY: the authoritative role
+   * lives in the team_members table, read per request, so role changes take
+   * effect without waiting out a stale token. lib/auth/membership.ts owns
+   * that resolution; nothing else should authorise on this field. The
+   * recognised values are 'admin' (legacy super_admin bootstrap) and the
+   * ALT role names.
    */
-  role: 'admin' | null;
+  role: string | null;
 }
+
+/** Claim values the parser lets through; everything else reads as null. */
+const KNOWN_ROLE_CLAIMS = new Set([
+  'admin',
+  'super_admin',
+  'sales_manager',
+  'sales_rep',
+  'analyst',
+  'viewer',
+]);
 
 /**
  * A Supabase client bound to this request's cookies.
@@ -116,10 +132,12 @@ export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
     };
     if (typeof claims.sub !== 'string' || claims.sub.length === 0) return null;
 
+    const rawRole = claims.app_metadata?.role;
     return {
       id: claims.sub,
       email: typeof claims.email === 'string' ? claims.email : null,
-      role: claims.app_metadata?.role === 'admin' ? 'admin' : null,
+      role:
+        typeof rawRole === 'string' && KNOWN_ROLE_CLAIMS.has(rawRole) ? rawRole : null,
     };
   } catch {
     // An expired or malformed token is a logged-out user, not an error page.
