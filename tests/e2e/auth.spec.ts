@@ -74,9 +74,22 @@ test.describe('the three header states', () => {
     await signIn(context, baseURL!);
     await page.goto('/dashboard');
 
-    const nav = page.getByRole('navigation', { name: 'Main' });
-    for (const label of ['Command Center', 'Leads', 'Campaigns', 'Pipeline']) {
-      await expect(nav.getByRole('link', { name: label })).toBeVisible();
+    // The primary row lives in the header at lg+; below that the same
+    // links are behind the menu button. Either way, a member can reach
+    // the workspace from anywhere.
+    const viewport = page.viewportSize();
+    if ((viewport?.width ?? 0) >= 1024) {
+      const nav = page.getByRole('navigation', { name: 'Main' });
+      for (const label of ['Command Center', 'Leads', 'Campaigns', 'Pipeline']) {
+        await expect(nav.getByRole('link', { name: label })).toBeVisible();
+      }
+    } else {
+      await page.getByRole('button', { name: 'Open menu' }).click();
+      const siteMenu = page.getByRole('menu', { name: 'Site' });
+      for (const label of ['Command Center', 'Leads', 'Campaigns', 'Pipeline']) {
+        await expect(siteMenu.getByRole('menuitem', { name: label })).toBeVisible();
+      }
+      await page.keyboard.press('Escape');
     }
 
     const account = page.getByRole('button', { name: new RegExp(MEMBER.email) });
