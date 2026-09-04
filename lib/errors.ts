@@ -89,6 +89,7 @@ export const ERROR_CODES = [
   // failure, so it refunds like one.
   'JOB_STALLED',
   'EXPORT_FAILED',
+  'BUDGET_EXCEEDED',
   'UNKNOWN',
 ] as const;
 
@@ -474,6 +475,13 @@ export const ERROR_COPY: Record<ErrorCode, ErrorCopy> = {
     body: 'Generating the file failed. The report itself is unaffected — try the download again.',
     retryable: true,
     status: 500,
+    refundsTokens: false,
+  },
+  BUDGET_EXCEEDED: {
+    title: 'The research budget will not cover this',
+    body: 'Starting this research would exceed the configured budget cap. Reduce the campaign scope, or ask a manager to raise the cap.',
+    retryable: false,
+    status: 409,
     refundsTokens: false,
   },
   UNKNOWN: {
