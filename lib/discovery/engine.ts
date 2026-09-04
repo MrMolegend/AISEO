@@ -8,6 +8,7 @@ import { getAltConfigStore } from '@/lib/alt/config-store';
 import { buildDiscoveryPlan } from '@/lib/discovery/plan';
 import { candidateFromResult, isPlatformHost } from '@/lib/leads/normalize';
 import { contactFromResult } from '@/lib/discovery/contacts';
+import { recomputeAccountScore } from '@/lib/scoring/service';
 import { PlatformError } from '@/lib/errors';
 import { logger } from '@/lib/observability/logger';
 
@@ -285,6 +286,14 @@ export async function runCampaignDiscovery(runId: string): Promise<void> {
     for (const accountId of workingSet) {
       const verdict = await applyQualityGate(leads, accountId, icp);
       if (verdict === 'qualified') qualified += 1;
+      // The explainable score, from the same rows the gate just read.
+      // Deterministic and free; a failure here is logged, not fatal.
+      await recomputeAccountScore(accountId).catch((error) => {
+        logger.warn('discovery.score_failed', {
+          accountId,
+          error: error instanceof Error ? error.message : 'unknown',
+        });
+      });
     }
     await campaigns.updateRun(runId, { accountsQualified: qualified });
 
