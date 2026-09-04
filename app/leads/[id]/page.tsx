@@ -6,6 +6,7 @@ import { Panel, Rule, Meta } from '@/components/ui/panel';
 import { AccountActions } from '@/components/leads/account-actions';
 import { MergePanel } from '@/components/leads/merge-panel';
 import { RelationshipConfirm } from '@/components/leads/relationship-confirm';
+import { DraftOutreachButton } from '@/components/leads/draft-outreach-button';
 import { ScorePanel } from '@/components/leads/score-panel';
 import { getRelationshipStore } from '@/lib/relationships/store';
 import { getScoreStore } from '@/lib/scoring/store';
@@ -239,6 +240,15 @@ export default async function AccountPage({
                   </span>
                 )}
               </div>
+              {canWork && (
+                <div className="mt-2">
+                  <DraftOutreachButton
+                    accountId={account.id}
+                    contactId={contact.id}
+                    language="en"
+                  />
+                </div>
+              )}
               {canWork && (
                 <RelationshipConfirm
                   contactId={contact.id}

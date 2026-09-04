@@ -856,6 +856,87 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_draft_versions: {
+        Row: {
+          body: string
+          created_at: string
+          draft_id: string
+          edited_by: string | null
+          id: string
+          version: number
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          draft_id: string
+          edited_by?: string | null
+          id?: string
+          version: number
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          draft_id?: string
+          edited_by?: string | null
+          id?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      outreach_drafts: {
+        Row: {
+          account_id: string
+          approved_at: string | null
+          approved_by: string | null
+          body: string
+          channel: string
+          contact_id: string | null
+          created_at: string
+          created_by: string | null
+          evidence_refs: Json
+          id: string
+          language: string
+          last_copied_at: string | null
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          account_id: string
+          approved_at?: string | null
+          approved_by?: string | null
+          body: string
+          channel: string
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          evidence_refs?: Json
+          id?: string
+          language?: string
+          last_copied_at?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          account_id?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          body?: string
+          channel?: string
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          evidence_refs?: Json
+          id?: string
+          language?: string
+          last_copied_at?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       provider_connections: {
         Row: {
           display_name: string | null
@@ -1303,6 +1384,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      suppression_entries: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          reason: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          reason?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          reason?: string
+          value?: string
+        }
+        Relationships: []
       }
       team_members: {
         Row: {
