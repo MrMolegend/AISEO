@@ -120,6 +120,36 @@ export type Database = {
           },
         ]
       }
+      account_merges: {
+        Row: {
+          created_at: string
+          id: string
+          loser_id: string
+          merged_by: string | null
+          reason: string
+          undone_at: string | null
+          winner_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          loser_id: string
+          merged_by?: string | null
+          reason?: string
+          undone_at?: string | null
+          winner_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          loser_id?: string
+          merged_by?: string | null
+          reason?: string
+          undone_at?: string | null
+          winner_id?: string
+        }
+        Relationships: []
+      }
       alt_brands: {
         Row: {
           active: boolean
@@ -392,6 +422,123 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_runs: {
+        Row: {
+          accounts_found: number
+          accounts_qualified: number
+          attempt_count: number
+          campaign_id: string
+          checkpoint: Json
+          contacts_found: number
+          created_at: string
+          error_code: string | null
+          finished_at: string | null
+          heartbeat_at: string | null
+          id: string
+          stage: string
+          started_by: string | null
+          status: string
+          units_budget: number
+          units_spent: number
+          updated_at: string
+        }
+        Insert: {
+          accounts_found?: number
+          accounts_qualified?: number
+          attempt_count?: number
+          campaign_id: string
+          checkpoint?: Json
+          contacts_found?: number
+          created_at?: string
+          error_code?: string | null
+          finished_at?: string | null
+          heartbeat_at?: string | null
+          id?: string
+          stage?: string
+          started_by?: string | null
+          status?: string
+          units_budget?: number
+          units_spent?: number
+          updated_at?: string
+        }
+        Update: {
+          accounts_found?: number
+          accounts_qualified?: number
+          attempt_count?: number
+          campaign_id?: string
+          checkpoint?: Json
+          contacts_found?: number
+          created_at?: string
+          error_code?: string | null
+          finished_at?: string | null
+          heartbeat_at?: string | null
+          id?: string
+          stage?: string
+          started_by?: string | null
+          status?: string
+          units_budget?: number
+          units_spent?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      campaigns: {
+        Row: {
+          budget_units: number
+          created_at: string
+          created_by: string | null
+          finished_at: string | null
+          icp_id: string | null
+          id: string
+          language: string
+          max_accounts: number
+          max_contacts_per_account: number
+          name: string
+          objective: string
+          owner_id: string | null
+          started_at: string | null
+          status: string
+          territory_keys: string[]
+          updated_at: string
+        }
+        Insert: {
+          budget_units?: number
+          created_at?: string
+          created_by?: string | null
+          finished_at?: string | null
+          icp_id?: string | null
+          id?: string
+          language?: string
+          max_accounts?: number
+          max_contacts_per_account?: number
+          name: string
+          objective?: string
+          owner_id?: string | null
+          started_at?: string | null
+          status?: string
+          territory_keys?: string[]
+          updated_at?: string
+        }
+        Update: {
+          budget_units?: number
+          created_at?: string
+          created_by?: string | null
+          finished_at?: string | null
+          icp_id?: string | null
+          id?: string
+          language?: string
+          max_accounts?: number
+          max_contacts_per_account?: number
+          name?: string
+          objective?: string
+          owner_id?: string | null
+          started_at?: string | null
+          status?: string
+          territory_keys?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       icps: {
         Row: {
           archived_at: string | null
@@ -436,6 +583,165 @@ export type Database = {
           research_budget_units?: number
           segment_keys?: string[]
           territory_keys?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lead_accounts: {
+        Row: {
+          campaign_id: string | null
+          canonical_name: string
+          city: string | null
+          created_at: string
+          discovered_at: string
+          domain: string | null
+          fit_rationale: string | null
+          icp_id: string | null
+          id: string
+          merged_into: string | null
+          normalized_name: string
+          owner_id: string | null
+          segment_key: string | null
+          status: string
+          summary: string | null
+          territory_key: string | null
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          canonical_name: string
+          city?: string | null
+          created_at?: string
+          discovered_at?: string
+          domain?: string | null
+          fit_rationale?: string | null
+          icp_id?: string | null
+          id?: string
+          merged_into?: string | null
+          normalized_name: string
+          owner_id?: string | null
+          segment_key?: string | null
+          status?: string
+          summary?: string | null
+          territory_key?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          campaign_id?: string | null
+          canonical_name?: string
+          city?: string | null
+          created_at?: string
+          discovered_at?: string
+          domain?: string | null
+          fit_rationale?: string | null
+          icp_id?: string | null
+          id?: string
+          merged_into?: string | null
+          normalized_name?: string
+          owner_id?: string | null
+          segment_key?: string | null
+          status?: string
+          summary?: string | null
+          territory_key?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      lead_claims: {
+        Row: {
+          account_id: string
+          confidence: string
+          content_date: string | null
+          created_at: string
+          id: string
+          kind: string
+          retrieval_mode: string
+          retrieved_at: string
+          source_category: string
+          source_title: string | null
+          source_url: string
+          text: string
+        }
+        Insert: {
+          account_id: string
+          confidence?: string
+          content_date?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          retrieval_mode?: string
+          retrieved_at?: string
+          source_category?: string
+          source_title?: string | null
+          source_url: string
+          text: string
+        }
+        Update: {
+          account_id?: string
+          confidence?: string
+          content_date?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          retrieval_mode?: string
+          retrieved_at?: string
+          source_category?: string
+          source_title?: string | null
+          source_url?: string
+          text?: string
+        }
+        Relationships: []
+      }
+      lead_contacts: {
+        Row: {
+          account_id: string
+          company_bio_url: string | null
+          contact_channel: string | null
+          created_at: string
+          employment_confidence: string
+          full_name: string
+          id: string
+          last_verified_on: string | null
+          profile_url: string | null
+          role_relevance: string | null
+          role_title: string | null
+          source_category: string
+          source_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          company_bio_url?: string | null
+          contact_channel?: string | null
+          created_at?: string
+          employment_confidence?: string
+          full_name: string
+          id?: string
+          last_verified_on?: string | null
+          profile_url?: string | null
+          role_relevance?: string | null
+          role_title?: string | null
+          source_category?: string
+          source_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          company_bio_url?: string | null
+          contact_channel?: string | null
+          created_at?: string
+          employment_confidence?: string
+          full_name?: string
+          id?: string
+          last_verified_on?: string | null
+          profile_url?: string | null
+          role_relevance?: string | null
+          role_title?: string | null
+          source_category?: string
+          source_url?: string | null
           updated_at?: string
         }
         Relationships: []
