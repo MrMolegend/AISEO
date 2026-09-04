@@ -7,12 +7,15 @@
  * EXCEPT, currently, for the product-depth tables added by migrations
  * 0011–0016 (business_profiles, research_drafts, report_scenarios,
  * report_feedback, action_items, share_links, share_events, and the
- * profile_id / attempt_count / heartbeat_at columns on research_jobs). Those
- * migrations have deliberately not been applied to the live project yet —
- * applying schema for unmerged code puts the database ahead of the
- * application for no benefit — so their types below were written by hand from
- * the migration files. Regenerate this file from the live database
- * immediately after 0011–0016 are applied, and this note goes with it.
+ * profile_id / attempt_count / heartbeat_at columns on research_jobs) and
+ * the ALT SIGNAL tables added by migrations 0017 onwards (team_members,
+ * ops_audit_events, and the rest of the ALT SIGNAL schema — see each
+ * migration's header). Those migrations have deliberately not been applied
+ * to the live project yet — applying schema for unmerged code puts the
+ * database ahead of the application for no benefit — so their types below
+ * were written by hand from the migration files. Regenerate this file from
+ * the live database immediately after they are applied, and this note goes
+ * with it.
  *
  * These are wired into lib/storage/supabase-store.ts via createClient<Database>,
  * which is what makes them worth having: a column renamed in a migration but not
@@ -339,6 +342,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ops_audit_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_kind: string
+          id: number
+          metadata: Json
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_kind: string
+          id?: never
+          metadata?: Json
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_kind?: string
+          id?: never
+          metadata?: Json
+        }
+        Relationships: []
       }
       report_feedback: {
         Row: {
@@ -706,6 +739,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      team_members: {
+        Row: {
+          created_at: string
+          display_name: string
+          invited_by: string | null
+          role: string
+          status: string
+          territories: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          invited_by?: string | null
+          role: string
+          status?: string
+          territories?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          invited_by?: string | null
+          role?: string
+          status?: string
+          territories?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       token_ledger: {
         Row: {

@@ -34,8 +34,22 @@ export const TEST_SESSION_COOKIE = 'e2e-test-session';
 export interface TestSession {
   id: string;
   email: string | null;
-  role?: 'admin';
+  /**
+   * Optional role knob for browser tests: 'admin' (legacy super_admin
+   * bootstrap) or any ALT role name. Flows through the same bootstrap path
+   * as the real app_metadata claim — see lib/auth/membership.ts.
+   */
+  role?: 'admin' | 'super_admin' | 'sales_manager' | 'sales_rep' | 'analyst' | 'viewer';
 }
+
+const TEST_ROLES = new Set([
+  'admin',
+  'super_admin',
+  'sales_manager',
+  'sales_rep',
+  'analyst',
+  'viewer',
+]);
 
 /** Reads the fake session, or null. Returns null whenever the driver is off. */
 export async function getTestSessionUser(): Promise<AuthenticatedUser | null> {
@@ -74,7 +88,7 @@ export async function getTestSessionUser(): Promise<AuthenticatedUser | null> {
     return {
       id,
       email: typeof email === 'string' ? email : null,
-      role: role === 'admin' ? 'admin' : null,
+      role: typeof role === 'string' && TEST_ROLES.has(role) ? role : null,
     };
   } catch {
     return null;
