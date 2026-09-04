@@ -152,9 +152,14 @@ test.describe('the growth journey', () => {
     await page.getByRole('button', { name: 'Apply as tasks' }).click();
     await expect(page.getByText(/3 already existed/)).toBeVisible();
 
+    // The personal queue is per assignee (an earlier suite pass owns the
+    // playbook tasks), so prove it with a task of our own: added by hand,
+    // assigned to the caller, on the list immediately.
     await page.goto('/tasks');
+    await page.getByLabel(/What needs doing/).fill('Call Pet Oasis about opening stock');
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
     await expect(
-      page.getByText('Send the approved first-touch message').first(),
+      page.getByText('Call Pet Oasis about opening stock').first(),
     ).toBeVisible();
 
     // ── Outreach: drafted, linted, approved by a person, copied by hand ─
@@ -196,6 +201,11 @@ test.describe('the growth journey', () => {
     await expect(page).toHaveURL(/\/brief$/);
     await expect(page.getByText('About Arab Land Trading')).toBeVisible();
     await expect(page.getByText(/build specification, 2026-09-03/).first()).toBeVisible();
+    // The playbook checklist is account-scoped, so the brief carries it
+    // whichever suite pass created it.
+    await expect(
+      page.getByText('Send the approved first-touch message').first(),
+    ).toBeVisible();
   });
 
   test('a watchlist check is bounded, sourced and honest about skips', async ({
