@@ -14,8 +14,16 @@ import { expect, test, type BrowserContext, type Page } from '@playwright/test';
  * "not verified" kept distinct from a gap, and nothing that sends.
  */
 
+/**
+ * A fresh manager per suite run. Lead accounts are workspace-shared and
+ * the fixture world always names the same companies, so when CI runs
+ * both browser projects against one server the second pass meets a world
+ * the first already worked. A fresh identity keeps the person-scoped
+ * flows (attestation, watching) first-time; the account-scoped
+ * assertions below are written to hold on a worked account too.
+ */
 const MANAGER = {
-  id: '33333333-3333-4333-8333-333333333333',
+  id: crypto.randomUUID(),
   email: 'manager@example.com',
   role: 'sales_manager' as const,
 };
@@ -120,15 +128,27 @@ test.describe('the growth journey', () => {
     await expect(page.getByRole('button', { name: 'Recompute' })).toBeVisible();
 
     // ── Pipeline movement, with the note kept ───────────────────────────
-    await page.getByLabel('Pipeline stage').selectOption('contacted');
+    // Move to whichever of two stages the account is not already in, so
+    // the assertion holds even when an earlier suite pass staged it.
+    const stageSelect = page.getByLabel('Pipeline stage');
+    const target =
+      (await stageSelect.inputValue()) === 'contacted' ? 'replied' : 'contacted';
+    await stageSelect.selectOption(target);
     await page.getByLabel('Why this move').fill('First call made from the journey.');
     await page.getByRole('button', { name: 'Move', exact: true }).click();
-    await expect(page.getByText(/Currently:\s*Contacted/)).toBeVisible();
+    await expect(
+      page.getByText(
+        new RegExp(`Currently:\\s*${target === 'contacted' ? 'Contacted' : 'Replied'}`),
+      ),
+    ).toBeVisible();
 
     // ── A playbook becomes tasks, idempotently — never messages ─────────
+    // The fingerprint is per account, so re-applying always converges:
+    // whatever the first press found, the second reports the full
+    // checklist as already existing rather than duplicating it.
     await page.getByLabel('Playbook').selectOption('cold_researched');
     await page.getByRole('button', { name: 'Apply as tasks' }).click();
-    await expect(page.getByText(/3 tasks created/)).toBeVisible();
+    await expect(page.getByText(/tasks? created|already existed/)).toBeVisible();
     await page.getByRole('button', { name: 'Apply as tasks' }).click();
     await expect(page.getByText(/3 already existed/)).toBeVisible();
 
@@ -153,8 +173,14 @@ test.describe('the growth journey', () => {
       .click();
     await expect(page).toHaveURL(/\/outreach\/[0-9a-f-]+$/);
 
-    await page.getByLabel(/I have reviewed this draft/).check();
-    await page.getByRole('button', { name: 'Approve', exact: true }).click();
+    // An earlier suite pass may have approved this draft already; when
+    // the approval controls are present, a person walks them — and either
+    // way the end state is an approved draft that never sends itself.
+    const reviewed = page.getByLabel(/I have reviewed this draft/);
+    if ((await reviewed.count()) > 0) {
+      await reviewed.check();
+      await page.getByRole('button', { name: 'Approve', exact: true }).click();
+    }
     await expect(page.getByText('Approved — nothing sends automatically')).toBeVisible();
     await expect(
       page.getByRole('button', { name: 'Copy to send by hand' }),
