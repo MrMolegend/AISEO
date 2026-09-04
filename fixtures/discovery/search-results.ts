@@ -18,6 +18,53 @@ import type { SearchResult } from '@/lib/research/provider';
  */
 
 export const DISCOVERY_FIXTURE_RESULTS: Record<string, SearchResult[]> = {
+  // Watchlist checks. One result deliberately fails the honesty guard —
+  // it never names the watched subject — so every fixture check exercises
+  // the skip path, not only the happy one.
+  'discovery:signals:pet oasis': [
+    {
+      title: 'Pet Oasis opens third Jumeirah store with grand opening event',
+      url: 'https://gulftradenews.example/retail/pet-oasis-third-store',
+      excerpt:
+        'Pet Oasis celebrated the grand opening of its third Jumeirah location on Saturday, expanding its premium pet supplies footprint in Dubai.',
+      publishedDate: '2026-08-20',
+      score: 0.9,
+    },
+    {
+      title: 'Pet Oasis now stocking new premium cat nutrition range',
+      url: 'https://petoasis.example/news/new-range',
+      excerpt:
+        'Pet Oasis announces a new range of premium cat nutrition products across all stores.',
+      publishedDate: '2026-08-28',
+      score: 0.85,
+    },
+    {
+      title: 'Dubai retail roundup: openings across the emirate this month',
+      url: 'https://gulflifestyle.example/retail-roundup-august',
+      excerpt:
+        'A busy month for Dubai retail with new cafes, salons and boutiques opening across the emirate.',
+      publishedDate: '2026-08-25',
+      score: 0.6,
+    },
+  ],
+  'discovery:signals:independent_pet_retail:AE-DU': [
+    {
+      title: 'New independent pet shop opens in Dubai Marina',
+      url: 'https://dubaiyellowpages.example/news/marina-pet-shop-opens',
+      excerpt:
+        'A new independent pet retailer has opened in Dubai Marina, stocking dog and cat food, accessories and aquatics.',
+      publishedDate: '2026-08-30',
+      score: 0.88,
+    },
+    {
+      title: 'Riyadh grocery chain adds petcare aisle',
+      url: 'https://gulftradenews.example/retail/riyadh-grocery-petcare',
+      excerpt:
+        'A Riyadh supermarket group is trialling dedicated petcare aisles in three stores.',
+      publishedDate: '2026-08-18',
+      score: 0.55,
+    },
+  ],
   'discovery:candidates:independent_pet_retail': [
     {
       title: 'Pet Oasis Trading LLC | Dubai Pet Shops Directory',

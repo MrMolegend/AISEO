@@ -1450,6 +1450,87 @@ export type Database = {
         }
         Relationships: []
       }
+      signals: {
+        Row: {
+          account_id: string | null
+          created_at: string
+          dismissed: boolean
+          excerpt: string | null
+          id: string
+          kind: string
+          source_host: string
+          title: string
+          url: string
+          watchlist_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string
+          dismissed?: boolean
+          excerpt?: string | null
+          id?: string
+          kind: string
+          source_host: string
+          title: string
+          url: string
+          watchlist_id: string
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string
+          dismissed?: boolean
+          excerpt?: string | null
+          id?: string
+          kind?: string
+          source_host?: string
+          title?: string
+          url?: string
+          watchlist_id?: string
+        }
+        Relationships: []
+      }
+      watchlists: {
+        Row: {
+          account_id: string | null
+          active: boolean
+          checks_today: number
+          created_at: string
+          id: string
+          kind: string
+          last_checked_on: string | null
+          name: string
+          owner_id: string
+          segment_key: string | null
+          territory_key: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          active?: boolean
+          checks_today?: number
+          created_at?: string
+          id?: string
+          kind: string
+          last_checked_on?: string | null
+          name: string
+          owner_id: string
+          segment_key?: string | null
+          territory_key?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          active?: boolean
+          checks_today?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          last_checked_on?: string | null
+          name?: string
+          owner_id?: string
+          segment_key?: string | null
+          territory_key?: string | null
+        }
+        Relationships: []
+      }
       share_events: {
         Row: {
           created_at: string

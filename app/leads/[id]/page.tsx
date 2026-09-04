@@ -8,6 +8,7 @@ import { MergePanel } from '@/components/leads/merge-panel';
 import { RelationshipConfirm } from '@/components/leads/relationship-confirm';
 import { DraftOutreachButton } from '@/components/leads/draft-outreach-button';
 import { PipelineControls } from '@/components/leads/pipeline-controls';
+import { WatchAccountButton } from '@/components/leads/watch-account-button';
 import { ActivityLog } from '@/components/leads/activity-log';
 import { getPipelineStore } from '@/lib/pipeline/store';
 import { PIPELINE_STAGE_LABEL, type PipelineStage } from '@/schemas/pipeline';
@@ -174,6 +175,21 @@ export default async function AccountPage({
         selfId={membership.user.id}
         canWork={canWork}
       />
+
+      {canWork && (
+        <div className="mt-4 flex flex-wrap items-center gap-4">
+          <WatchAccountButton
+            accountId={account.id}
+            accountName={account.canonicalName}
+          />
+          <Link
+            href={`/leads/${account.id}/brief`}
+            className="text-text-muted text-[13px] underline-offset-2 hover:underline"
+          >
+            Meeting brief →
+          </Link>
+        </div>
+      )}
 
       {canWork && (
         <PipelineControls

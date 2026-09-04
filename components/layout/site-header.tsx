@@ -47,6 +47,7 @@ export async function SiteHeader() {
   const secondaryLinks = role
     ? [
         { href: '/relationships', label: 'Relationships' },
+        { href: '/watchlists', label: 'Watchlists' },
         { href: '/territories', label: 'Territories' },
         { href: '/intelligence', label: 'Intelligence' },
         { href: '/icps', label: 'Ideal customer profiles' },
