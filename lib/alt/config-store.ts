@@ -10,6 +10,7 @@ import {
   type FactSource,
 } from '@/schemas/alt-config';
 import { ALT_FACTS, GCC_MARKETS, UAE_EMIRATES } from '@/config/alt';
+import { DEFAULT_PLAYBOOKS } from '@/schemas/pipeline';
 import { PlatformError } from '@/lib/errors';
 import { getEnv, hasSupabase } from '@/lib/env';
 import type { z } from 'zod';
@@ -74,6 +75,11 @@ export function defaultConfigValue<K extends ConfigKey>(key: K): ConfigValue<K> 
       return { ...DEFAULT_SCORING_WEIGHTS } as ConfigValue<K>;
     case 'budget_caps':
       return { ...DEFAULT_BUDGET_CAPS } as ConfigValue<K>;
+    case 'playbooks':
+      return DEFAULT_PLAYBOOKS.map((playbook) => ({
+        ...playbook,
+        steps: playbook.steps.map((step) => ({ ...step })),
+      })) as ConfigValue<K>;
     default: {
       const exhausted: never = key;
       throw new PlatformError('INVALID_INPUT', `Unknown config key ${String(exhausted)}`);
