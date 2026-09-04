@@ -33,14 +33,14 @@ const EXECUTABLE =
   process.env.PLAYWRIGHT_CHROMIUM_PATH ??
   '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
 
-/** A workspace member (manager role, so every primary surface renders). */
+/** A workspace member (super_admin, so every surface including /admin renders). */
 const SESSION = {
   name: 'e2e-test-session',
   value: encodeURIComponent(
     JSON.stringify({
       id: '11111111-1111-4111-8111-111111111111',
       email: 'sam@example.com',
-      role: 'sales_manager',
+      role: 'super_admin',
     }),
   ),
   url: BASE,
