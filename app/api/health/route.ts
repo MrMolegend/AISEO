@@ -62,9 +62,29 @@ export async function GET() {
      * field that changes and the health check keeps telling the truth.
      */
     jobs: 'in-process',
+    /**
+     * LinkedIn reports its configured MODE, because for this integration
+     * "disabled" and "openid_only" are healthy steady states chosen on
+     * purpose — the product works fully without LinkedIn, and no partner
+     * capability exists in this build. The only unhealthy shape is a mode
+     * that promises OAuth while its credentials are missing.
+     */
+    linkedin: env.LINKEDIN_MODE,
   } as const;
 
   const problems: string[] = [];
+
+  if (env.LINKEDIN_MODE !== 'disabled') {
+    const configured =
+      Boolean(env.LINKEDIN_CLIENT_ID) &&
+      Boolean(env.LINKEDIN_CLIENT_SECRET) &&
+      Boolean(env.LINKEDIN_REDIRECT_URI);
+    if (!configured) {
+      problems.push(
+        `LINKEDIN_MODE is "${env.LINKEDIN_MODE}" but the LinkedIn credentials are not fully configured`,
+      );
+    }
+  }
 
   if (servesRealCustomers(env)) {
     if (providers.storage !== 'supabase') problems.push('storage is not Supabase');

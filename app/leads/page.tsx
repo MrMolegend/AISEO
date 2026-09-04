@@ -10,6 +10,7 @@ import { getCampaignStore } from '@/lib/campaigns/store';
 import { getAltConfigStore } from '@/lib/alt/config-store';
 import { SEGMENT_LABEL, type SegmentKey } from '@/config/alt';
 import { LEAD_STATUSES, LEAD_STATUS_LABEL, type LeadStatus } from '@/schemas/campaign';
+import { ROLES_WHO_EXPORT } from '@/schemas/team';
 
 export const metadata: Metadata = {
   title: pageTitle('Lead explorer'),
@@ -36,7 +37,7 @@ export default async function LeadsPage({
     page?: string;
   }>;
 }) {
-  await requireWorkspacePage('/leads');
+  const membership = await requireWorkspacePage('/leads');
   const params = await searchParams;
 
   const status =
@@ -66,6 +67,18 @@ export default async function LeadsPage({
   ]);
   const territoryName = new Map(territories.map((t) => [t.key, t.name]));
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const canExport = (ROLES_WHO_EXPORT as readonly string[]).includes(
+    membership.member.role,
+  );
+  const exportHref = (() => {
+    const search = new URLSearchParams();
+    if (params.q) search.set('q', params.q);
+    if (status) search.set('status', status);
+    if (params.territory) search.set('territory', params.territory);
+    const qs = search.toString();
+    return qs ? `/api/leads/export?${qs}` : '/api/leads/export';
+  })();
 
   const queryFor = (nextPage: number) => {
     const search = new URLSearchParams();
@@ -165,6 +178,21 @@ export default async function LeadsPage({
           Filter
         </Button>
       </form>
+
+      {canExport && (
+        <p className="mt-3">
+          <a
+            href={exportHref}
+            className="text-text-muted text-[13px] underline-offset-2 hover:underline"
+          >
+            Export these accounts as CSV
+          </a>
+          <span className="text-text-subtle text-[12px]">
+            {' '}
+            — audited; cell values are neutralised against spreadsheet formulas.
+          </span>
+        </p>
+      )}
 
       <div className="mt-6 flex items-center justify-between">
         <Meta data-numeric role="status">

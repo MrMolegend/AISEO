@@ -11,6 +11,16 @@ import { stallCutoffIso } from '@/lib/jobs/recovery';
 import { getReportFeedbackStore } from '@/lib/feedback/store';
 import { getShareLinkStore } from '@/lib/share/store';
 import { isPlatformError } from '@/lib/errors';
+import Link from 'next/link';
+import { RepairCampaignsButton } from '@/components/admin/repair-campaigns-button';
+import { capabilityReport } from '@/lib/linkedin/provider';
+import { getCampaignStore } from '@/lib/campaigns/store';
+import { runStallCutoffIso } from '@/lib/discovery/start';
+import { getAltConfigStore } from '@/lib/alt/config-store';
+import { getSignalStore } from '@/lib/signals/store';
+import { getTeamStore } from '@/lib/team/store';
+import { getOutreachStore } from '@/lib/outreach/store';
+import { ROLE_LABEL, type AltRole } from '@/schemas/team';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,6 +76,32 @@ export default async function AdminPage() {
 
   const shortId = (value: string) => `${value.slice(0, 8)}…`;
 
+  // ── Lead-intelligence operations ──────────────────────────────────────
+  const startOfTodayUtc = `${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
+  const today = new Date().toISOString().slice(0, 10);
+  const [campaigns, config, signals, team, outreach] = await Promise.all([
+    getCampaignStore(),
+    getAltConfigStore(),
+    getSignalStore(),
+    getTeamStore(),
+    getOutreachStore(),
+  ]);
+  const [stalledRuns, caps, campaignUnitsToday, checkUnitsToday, members, suppression] =
+    await Promise.all([
+      campaigns.listStaleRuns(runStallCutoffIso()),
+      config.getConfig('budget_caps'),
+      campaigns.unitsSpentSince(startOfTodayUtc),
+      signals.checksUsedOn(today),
+      team.list(),
+      outreach.listSuppression(),
+    ]);
+  const linkedIn = capabilityReport([]);
+  const roleCounts = new Map<AltRole, number>();
+  for (const member of members) {
+    if (member.status !== 'active') continue;
+    roleCounts.set(member.role, (roleCounts.get(member.role) ?? 0) + 1);
+  }
+
   return (
     <>
       <SiteHeader />
@@ -95,6 +131,154 @@ export default async function AdminPage() {
               </div>
             ))}
           </dl>
+        </section>
+
+        {/* ── LinkedIn capabilities ──────────────────────────────────────── */}
+        <section aria-labelledby="linkedin-heading" className="mt-12">
+          <h2 id="linkedin-heading" className="text-text text-[16px] font-medium">
+            LinkedIn capabilities
+          </h2>
+          <Rule className="mt-2" />
+          <p className="text-text-muted mt-3 text-[13px]">
+            Mode: <span className="text-text">{linkedIn.mode}</span>
+            {' · '}
+            {linkedIn.configured
+              ? 'credentials configured'
+              : 'credentials not configured'}
+          </p>
+          <dl className="mt-3 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+            {Object.entries(linkedIn.capabilities).map(([capability, available]) => (
+              <div key={capability} className="flex items-baseline justify-between gap-4">
+                <dt className="text-text-muted text-[13px]">
+                  {capability.replaceAll('_', ' ')}
+                </dt>
+                <dd
+                  className={
+                    available ? 'text-signal text-[13px]' : 'text-text-subtle text-[13px]'
+                  }
+                >
+                  {available ? 'available' : 'off'}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <ul className="mt-3 space-y-1">
+            {linkedIn.notes.map((note, index) => (
+              <li key={index} className="text-text-subtle text-[13px]">
+                {note}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* ── Research budgets ───────────────────────────────────────────── */}
+        <section aria-labelledby="budgets-heading" className="mt-12">
+          <h2 id="budgets-heading" className="text-text text-[16px] font-medium">
+            Research budgets
+          </h2>
+          <Rule className="mt-2" />
+          <dl className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div className="flex items-baseline justify-between gap-4">
+              <dt className="text-text-muted text-[13px]">Per-campaign cap</dt>
+              <dd className="text-text text-[13px]" data-numeric>
+                {caps.perCampaignUnits} units
+              </dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-4">
+              <dt className="text-text-muted text-[13px]">Workspace daily cap</dt>
+              <dd className="text-text text-[13px]" data-numeric>
+                {caps.perDayUnits} units
+              </dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-4">
+              <dt className="text-text-muted text-[13px]">Spent today — campaigns</dt>
+              <dd className="text-text text-[13px]" data-numeric>
+                {campaignUnitsToday} units
+              </dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-4">
+              <dt className="text-text-muted text-[13px]">Spent today — watch checks</dt>
+              <dd className="text-text text-[13px]" data-numeric>
+                {checkUnitsToday} units
+              </dd>
+            </div>
+          </dl>
+          <p className="text-text-subtle mt-3 text-[13px]">
+            Caps are configuration, changed on the{' '}
+            <Link href="/commercial" className="underline-offset-2 hover:underline">
+              commercial page
+            </Link>
+            . Both campaign discovery and watchlist checks spend from the same daily cap.
+          </p>
+        </section>
+
+        {/* ── Campaign runs ──────────────────────────────────────────────── */}
+        <section aria-labelledby="campaign-runs-heading" className="mt-12">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="campaign-runs-heading" className="text-text text-[16px] font-medium">
+              Stalled campaign runs
+            </h2>
+            <RepairCampaignsButton count={stalledRuns.length} />
+          </div>
+          <Rule className="mt-2" />
+          {stalledRuns.length === 0 ? (
+            <p className="text-text-faint mt-3 text-[13px]">
+              No discovery run has gone quiet. Runs without a heartbeat past the stall
+              window would appear here.
+            </p>
+          ) : (
+            <ul className="mt-3 space-y-1.5">
+              {stalledRuns.map((run) => (
+                <li
+                  key={run.id}
+                  className="flex flex-wrap items-baseline gap-x-4 text-[13px]"
+                >
+                  <span className="text-text" data-numeric>
+                    run {shortId(run.id)}
+                  </span>
+                  <span className="text-text-muted">stage {run.stage}</span>
+                  <span className="text-text-subtle" data-numeric>
+                    campaign {shortId(run.campaignId)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {/* ── Team and suppression ───────────────────────────────────────── */}
+        <section aria-labelledby="team-heading" className="mt-12">
+          <h2 id="team-heading" className="text-text text-[16px] font-medium">
+            Team and suppression
+          </h2>
+          <Rule className="mt-2" />
+          <dl className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {[...roleCounts.entries()].map(([role, count]) => (
+              <div key={role} className="flex items-baseline justify-between gap-4">
+                <dt className="text-text-muted text-[13px]">{ROLE_LABEL[role]}</dt>
+                <dd className="text-text text-[13px]" data-numeric>
+                  {count}
+                </dd>
+              </div>
+            ))}
+            <div className="flex items-baseline justify-between gap-4">
+              <dt className="text-text-muted text-[13px]">Suppression entries</dt>
+              <dd className="text-text text-[13px]" data-numeric>
+                {suppression.length}
+              </dd>
+            </div>
+          </dl>
+          <p className="text-text-subtle mt-3 text-[13px]">
+            Membership is managed on the{' '}
+            <Link href="/team" className="underline-offset-2 hover:underline">
+              team page
+            </Link>
+            ; CSV account imports live at{' '}
+            <Link href="/imports" className="underline-offset-2 hover:underline">
+              /imports
+            </Link>
+            .
+          </p>
         </section>
 
         {/* ── Stalled jobs ───────────────────────────────────────────────── */}
