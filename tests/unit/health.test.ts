@@ -108,6 +108,41 @@ describe('places is a deliberate absence, not a missing key', () => {
   });
 });
 
+describe('LinkedIn reports its mode, and disabled is healthy', () => {
+  it('defaults to disabled with no problem raised', async () => {
+    const { response, body } = await health({ ...PRODUCTION });
+    expect(body.providers.linkedin).toBe('disabled');
+    expect(response.status).toBe(200);
+    expect(body.problems.join(' ')).not.toMatch(/linkedin/i);
+  });
+
+  it('openid_only with credentials is healthy and says so', async () => {
+    const { response, body } = await health({
+      ...PRODUCTION,
+      LINKEDIN_MODE: 'openid_only',
+      LINKEDIN_CLIENT_ID: 'client-id',
+      LINKEDIN_CLIENT_SECRET: 'client-secret-value',
+      LINKEDIN_REDIRECT_URI: 'https://example.com/auth/linkedin/callback',
+    });
+    expect(body.providers.linkedin).toBe('openid_only');
+    expect(response.status).toBe(200);
+  });
+
+  it('a mode without its credentials is the one unhealthy LinkedIn shape', async () => {
+    const { response, body } = await health({
+      ...PRODUCTION,
+      LINKEDIN_MODE: 'openid_only',
+      LINKEDIN_CLIENT_ID: undefined,
+      LINKEDIN_CLIENT_SECRET: undefined,
+      LINKEDIN_REDIRECT_URI: undefined,
+    });
+    expect(response.status).toBe(503);
+    expect(body.problems.join(' ')).toMatch(/linkedin/i);
+    // Candid about the state, silent about values.
+    expect(JSON.stringify(body)).not.toContain('client-secret');
+  });
+});
+
 describe('production must never silently run on mock research', () => {
   it('is degraded when the research provider is the mock', async () => {
     const { response, body } = await health({
