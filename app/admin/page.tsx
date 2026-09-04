@@ -322,7 +322,14 @@ export default async function AdminPage() {
             Recent runs
           </h2>
           <Rule className="mt-2" />
-          <div className="mt-3 overflow-x-auto">
+          {/* Scrolls sideways on a phone, so it must be reachable by
+              keyboard: focusable, and named for whoever lands on it. */}
+          <div
+            className="mt-3 overflow-x-auto"
+            role="region"
+            aria-label="Recent runs"
+            tabIndex={0}
+          >
             <table className="w-full min-w-[640px] text-left text-[13px]">
               <thead>
                 <tr className="text-text-subtle">
