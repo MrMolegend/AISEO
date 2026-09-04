@@ -339,12 +339,16 @@ test.describe('the whole journey', () => {
     await expect(guestPage.getByText(/no longer opens anything/)).toBeVisible();
     await guest.close();
 
-    /* ── The desk reflects all of it ────────────────────────────────────── */
+    /* ── The workspace door stays closed to a legacy customer ───────────── */
+    // The dashboard is the lead-intelligence Command Center now, and this
+    // account is not a workspace member: /dashboard resolves to the
+    // request-access holding page while every legacy report URL above kept
+    // working. That split — reports reachable, workspace not — is the
+    // retention promise, so it is asserted rather than assumed.
     await page.goto('/dashboard');
-    await expect(page.getByRole('heading', { name: 'Your working desk' })).toBeVisible();
-    await expect(page.getByText('Ardmore Sea Salt').first()).toBeVisible();
+    await expect(page).toHaveURL(/\/request-access$/);
 
-    // The new-report page passes axe with everything on it.
+    // The report page passes axe with everything on it.
     await page.goto(reportUrl);
     const results = await new AxeBuilder({ page })
       .disableRules(['color-contrast'])

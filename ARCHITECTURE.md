@@ -1,5 +1,142 @@
 # Architecture
 
+The platform now serves **ALT SIGNAL**, Arab Land Trading's internal
+lead-intelligence workspace. The first half of this document describes that
+layer; the sections after it describe the platform subsystems it stands on
+(security, auth, budgets, jobs, sharing, privacy), which carried over from the
+earlier products and still run — the legacy report surfaces remain reachable
+for their owners.
+
+## ALT SIGNAL: the lead-intelligence layer
+
+### Roles and membership
+
+Five roles — `super_admin`, `sales_manager`, `sales_rep`, `analyst`, `viewer`
+— live in the `team_members` table and nowhere else: not in `user_metadata`
+(user-writable), not as email lists in code. `lib/auth/membership.ts` reads
+the membership row on every request; `app_metadata.role` acts only as a
+bootstrap for the first administrator, and an explicit revocation in the table
+beats any claim a stale JWT still carries. Every denial is a 404 — an
+authorisation surface that answers "forbidden" has confirmed the resource
+exists. Pages gate through `requireWorkspacePage(returnTo, ...roles)`
+(redirects to sign-in / request-access / notFound), routes through
+`requireMember(...roles)`.
+
+### Domain map
+
+```
+config/alt.ts          verified ALT facts (each with source + recorded date), GCC
+                       markets, emirates, default segments
+lib/alt/               keyed workspace configuration (proof points, prohibited
+                       claims, scoring weights, budget caps, playbooks) + brands
+                       + territories, two-driver store
+lib/icps/              ideal customer profiles
+lib/campaigns/         campaigns and runs (duplicate-active guard, unit accounting)
+lib/discovery/         plan → cost estimate → engine (stages, checkpoints, caps,
+                       cancellation-safe terminal states) → contacts
+lib/leads/             accounts, claims (evidence rows), contacts, merges with
+                       undo; normalisation and the cautious dedup rules
+lib/relationships/     the 8-state provenance graph and its attestations
+lib/linkedin/          mode contract, OAuth (PKCE + state), capability report
+lib/scoring/           deterministic dimensions, override handling, brand matching
+lib/outreach/          deterministic bilingual drafting, the lint, approval flow,
+                       suppression
+lib/pipeline/          stage history, activities (private-note filtering), tasks
+                       (playbook fingerprint idempotency), saved views
+lib/signals/           watchlists and bounded, budgeted signal checks
+lib/insights/          pure outcome analytics with sample-size floors; territory
+                       rollups
+lib/imports/           CSV parse/preview (pure) + commit/undo orchestration
+```
+
+Every domain store follows the same two-driver pattern the platform
+established: a Supabase driver using the least-privileged service role with
+ownership enforced inside each query, and an in-memory driver behind a
+`globalThis` symbol so unit tests and keyless local development run the whole
+product.
+
+### The honesty invariants
+
+These are load-bearing and tested, not aspirational:
+
+- **No fabrication.** Accounts come only from search results that name them
+  (`candidateFromResult` refuses listicles and question headlines); contacts
+  only from structured "Name – Role – Company" titles, with employment marked
+  `unverified` and no invented channels; dedup merges only on normalised-name
+  equality or same canonical domain, never similarity, and every merge is
+  reversible.
+- **No automatic sending.** The outreach schema has no recipient or delivery
+  column; drafts require an explicit reviewed-checkbox approval; copy is the
+  only exit and it is recorded. Playbooks create tasks, not messages.
+- **Provenance-gated language.** "Verified direct connection" renders only
+  for `official_api_verified_direct` and `employee_confirmed_direct`, and the
+  store refuses to persist a verified-direct edge whose provenance string
+  does not prove it.
+- **Derived, decomposed scoring.** `lib/scoring/compute.ts` is pure integer
+  arithmetic over stated rules; missing inputs stay in the denominator and
+  are named; an override never edits the computed total.
+- **Gap vs. unknown.** Brand matching returns `already_stocked`,
+  `observed_opportunity`, `not_verified` or `restricted` — and the UI copy
+  keeps "not verified" from ever reading as "they don't stock it".
+- **Budget before spend.** The discovery engine decrements its unit budget
+  before each provider call; exhaustion completes the run as `partial`.
+  Campaign starts are gated by the per-campaign cap and the workspace daily
+  cap; watchlist checks spend from the same daily cap, at most three per
+  watch per day, and record the check before searching.
+- **Samples with their n.** `lib/insights/compute.ts` refuses to render a
+  rate below `MIN_SAMPLE` as a percentage.
+
+### LinkedIn: the capability truth table
+
+`LINKEDIN_MODE` ∈ `disabled` (default) · `openid_only` · `partner_sales_access`.
+Capabilities derive from **granted OAuth scopes**, never from env presence:
+`capabilityReport(grantedScopes)` is the single source the admin panel, the
+relationships page and `/api/health` all render from. In this build the
+partner tier ships **no** capability — setting the mode grants nothing beyond
+`openid_only` and the report says so in words. OAuth uses the authorization-code
+flow with PKCE (S256) and an opaque state bound to an HttpOnly cookie; tokens
+are used server-side for the identity exchange and are not persisted. There
+is no scraping, browser automation, cookie reuse or unofficial endpoint in
+any mode, and `linkedin.com` sits in the non-crawlable host list — public
+profile URLs arrive only as labelled `public_search_index` references.
+
+### The lead-intelligence migrations (`0017`–`0024`)
+
+**Not applied to the live project.** They ship with this change and are
+applied at deploy time after `0016`, in numeric order:
+
+| File   | Adds                                                                                                            |
+| ------ | --------------------------------------------------------------------------------------------------------------- |
+| `0017` | `team_members`, `ops_audit_events` (the legacy `audit_events` from `0001` is left untouched)                    |
+| `0018` | `alt_territories` (GCC seeded), `alt_brands`, `alt_config`, `icps`                                              |
+| `0019` | `campaigns`, `campaign_runs`, `lead_accounts`, `lead_claims`, `lead_contacts`, `account_merges`                 |
+| `0020` | `relationships` (8-state CHECK), `provider_connections` (scopes, no tokens)                                     |
+| `0021` | `account_scores` (override↔reason pairing CHECK)                                                                |
+| `0022` | `outreach_drafts` (approval-pair CHECK, no recipient columns), `outreach_draft_versions`, `suppression_entries` |
+| `0023` | pipeline columns on `lead_accounts`, `pipeline_history`, `activities`, `sales_tasks`, `saved_views`             |
+| `0024` | `watchlists`, `signals`                                                                                         |
+
+All follow the `0011`–`0016` conventions: additive only, RLS enabled with no
+policies, revoke-then-grant service-role privileges, length/state CHECKs,
+partial unique indexes where idempotency depends on them (one active run per
+campaign; one task per playbook step per account; one signal per watch+URL),
+and a commented `-- down` block. Apply with `supabase db push`, then
+regenerate `supabase/database.types.ts` — its hand-written pending-tables
+section says exactly this.
+
+Personal data hangs off `auth.users` with `ON DELETE CASCADE`
+(`team_members`, `relationships.employee_id`, `provider_connections`,
+`watchlists`, `saved_views`); shared work records use `ON DELETE SET NULL` so
+the team's history survives a member's deletion with the personal reference
+cleared. The privacy page states this in the same words.
+
+### Legacy retention
+
+The earlier products' tables, report URLs and auth callbacks are untouched.
+Marketing routes redirect to the gateway; `robots.ts` disallows everything;
+nothing reads legacy rows as leads. The wallet/ledger machinery still settles
+the legacy report pipeline and is absent from the primary navigation.
+
 ## Layers
 
 Each layer may only import from the ones above it. The boundaries are enforced by
@@ -658,27 +795,35 @@ Two different things, deliberately separated:
 
 Environment variables — names only, values never printed anywhere:
 
-| Variable                                                 | Needed for                                                          |
-| -------------------------------------------------------- | ------------------------------------------------------------------- |
-| `NEXT_PUBLIC_SITE_URL`                                   | Canonical URLs, auth redirects                                      |
-| `NEXT_PUBLIC_SUPABASE_URL`                               | Auth and storage                                                    |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `…_ANON_KEY`) | Browser auth client                                                 |
-| `SUPABASE_SERVICE_ROLE_KEY`                              | Server-side storage. Never in a browser bundle                      |
-| `ANTHROPIC_API_KEY`, `AI_PROVIDER=anthropic`, `AI_MODEL` | Report synthesis                                                    |
-| `RESEARCH_PROVIDER=tavily`, `TAVILY_API_KEY`             | Finding public sources                                              |
-| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`     | Limits that span instances                                          |
-| `IP_HASH_SALT`                                           | Hashing IPs. Raw addresses are never stored                         |
-| `RESEARCH_DAILY_GLOBAL_CAP`                              | The cost ceiling. **Set before the first public link**              |
-| `ADMIN_GRANT_SECRET`                                     | The grant route. Absent ⇒ route disabled. Min 24 chars              |
-| `WELCOME_TOKEN_GRANT`                                    | Leave at `0` in production                                          |
-| `JOB_STALL_MINUTES`                                      | Optional. Heartbeat age before a run counts as stalled (default 15) |
+| Variable                                                                  | Needed for                                                                                                            |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SITE_URL`                                                    | Canonical URLs, auth redirects                                                                                        |
+| `NEXT_PUBLIC_SUPABASE_URL`                                                | Auth and storage                                                                                                      |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `…_ANON_KEY`)                  | Browser auth client                                                                                                   |
+| `SUPABASE_SERVICE_ROLE_KEY`                                               | Server-side storage. Never in a browser bundle                                                                        |
+| `ANTHROPIC_API_KEY`, `AI_PROVIDER=anthropic`, `AI_MODEL`                  | Report synthesis                                                                                                      |
+| `RESEARCH_PROVIDER=tavily`, `TAVILY_API_KEY`                              | Finding public sources                                                                                                |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`                      | Limits that span instances                                                                                            |
+| `IP_HASH_SALT`                                                            | Hashing IPs. Raw addresses are never stored                                                                           |
+| `RESEARCH_DAILY_GLOBAL_CAP`                                               | The cost ceiling. **Set before the first public link**                                                                |
+| `ADMIN_GRANT_SECRET`                                                      | The grant route. Absent ⇒ route disabled. Min 24 chars                                                                |
+| `WELCOME_TOKEN_GRANT`                                                     | Leave at `0` in production                                                                                            |
+| `JOB_STALL_MINUTES`                                                       | Optional. Heartbeat age before a run counts as stalled (default 15)                                                   |
+| `LINKEDIN_MODE`                                                           | Optional. `disabled` (default, healthy) · `openid_only` · `partner_sales_access` (grants nothing extra in this build) |
+| `LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET` / `LINKEDIN_REDIRECT_URI` | Only when `LINKEDIN_MODE` ≠ `disabled`; health reports the mode as failing without them                               |
 
 Steps:
 
-1. Apply `supabase/migrations/0004`–`0016` in order (`0004`–`0010` are already
-   on the live project; `0011`–`0016` are not), then regenerate
+1. Apply `supabase/migrations/0011`–`0024` in order (`0001`–`0010` are already
+   on the live project; nothing after them is), then regenerate
    `supabase/database.types.ts` from the live schema and run the verification
-   queries under **The product-depth migrations** above.
+   queries under **The product-depth migrations** above. The lead-intelligence
+   tables are listed under **The lead-intelligence migrations** near the top of
+   this document.
+   1a. Bootstrap the first administrator: set `app_metadata.role = 'super_admin'`
+   on your operator account (see **Admin authorisation**), sign in, then create
+   your own `team_members` row from `/team` — after which the table, not the
+   claim, is the authority. Invite the rest of the team from the same page.
 2. Enable email sign-in in Supabase Auth and add
    `${NEXT_PUBLIC_SITE_URL}/auth/confirm` to the allowed redirect URLs — then
    follow **Supabase dashboard checklist** above for the rest of it. That step

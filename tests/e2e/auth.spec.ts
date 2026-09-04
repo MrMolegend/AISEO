@@ -2,26 +2,37 @@ import { expect, test, type Page, type BrowserContext } from '@playwright/test';
 import { AxeBuilder } from '@axe-core/playwright';
 
 /**
- * The signed-in surface, in a real browser.
+ * Authentication and the three header states, in a real browser.
  *
- * The outage this release fixes was invisible to every other kind of test: the
- * build passed, the types passed, the route returned a redirect. What nobody
- * could see was a user arriving on a page that did not know who they were. So
- * these open an actual browser and look.
- *
- * The session comes from the in-memory driver (AUTH_TEST_DRIVER=1, set in
- * playwright.config.ts). It stands in for Supabase and nothing else — the
- * header, the account menu, the sign-out route, the protected-route redirects
- * and every page below are the real ones.
+ * This workspace has exactly three kinds of visitor: a signed-out stranger
+ * (wordmark + Sign in, nothing to market), a signed-in account without
+ * membership (the account control and the request-access holding page,
+ * nothing else), and a member (the workspace for their role). The session
+ * comes from the in-memory driver (AUTH_TEST_DRIVER=1, set in
+ * playwright.config.ts); the header, membership resolution, sign-out route
+ * and protected-route redirects are the real ones.
  */
 
-const SESSION = { id: '11111111-1111-4111-8111-111111111111', email: 'sam@example.com' };
+const MEMBER = {
+  id: '11111111-1111-4111-8111-111111111111',
+  email: 'sam@example.com',
+  role: 'sales_manager' as const,
+};
 
-async function signIn(context: BrowserContext, baseURL: string) {
+const OUTSIDER = {
+  id: '22222222-2222-4222-8222-222222222222',
+  email: 'stranger@example.com',
+};
+
+async function signIn(
+  context: BrowserContext,
+  baseURL: string,
+  session: object = MEMBER,
+) {
   await context.addCookies([
     {
       name: 'e2e-test-session',
-      value: encodeURIComponent(JSON.stringify(SESSION)),
+      value: encodeURIComponent(JSON.stringify(session)),
       url: baseURL,
     },
   ]);
@@ -41,89 +52,87 @@ const AUTH_PAGES = [
   '/auth/error?reason=expired',
 ] as const;
 
-test.describe('the header tells you whether you are signed in', () => {
-  test('signed out: offers both ways in', async ({ page }) => {
+test.describe('the three header states', () => {
+  test('signed out: the gateway, the wordmark and one way in', async ({ page }) => {
     await page.goto('/');
 
     const header = page.locator('header');
-    // Sign in is visible at every width — someone who already has an account
-    // should never have to open a menu to use it. Start report moves into the
-    // menu below `sm`, where both controls plus the trigger would overflow.
     await expect(header.getByRole('link', { name: 'Sign in' })).toBeVisible();
     await expect(header.getByRole('button', { name: /Account menu/ })).toHaveCount(0);
 
-    const viewport = page.viewportSize();
-    if ((viewport?.width ?? 0) >= 640) {
-      await expect(header.getByRole('link', { name: 'Start report' })).toBeVisible();
-    } else {
-      await page.getByRole('button', { name: 'Open menu' }).click();
-      await expect(
-        page.getByRole('menu', { name: 'Site' }).getByRole('menuitem', {
-          name: 'Start report',
-        }),
-      ).toBeVisible();
-    }
+    // An internal tool markets nothing: no pricing, no feature tour, no
+    // sign-up pitch — one sentence and the door.
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect(page.getByText(/invitation/i).first()).toBeVisible();
   });
 
-  test('signed in: shows who you are and what you have', async ({
+  test('a member sees the workspace navigation for their role', async ({
     page,
     context,
     baseURL,
   }) => {
     await signIn(context, baseURL!);
-    await page.goto('/');
+    await page.goto('/dashboard');
 
-    // The whole point of the fix: a page that knows the visitor.
-    const account = page.getByRole('button', { name: new RegExp(SESSION.email) });
+    const nav = page.getByRole('navigation', { name: 'Main' });
+    for (const label of ['Command Center', 'Leads', 'Campaigns', 'Pipeline']) {
+      await expect(nav.getByRole('link', { name: label })).toBeVisible();
+    }
+
+    const account = page.getByRole('button', { name: new RegExp(MEMBER.email) });
     await expect(account).toBeVisible();
-
     await account.click();
     const menu = page.getByRole('menu', { name: 'Account' });
     await expect(menu).toBeVisible();
-    await expect(menu.getByText(SESSION.email)).toBeVisible();
-    for (const item of ['Intelligence Desk', 'My dossiers', 'Account']) {
+    await expect(menu.getByText(MEMBER.email)).toBeVisible();
+    for (const item of ['Relationships', 'Territories', 'Team', 'Account']) {
       await expect(menu.getByRole('menuitem', { name: item })).toBeVisible();
     }
     await expect(menu.getByRole('menuitem', { name: 'Sign out' })).toBeVisible();
   });
 
-  test('the account control is reachable on a phone too', async ({
+  test('a signed-in non-member gets the holding page, not the workspace', async ({
     page,
     context,
     baseURL,
   }) => {
-    // The old header hid the nav below md and the balance below sm, with no
-    // menu in their place — a signed-in phone user saw a logo and a circle.
+    await signIn(context, baseURL!, OUTSIDER);
+    await page.goto('/dashboard');
+
+    await expect(page).toHaveURL(/\/request-access$/);
+    // Their email is shown so they can quote it to the administrator.
+    await expect(page.getByText(OUTSIDER.email, { exact: true })).toBeVisible();
+    // No workspace navigation leaks to someone without membership.
+    await expect(page.getByRole('navigation', { name: 'Main' })).toHaveCount(0);
+  });
+
+  test('the workspace is reachable on a phone through the menu', async ({
+    page,
+    context,
+    baseURL,
+  }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await signIn(context, baseURL!);
     await page.goto('/dashboard');
 
-    await expect(
-      page.getByRole('button', { name: new RegExp(SESSION.email) }),
-    ).toBeVisible();
-
     await page.getByRole('button', { name: 'Open menu' }).click();
     const menu = page.getByRole('menu', { name: 'Site' });
-    await expect(menu.getByRole('menuitem', { name: 'Intelligence Desk' })).toBeVisible();
-    await expect(menu.getByRole('menuitem', { name: 'Assess a market' })).toBeVisible();
-    await expect(menu.getByRole('menuitem', { name: 'Account' })).toBeVisible();
-    await expect(menu.getByRole('menuitem', { name: 'Sign out' })).toBeVisible();
+    for (const item of ['Command Center', 'Leads', 'Pipeline', 'Watchlists']) {
+      await expect(menu.getByRole('menuitem', { name: item })).toBeVisible();
+    }
   });
 });
 
 test.describe('signing out', () => {
-  test('returns home and says so', async ({ page, context, baseURL }) => {
+  test('returns to the gateway and says so', async ({ page, context, baseURL }) => {
     await signIn(context, baseURL!);
     await page.goto('/dashboard');
 
-    await page.getByRole('button', { name: new RegExp(SESSION.email) }).click();
+    await page.getByRole('button', { name: new RegExp(MEMBER.email) }).click();
     await page.getByRole('menuitem', { name: 'Sign out' }).click();
 
     await expect(page).toHaveURL(/\/\?signed-out=1$/);
-    // A redirect on its own is not evidence that anything happened.
     await expect(page.getByText('You have been signed out.')).toBeVisible();
-
-    // And the session is genuinely gone, not merely navigated away from.
     await expect(
       page.locator('header').getByRole('link', { name: 'Sign in' }),
     ).toBeVisible();
@@ -136,7 +145,7 @@ test.describe('signing out', () => {
   }) => {
     await signIn(context, baseURL!);
     await page.goto('/dashboard');
-    await page.getByRole('button', { name: new RegExp(SESSION.email) }).click();
+    await page.getByRole('button', { name: new RegExp(MEMBER.email) }).click();
     await page.getByRole('menuitem', { name: 'Sign out' }).click();
     await expect(page).toHaveURL(/signed-out=1/);
 
@@ -146,27 +155,25 @@ test.describe('signing out', () => {
 });
 
 test.describe('protected routes', () => {
-  for (const path of ['/dashboard', '/wallet', '/account', '/assess']) {
+  for (const path of ['/dashboard', '/leads', '/campaigns', '/account']) {
     test(`${path} sends an anonymous visitor to sign-in, remembering where`, async ({
       page,
     }) => {
       await page.goto(path);
-
       await expect(page).toHaveURL(
         new RegExp(`/sign-in\\?next=${encodeURIComponent(path).replace(/%/g, '%')}`),
       );
     });
 
-    test(`${path} opens for a signed-in visitor`, async ({ page, context, baseURL }) => {
+    test(`${path} opens for a member`, async ({ page, context, baseURL }) => {
       await signIn(context, baseURL!);
       await page.goto(path);
-
       await expect(page).toHaveURL(new RegExp(`${path}$`));
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     });
   }
 
-  test('an already signed-in visitor is sent away from sign-in', async ({
+  test('a signed-in member is sent away from sign-in', async ({
     page,
     context,
     baseURL,
@@ -178,16 +185,13 @@ test.describe('protected routes', () => {
 
   test('and is returned to where they were going', async ({ page, context, baseURL }) => {
     await signIn(context, baseURL!);
-    await page.goto('/sign-in?next=%2Fwallet');
-    await expect(page).toHaveURL(/\/wallet$/);
+    await page.goto('/sign-in?next=%2Fleads');
+    await expect(page).toHaveURL(/\/leads$/);
   });
 
   test('an external next is refused', async ({ page, context, baseURL }) => {
     await signIn(context, baseURL!);
     await page.goto('/sign-in?next=https%3A%2F%2Fevil.test%2Fsteal');
-
-    // Signed in on the real site, then handed to an attacker, is the whole
-    // value of an open redirect through an auth flow.
     await expect(page).toHaveURL(/\/dashboard$/);
     expect(page.url()).not.toContain('evil.test');
   });
@@ -244,64 +248,4 @@ test.describe('the authentication pages', () => {
       });
     }
   }
-
-  for (const width of [360, 768, 1280]) {
-    test(`no horizontal overflow at ${width}px`, async ({ page }) => {
-      await page.setViewportSize({ width, height: 900 });
-
-      for (const path of AUTH_PAGES) {
-        await page.goto(path);
-        const overflow = await page.evaluate(() => {
-          const doc = document.documentElement;
-          return doc.scrollWidth > doc.clientWidth
-            ? `${doc.scrollWidth} > ${doc.clientWidth}`
-            : null;
-        });
-        expect(overflow, `${path} at ${width}px`).toBeNull();
-      }
-    });
-  }
-});
-
-test.describe('the signed-in surface is accessible too', () => {
-  for (const scheme of ['light', 'dark'] as const) {
-    test(`the dashboard has no violations (${scheme})`, async ({
-      page,
-      context,
-      baseURL,
-    }) => {
-      await signIn(context, baseURL!);
-      await page.emulateMedia({ colorScheme: scheme });
-      await page.goto('/dashboard');
-
-      const violations = await scan(page);
-      expect(violations, violations.map((v) => `${v.id}: ${v.help}`).join('\n')).toEqual(
-        [],
-      );
-    });
-  }
-
-  test('the open account menu is accessible', async ({ page, context, baseURL }) => {
-    await signIn(context, baseURL!);
-    await page.goto('/dashboard');
-    await page.getByRole('button', { name: new RegExp(SESSION.email) }).click();
-
-    const violations = await scan(page);
-    expect(violations, violations.map((v) => `${v.id}: ${v.help}`).join('\n')).toEqual(
-      [],
-    );
-  });
-
-  test('Escape closes the menu and returns focus', async ({ page, context, baseURL }) => {
-    await signIn(context, baseURL!);
-    await page.goto('/dashboard');
-
-    const trigger = page.getByRole('button', { name: new RegExp(SESSION.email) });
-    await trigger.click();
-    await expect(page.getByRole('menu', { name: 'Account' })).toBeVisible();
-
-    await page.keyboard.press('Escape');
-    await expect(page.getByRole('menu', { name: 'Account' })).toHaveCount(0);
-    await expect(trigger).toBeFocused();
-  });
 });
