@@ -66,6 +66,8 @@ export interface PipelineStore {
     note: string;
   }): Promise<StageChangeRecord>;
   historyForAccount(accountId: string): Promise<StageChangeRecord[]>;
+  /** Recent history across all accounts, newest first — the insights feed. */
+  allHistory(limit: number): Promise<StageChangeRecord[]>;
 
   addActivity(activity: {
     accountId: string;
@@ -198,6 +200,20 @@ export class SupabasePipelineStore implements PipelineStore {
       .eq('account_id', accountId)
       .order('created_at', { ascending: false })
       .limit(100);
+    if (error) {
+      throw new PlatformError('STORAGE_ERROR', 'Could not read the history', {
+        cause: error,
+      });
+    }
+    return (data ?? []).map((row) => historyRowToRecord(row as HistoryRow));
+  }
+
+  async allHistory(limit: number): Promise<StageChangeRecord[]> {
+    const { data, error } = await this.client
+      .from('pipeline_history')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
     if (error) {
       throw new PlatformError('STORAGE_ERROR', 'Could not read the history', {
         cause: error,
@@ -472,6 +488,10 @@ export class MemoryPipelineStore implements PipelineStore {
     return [...memory().history]
       .filter((change) => change.accountId === accountId)
       .reverse();
+  }
+
+  async allHistory(limit: number): Promise<StageChangeRecord[]> {
+    return [...memory().history].reverse().slice(0, limit);
   }
 
   async addActivity(activity: {
