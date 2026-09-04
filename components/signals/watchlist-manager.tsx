@@ -120,7 +120,7 @@ export function WatchlistManager({
       )}
 
       {watchlists.length === 0 ? (
-        <p className="text-text-muted text-[14px] leading-relaxed">
+        <p className="text-text-muted animate-fade text-[14px] leading-relaxed">
           No watches yet. Watch an account from its page, or watch a segment in a
           territory below.
         </p>

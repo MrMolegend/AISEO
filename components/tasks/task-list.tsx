@@ -74,7 +74,7 @@ export function TaskList({ tasks, today }: { tasks: TaskView[]; today: string })
       )}
 
       {tasks.length === 0 ? (
-        <p className="text-text-muted text-[14px] leading-relaxed">
+        <p className="text-text-muted animate-fade text-[14px] leading-relaxed">
           Nothing open. Tasks arrive from playbooks, colleagues and your own notes below.
         </p>
       ) : (
