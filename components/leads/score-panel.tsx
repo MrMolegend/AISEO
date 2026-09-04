@@ -155,7 +155,7 @@ export function ScorePanel({
           </div>
 
           <ul className="mt-6 space-y-3">
-            {score.components.map((component) => (
+            {score.components.map((component, index) => (
               <li key={component.dimension}>
                 <div className="flex items-baseline justify-between gap-4">
                   <span className="text-text text-[13px] font-medium">
@@ -174,8 +174,13 @@ export function ScorePanel({
                   aria-label={`${component.label}: ${component.raw} out of 100`}
                 >
                   <div
-                    className="bg-signal h-full"
-                    style={{ width: `${component.raw}%` }}
+                    className="bg-signal animate-bar h-full"
+                    style={
+                      {
+                        width: `${component.raw}%`,
+                        '--bar-index': index,
+                      } as React.CSSProperties
+                    }
                   />
                 </div>
                 <p className="text-text-subtle mt-1 text-[12px] leading-relaxed">

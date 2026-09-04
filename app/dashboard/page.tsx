@@ -9,6 +9,7 @@ import { pageTitle } from '@/config/brand';
 import { getCurrentUser, signInPath } from '@/lib/auth/server';
 import { getMembership } from '@/lib/auth/membership';
 import { ROLE_LABEL } from '@/schemas/team';
+import { NetworkMotif } from '@/components/motion/network-motif';
 
 export const metadata: Metadata = {
   title: pageTitle('Command Center'),
@@ -50,13 +51,16 @@ export default async function CommandCenterPage() {
               {member.territories.length > 0 ? ` — ${member.territories.join(', ')}` : ''}
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Button asChild>
-              <Link href="/campaigns">Campaigns</Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link href="/leads">Lead explorer</Link>
-            </Button>
+          <div className="flex flex-col items-end gap-4">
+            <NetworkMotif className="hidden h-16 w-48 opacity-80 md:block" />
+            <div className="flex flex-wrap gap-3">
+              <Button asChild>
+                <Link href="/campaigns">Campaigns</Link>
+              </Button>
+              <Button asChild variant="secondary">
+                <Link href="/leads">Lead explorer</Link>
+              </Button>
+            </div>
           </div>
         </header>
 

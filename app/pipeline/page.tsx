@@ -53,7 +53,7 @@ export default async function PipelinePage() {
       intro="Stages, owners, next actions and outcomes for every account being worked. Moves are made on the account page, with a note — stage history is kept, and reopening a settled account demands its reason."
     >
       {inPipeline.length === 0 ? (
-        <Panel className="mt-10 p-8 text-center">
+        <Panel className="animate-fade mt-10 p-8 text-center">
           <p className="text-text font-medium">Nothing in the pipeline yet.</p>
           <p className="text-text-muted mx-auto mt-2 max-w-md text-[14px] leading-relaxed">
             Qualify accounts in the lead explorer, then move them into a stage from their
@@ -62,8 +62,14 @@ export default async function PipelinePage() {
         </Panel>
       ) : (
         <div className="mt-10 space-y-10">
-          {PIPELINE_STAGES.filter((stage) => byStage.has(stage)).map((stage) => (
-            <section key={stage} aria-labelledby={`stage-${stage}`}>
+          {/* Pipeline movement: stage groups rise in, in stage order. */}
+          {PIPELINE_STAGES.filter((stage) => byStage.has(stage)).map((stage, index) => (
+            <section
+              key={stage}
+              aria-labelledby={`stage-${stage}`}
+              className="animate-fade"
+              style={{ '--fade-index': index } as React.CSSProperties}
+            >
               <div className="flex items-baseline justify-between">
                 <h2 id={`stage-${stage}`} className="text-text text-[15px] font-medium">
                   {PIPELINE_STAGE_LABEL[stage]}

@@ -126,15 +126,20 @@ export default async function Page() {
           <ul className="space-y-2">
             {funnel
               .filter((entry) => entry.count > 0)
-              .map((entry) => (
+              .map((entry, index) => (
                 <li key={entry.stage} className="flex items-center gap-4">
                   <span className="text-text-muted w-56 shrink-0 text-[13px]">
                     {PIPELINE_STAGE_LABEL[entry.stage]}
                   </span>
                   <span
                     aria-hidden="true"
-                    className="bg-signal/70 h-3"
-                    style={{ width: `${Math.max(2, (entry.count / maxStage) * 100)}%` }}
+                    className="bg-signal/70 animate-bar h-3"
+                    style={
+                      {
+                        width: `${Math.max(2, (entry.count / maxStage) * 100)}%`,
+                        '--bar-index': index,
+                      } as React.CSSProperties
+                    }
                   />
                   <span className="text-text text-[13px]" data-numeric>
                     {entry.count}

@@ -157,7 +157,7 @@ export function CommandPalette() {
       onClick={close}
     >
       <div
-        className="border-rule bg-ground-raised w-full max-w-lg border shadow-[var(--shadow-lift)]"
+        className="border-rule bg-ground-raised animate-fade w-full max-w-lg border shadow-[var(--shadow-lift)]"
         onClick={(event) => event.stopPropagation()}
       >
         <input

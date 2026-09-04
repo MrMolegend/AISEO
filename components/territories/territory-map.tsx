@@ -49,16 +49,18 @@ function TileShape({
   tile,
   rollup,
   max,
+  index,
 }: {
   tile: Tile;
   rollup: TerritoryRollup | undefined;
   max: number;
+  index: number;
 }) {
   const count = rollup?.accounts ?? 0;
   const name = rollup?.name ?? tile.key;
   const label = tile.labelOutside ? tile.key.replace(/^AE-/, '') : name;
   return (
-    <g>
+    <g className="animate-fade" style={{ '--fade-index': index } as React.CSSProperties}>
       <rect
         x={tile.x}
         y={tile.y}
@@ -109,14 +111,27 @@ export function TerritoryMap({ rollups }: { rollups: TerritoryRollup[] }) {
           aria-label="Schematic map of GCC markets, shaded by account count"
           className="border-rule bg-ground-sunken w-full max-w-2xl border"
         >
-          {MARKET_TILES.map((tile) => (
+          {MARKET_TILES.map((tile, index) => (
             <TileShape
               key={tile.key}
               tile={tile}
               rollup={byKey.get(tile.key)}
               max={marketMax}
+              index={index}
             />
           ))}
+          {/* One sweep of light on arrival; a single iteration that ends
+              invisible, so reduced motion lands it already gone. */}
+          <rect
+            aria-hidden="true"
+            x={0}
+            y={0}
+            width={80}
+            height={400}
+            fill="var(--color-signal)"
+            className="animate-scan pointer-events-none"
+            opacity={0}
+          />
         </svg>
         <figcaption className="text-text-subtle mt-2 text-[12px]">
           Schematic positions, not geography. Darker means more accounts; exact numbers
@@ -130,12 +145,13 @@ export function TerritoryMap({ rollups }: { rollups: TerritoryRollup[] }) {
           aria-label="UAE emirates, shaded by account count"
           className="border-rule bg-ground-sunken w-full border lg:w-[420px]"
         >
-          {EMIRATE_TILES.map((tile) => (
+          {EMIRATE_TILES.map((tile, index) => (
             <TileShape
               key={tile.key}
               tile={tile}
               rollup={byKey.get(tile.key)}
               max={emirateMax}
+              index={index}
             />
           ))}
         </svg>

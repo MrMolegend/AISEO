@@ -59,8 +59,13 @@ export function RelationshipConfirm({
     <div className="mt-2">
       {sentences.length > 0 && (
         <ul className="space-y-1">
-          {sentences.map((sentence) => (
-            <li key={sentence} className="text-text-muted text-[13px] leading-relaxed">
+          {/* The warm-path reveal: each confirmed path fades in, in order. */}
+          {sentences.map((sentence, index) => (
+            <li
+              key={sentence}
+              className="text-text-muted animate-fade text-[13px] leading-relaxed"
+              style={{ '--fade-index': index } as React.CSSProperties}
+            >
               {sentence}
             </li>
           ))}
