@@ -36,7 +36,13 @@ const nextConfig: NextConfig = {
     return [
       { source: '/research/new', destination: '/assess', permanent: true },
       { source: '/research/new/:packageId', destination: '/assess', permanent: true },
-      { source: '/pricing', destination: '/methodology', permanent: true },
+      // Public marketing routes from the previous products. The application
+      // is now an internal tool: everything marketing-shaped lands on the
+      // sign-in gateway. Auth callbacks are untouched, and legacy report
+      // URLs still render for their owners.
+      { source: '/pricing', destination: '/', permanent: true },
+      { source: '/example', destination: '/', permanent: true },
+      { source: '/methodology', destination: '/', permanent: true },
     ];
   },
 

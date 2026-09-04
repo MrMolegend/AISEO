@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { FIXTURE_RESULTS } from '@/fixtures/market-entry/search-results';
+import { DISCOVERY_FIXTURE_RESULTS } from '@/fixtures/discovery/search-results';
 import { FIXTURE_PAGES } from '@/fixtures/market-entry/pages';
 import { PlatformError } from '@/lib/errors';
 import type { SafeFetchResult } from '@/lib/security/safe-fetch';
@@ -108,8 +109,12 @@ export class FixtureResearchProvider implements ResearchProvider {
     }
 
     const area = query.area ?? '';
-    const results =
-      (FIXTURE_RESULTS as Record<string, SearchResult[] | undefined>)[area] ?? [];
+    // Discovery areas answer from their own fixture world; everything else
+    // stays the market-entry case. An unknown discovery area is an empty
+    // result set, not an error — real search comes back empty too.
+    const results = area.startsWith('discovery:')
+      ? (DISCOVERY_FIXTURE_RESULTS[area] ?? [])
+      : ((FIXTURE_RESULTS as Record<string, SearchResult[] | undefined>)[area] ?? []);
 
     return {
       query: query.query,

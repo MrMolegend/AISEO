@@ -1,12 +1,18 @@
-# CORRIDOR
+# ALT SIGNAL
 
-**Enter new markets with evidence.**
+**Wholesale Growth Intelligence.**
 
-CORRIDOR produces one thing: a **Market Entry Intelligence Report** for a small
-brand, wholesaler, distributor or founder deciding whether to sell into a new
-country. You describe what you sell and where you want to take it; the research
-runs against the public record; the report tells you what the evidence supports,
-what it does not, and what it could not establish at all.
+ALT SIGNAL is the private, invitation-only lead-intelligence and wholesale
+sales workspace of **Arab Land Trading LLC** — the Dubai pet-supply wholesaler
+(est. 2001, Al Quoz). It finds prospective wholesale customers across the UAE
+and the wider GCC from the public record, explains every judgement it makes,
+and helps the sales team work those accounts — without ever sending a message,
+inventing a fact, or touching a channel the team did not choose.
+
+There is no public sign-up. A signed-in person who is not a team member sees a
+request-access page and nothing else; membership is granted by an
+administrator and read from the database on every request, never from a token
+a browser can keep.
 
 The product name lives in exactly one file,
 [`config/brand.ts`](config/brand.ts), and a unit test fails if it appears as a
@@ -14,222 +20,123 @@ string literal anywhere else.
 
 ## The ideas that shape everything
 
-**We do not ask for your website.** There is no URL field, no crawl of your
-domain, and nothing in the schema shaped like one — a test reads the intake
-source file and fails if a field named for a website, URL or domain ever appears.
-What you sell is something you can describe better than a homepage can, and a
-homepage was never evidence about a market you have not entered.
+**Nothing sends, ever.** The outreach studio drafts; a person reviews,
+approves, copies and sends on their own channels. There is no delivery
+integration, no recipient column in the schema, no queue that could grow one.
+Playbooks create tasks with dates — recommendations, not automation.
 
-**External retrieval is enrichment, never a dependency.** After the search phase
-the pipeline opens a handful of the sources it found, and gives up on any of them
-freely. `retrieveSources()` does not throw — not for a robots refusal, not for a
-timeout, not if every single fetch fails. A blocked page becomes a recorded
-limitation the report shows, not an error the customer sees. An authority's
-website being slow on a Tuesday is not a reason to fail a report someone paid
-for.
+**Evidence-led, website-optional.** Accounts are discovered from sources that
+actually name them — a directory listing, a news profile, their own site if
+they have one. A listicle headline never becomes a company; a business without
+a website is a normal case, not an error. Every claim carries its source URL,
+category, retrieval mode and date.
 
-**A claim that cannot be supported is marked, not asserted.** A regulatory,
-financial or market-size claim needs a source we opened ourselves; a search-index
-summary is a weak signal and is labelled as one. Where the support is not there,
-the claim is demoted to unverified with the gap recorded, and the report ships.
+**Not verified is not a gap.** Product matching distinguishes an _observed
+opportunity_ (a page said something) from _not verified_ (nothing said either
+way). Scoring is deterministic integer arithmetic with configurable weights;
+every score renders its decomposition, missing inputs are named in the
+denominator, and a manager's override preserves the computed number beside
+the reason.
 
-**The evidence grade is derived, never awarded.** Verified fact · you told us ·
-modelled estimate · strategic inference · unverified. One pure function maps
-basis, source category and retrieval mode onto a grade, so a confident sentence
-cannot dress itself up as a researched one.
+**Relationships are provenance, not vibes.** A connection edge carries one of
+eight states, and the words "Verified direct connection" render only for the
+two that earn them (an official API verification or a colleague's explicit
+confirmation). "Might know them" is stored as exactly that.
 
-**The verdict is arithmetic, not prose.** Readiness is seven weighted factors,
-each computed from validated fields, each carrying the sentence shown beside it.
-Nobody has to take 62 on trust — they can see which factor they disagree with.
+**LinkedIn is honest or it is off.** Three modes: `disabled` (default, fully
+functional product), `openid_only` (Sign In with LinkedIn — identity
+verification, nothing else), and a `partner_sales_access` contract slot that
+ships **no** capability in this build. No mode scrapes, automates a browser,
+reuses cookies, or calls unofficial endpoints — the admin panel states
+capability-by-capability what is on, off, and why. Public LinkedIn URLs found
+through a search index are labelled `public_search_index` and are never
+crawled.
 
-**A balance is only ever the result of an operation with a reason attached.**
-There is no `setBalance` anywhere in the system. Credit is reserved, then either
-finalised or refunded, by database functions that take a row lock and an
-idempotency key. Finalisation happens **after** the quality gate, so a customer
-is only ever charged for a report that was worth producing.
+**Spending is capped before it happens.** A campaign shows its cost ceiling
+and requires confirmation; the engine decrements budget before each provider
+call; per-campaign and workspace-daily caps refuse over-budget work with the
+numbers in the message. Watchlist checks spend from the same daily cap. Tests,
+CI and screenshots never call a paid API — a deterministic fixture world
+answers instead.
 
-## Running it locally
+**Small samples are not truths.** Outcome analytics compute from recorded
+results only, every rate carries its `n`, and below the sample floor the page
+says "not enough data" instead of a percentage.
+
+**Suppression is absolute.** An account, contact or channel on the suppression
+list is excluded from drafting everywhere, and the exclusion survives
+re-discovery.
+
+## Roles
+
+Five roles, stored server-side in `team_members` (never in user metadata,
+never as an email list in code): `super_admin`, `sales_manager`, `sales_rep`,
+`analyst`, `viewer`. Authorisation is read per request; an explicit revocation
+beats any claim a stale JWT still carries; a denial renders the same 404 a
+mistyped URL gets.
+
+## The workspace
+
+| Surface                            | What it does                                                                                                                   |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `/dashboard`                       | Command Center: role-aware first steps and the day's work                                                                      |
+| `/commercial`                      | ALT's facts, brands, territories, proof points, scoring weights, budget caps — configuration with provenance, not doctrine     |
+| `/icps`                            | Ideal customer profiles: territory, segment, category mix, evidence bar                                                        |
+| `/campaigns`                       | Campaign builder with cost preview + confirmation; live run console                                                            |
+| `/leads`                           | Lead explorer with filters, saved views and (for export roles) audited CSV export                                              |
+| `/leads/[id]`                      | Account intelligence: evidence, contacts, relationships, score decomposition, pipeline controls, activity log, merge with undo |
+| `/leads/[id]/brief`                | Printable meeting brief assembled from stored records only                                                                     |
+| `/relationships`                   | Confirmation queue and the LinkedIn capability truth panel                                                                     |
+| `/watchlists`                      | Bounded, budgeted signal checks on accounts and segments                                                                       |
+| `/territories`                     | Schematic SVG GCC map (no mapping provider) with the exact table beside it                                                     |
+| `/pipeline`, `/tasks`, `/outreach` | Stage-grouped pipeline, personal task queue, draft review studio                                                               |
+| `/intelligence`                    | Outcome analytics with sample sizes                                                                                            |
+| `/imports`                         | CSV import with row-by-row preview, idempotent commit and guarded undo                                                         |
+| `/admin`                           | Operations: providers, LinkedIn capabilities, budgets, stalled-run repair, team and suppression counts                         |
+
+`Ctrl/Cmd-K` opens the command palette: navigation, saved views, account
+search, and save-current-page-as-view.
+
+## Running it
 
 ```bash
 npm install
+cp .env.example .env.local   # defaults run fully in-memory with fixtures
 npm run dev
 ```
 
-That is the whole setup. With no `.env` at all the application runs end to end on
-in-memory drivers and fixture data: no API key, no accounts, no cost, no network
-egress. `/api/health` reports which provider is serving each subsystem.
+With no Supabase configured everything runs on in-memory drivers and the
+deterministic fixture research world — a whole discovery campaign works end to
+end with no keys and no cost. `/api/health` names the provider serving each
+subsystem and reports LinkedIn's mode; `disabled` is a healthy state.
 
-To use real services, copy `.env.example` to `.env.local`. Every variable is
-validated at boot, so a typo fails immediately with the variable's name rather
-than surfacing later as an undefined-property crash.
+```bash
+npm run verify                       # typecheck + unit/integration tests + lint
+npx playwright test --project=desktop
+```
 
-There is no Google dependency of any kind. `GOOGLE_PLACES_API_KEY` is not read,
-not required and not supported; `/api/health` reports `places: "disabled"`, and
-that is a healthy steady state rather than something to fix.
+## Database
 
-## Commands
+Migrations `0001`–`0010` are applied to the live project. Migrations
+**`0011`–`0024` exist in this repository and are NOT applied** — they ship
+with this work and are applied at deploy time, in order. Each file carries
+that warning in its header, RLS enabled with no policies (service-role only),
+revoke-then-grant least privilege, and a commented `-- down` block.
+`supabase/database.types.ts` is hand-extended for the pending tables and
+should be regenerated (`supabase gen types typescript`) once they are applied.
 
-| Command            | What it does                                      |
-| ------------------ | ------------------------------------------------- |
-| `npm run dev`      | Development server                                |
-| `npm run verify`   | Typecheck, lint, format check, unit + integration |
-| `npm test`         | Unit and integration tests                        |
-| `npm run test:e2e` | Playwright, against a real production build       |
-| `npm run build`    | Production build                                  |
-| `npm run shots`    | Screenshot QA across the twelve reviewed views    |
+## Legacy
 
-`npm run verify` is exactly what CI runs before the build step, so a green local
-run means a green CI run.
+The platform's earlier products (research reports, market-entry assessments)
+are preserved: their tables are untouched, their report URLs keep working for
+their owners, and nothing reinterprets their data as leads. Marketing routes
+redirect to the sign-in gateway; robots are disallowed everywhere — this is an
+internal tool.
 
-No test makes a paid API call. The synthesis provider and the research provider
-both fall back to deterministic fixtures when no key is configured, and the test
-setup pins them there. A production deployment does the opposite: it refuses to
-start a customer's job at all when either provider is a fixture.
+## What this system will never do
 
-## What one report costs
-
-One Market Entry Intelligence Report costs **one report credit**. That is the
-only unit a customer ever sees.
-
-Internally a credit is 100 tokens on the existing append-only ledger, which is
-what lets balances granted before this release keep working unchanged. The
-conversion happens on the server; no token figure is ever sent to a browser, and
-an end-to-end test walks every page signed in and signed out and fails on the
-word.
-
-**Purchasing is not implemented, and is not part of this release.** There is no
-payment integration and no simulated one. During the beta, credits are granted
-manually through the operator route below. Wiring a payment provider means
-crediting a wallet through the existing `grant()` path — the accounting is
-already there.
-
-## Granting credit
-
-The one operation that creates spendable value from nothing, so its reachability
-matters more than its implementation.
-
-`POST /api/admin/grant-tokens` requires `ADMIN_GRANT_SECRET`. If that variable is
-absent the route is **disabled outright** — not open, not warning — and a wrong
-secret returns 404 rather than 403, because an endpoint that admits it exists is
-an endpoint worth attacking. The secret must be at least 24 characters or the
-application refuses to boot. Every grant carries an operator reference that
-becomes its idempotency key, so re-running a command does not stack credit.
-
-`WELCOME_TOKEN_GRANT` defaults to `0`. Leave it there in production: an account
-that silently receives spendable credit is a cost leak.
-
-## The workspace around a report
-
-A report is the middle of the product, not the end of it:
-
-- **Business profiles** (`/profiles`) describe what you sell once; every new
-  brief starts prefilled from one. The website field is optional everywhere —
-  when present it is one research seed among many, and a site that cannot be
-  read is a recorded limitation, never a failed report.
-- **Drafts** save server-side as you type, with a visible Saving/Saved state,
-  and survive devices and sessions. Two tabs cannot silently overwrite each
-  other — the stale one is told.
-- **Versions**: a new run for the same profile is a new version, and any two
-  versions compare structurally — verdict, readiness, factors, risks,
-  requirements, plan — computed, not paraphrased.
-- **Scenario Lab** (`/research/<id>/scenarios`): deterministic what-ifs on
-  your own numbers, every figure carrying its formula, presets that never
-  invent a demand range for you.
-- **Actions** (`/actions`): the report's 30/60/90 plan as an editable
-  workspace, imported exactly once however often you press the button.
-- **Evidence** (`/research/<id>/evidence`): every source, filterable by
-  publisher kind, retrieval mode, confidence, section and competitor, with
-  what could not be read listed as limitations.
-- **Sharing** (`/research/<id>/sharing`): reports are private by default.
-  Sharing mints revocable, optionally expiring links; the server keeps only a
-  hash of each token.
-- **Your data** (`/account`): one-file export, typed-phrase deletion.
-
-## The research, in outline
-
-1. **Four-stage intake** — what you sell, where you want to go, your commercial
-   position, what you need to know. Auto-saved for signed-in users; nothing is
-   validated on the way back.
-2. **A bounded query plan** across twelve investigation areas, built in code from
-   your brief rather than by the model, so the number of paid calls is a budget
-   decision. **At most 3 advanced and 9 basic searches, 12 in total**, enforced
-   server-side by a budget object the runner cannot bypass.
-3. **Best-effort retrieval** of the highest-authority sources found — at most 8
-   fetches, 8MB, 45 seconds, two per publisher. SSRF-guarded, robots-respected,
-   and never issued at all to platforms whose terms forbid it.
-4. **One synthesis call, and at most one repair.** The model receives page text
-   and search excerpts inside a nonce boundary and returns a strictly typed
-   object. It never chooses a verdict, a score, a grade or a margin.
-5. **Validation, grading and demotion** — citations are cross-referenced against
-   the registry, and any sensitive claim without an accessible authority behind
-   it is demoted to unverified with a limitation generated for it.
-6. **The quality gate** decides whether the report is worth charging for. If it
-   is not, the credit is refunded automatically and the failure explains why.
-
-## Testing what matters
-
-- `tests/integration/retrieval-best-effort.test.ts` — the central promise, tested
-  at the limit: a report still completes and is charged for when **every** fetch
-  is refused, and the claims that needed an authority are marked unverified
-  rather than dropped or asserted anyway.
-- `tests/integration/market-entry-lifecycle.test.ts` — the money path. Charged
-  once and only after the gate, refunded automatically on a gate failure, never
-  double-refunded however many times the failure path runs. Each assertion checks
-  the balance _and_ the ledger, because a job can look correct and still have
-  stranded a hold.
-- `tests/integration/example-dossier.test.ts` — pins the published worked example
-  to what the real pipeline produces from the same fixtures, so the marketing
-  page cannot quietly stop being the product.
-- `tests/integration/legacy-report.test.ts` — reports from the previous product
-  still parse, still render and still live at the same URLs.
-- `tests/unit/quality-gate.test.ts` — weighted towards what must **not** fire.
-  One inaccessible page can never fail a report.
-- `tests/unit/design-tokens.test.ts` — every foreground/background pair in the
-  palette, resolved through oklch to sRGB and measured for WCAG contrast.
-- `tests/e2e` — signed out and signed in, in both themes, from 320px up, with
-  axe. The signed-in session comes from an in-memory driver that the application
-  refuses to load alongside real credentials.
-
-## Signing in
-
-Create an account with an email address, confirm it, choose a password, then use
-that password from then on. A magic link is available as a fallback, and there is
-a password-recovery path.
-
-The email link flow is `token_hash` + `verifyOtp()` at `/auth/confirm`, chosen
-because it needs nothing from the browser that requested the link — PKCE needs a
-verifier cookie that a mail app's in-app browser does not have, which is what
-broke sign-in in production once. **The Supabase email templates must be edited
-to match**; the exact HTML is in [`ARCHITECTURE.md`](ARCHITECTURE.md).
-
-## Reports from the previous product
-
-This repository previously shipped a four-package research platform. Those
-reports are not migrated, not rewritten and not deleted: they remain readable at
-their existing URLs, keep their CSV exports, and render through the renderer that
-produced them with a banner saying where they came from. They are simply no
-longer offered.
-
-## Deploying
-
-See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the deployment checklist, the
-migration list, and what to verify after a deploy.
-
-## What this will not do
-
-It does not ask for, store or fetch your website.
-
-It does not use any Google service — no Places, no Maps, no Business Profile, no
-Cloud billing, and no scraping of search results.
-
-It does not scrape LinkedIn, Instagram, Facebook, TikTok or X, or attempt to work
-around a CAPTCHA, a robots refusal or an authentication wall. Where a source can
-be cited but not fetched, it is cited without being fetched and marked as such.
-
-It does not invent numbers. Market size, growth rates, prices, tariff rates,
-revenue, employee counts, certifications and contact details are reported where a
-source supports them and named as gaps where none does. A margin scenario with a
-missing input renders the missing input, never a plausible figure.
-
-It is not legal advice. Regulatory findings are research with their sources
-attached, and say so.
+Send messages automatically. Scrape LinkedIn or any site that forbids it.
+Invent a contact, a connection, or a commercial fact. Present a rented search
+snippet as verified evidence. Spend research budget without a cap and a
+confirmation. Show a percentage computed from three data points as if it were
+knowledge.

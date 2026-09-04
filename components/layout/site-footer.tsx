@@ -6,16 +6,16 @@ import { BRAND } from '@/config/brand';
 /**
  * The footer.
  *
- * Carries the two disclosures that belong on every page rather than only where
- * they are convenient: that reports are research and not advice, and what a
- * report credit is. Burying either in a terms page would be the kind of
- * technically-compliant that nobody defends afterwards.
+ * Internal-tool chrome: identity, the two legal pages, and the one
+ * disclosure that belongs on every page — that research output is assembled
+ * from public sources and is not advice. No marketing links; there is no
+ * marketing surface to link to.
  */
 export function SiteFooter() {
   /*
-   * `print:hidden`: the site footer is chrome, not document. The dossier prints
-   * its own sources and limitations, and a column of site links after them is
-   * noise on paper.
+   * `print:hidden`: the site footer is chrome, not document. Printed briefs
+   * carry their own sources and limitations, and a column of site links
+   * after them is noise on paper.
    */
   return (
     <footer className="border-rule mt-24 border-t print:hidden">
@@ -24,15 +24,14 @@ export function SiteFooter() {
           <div>
             <Logo />
             <p className="text-text-muted measure mt-4 text-[14px] leading-relaxed">
-              {BRAND.tagline} Every factual claim in a dossier carries a link to the
-              source it came from, and every dossier says what it could not establish.
+              {BRAND.tagline}. An internal platform of {BRAND.legalEntity}. Every material
+              claim about an account carries the source it came from, and anything
+              unverified says so.
             </p>
           </div>
 
           <nav aria-label="Footer" className="flex flex-col gap-2.5">
             <Meta className="mb-1">This site</Meta>
-            <FooterLink href="/example">Example report</FooterLink>
-            <FooterLink href="/methodology">Research methodology</FooterLink>
             <FooterLink href="/privacy">Privacy</FooterLink>
             <FooterLink href="/terms">Terms</FooterLink>
           </nav>
@@ -40,12 +39,9 @@ export function SiteFooter() {
 
         <div className="border-rule mt-12 space-y-2 border-t pt-6">
           <p className="text-text-faint text-[12px] leading-relaxed">
-            Reports are research assembled from public sources, not legal, regulatory or
-            financial advice. Verify anything you are about to spend money against with
-            the relevant authority or a qualified adviser first.
-          </p>
-          <p className="text-text-faint text-[12px] leading-relaxed">
-            {BRAND.credit.disclaimer}
+            Research here is assembled from public sources and colleague confirmations. It
+            is not legal or financial advice, and outreach drafts are proposals for human
+            review — nothing sends automatically.
           </p>
         </div>
       </div>

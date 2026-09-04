@@ -86,25 +86,23 @@ describe('the marketing copy counts what the code plans', () => {
     13: 'thirteen',
   };
 
-  it('names the right number of investigation areas', () => {
-    const expected = spelled[INVESTIGATION_AREAS.length];
-    expect(expected, 'add the spelling for this count').toBeTruthy();
-
+  it('the gateway makes no count claims at all', () => {
+    /*
+     * The public marketing surface is gone — the root page is an internal
+     * sign-in gateway now — so the honest form of this guard inverted: the
+     * gateway must not name investigation-area or search counts, because
+     * nothing on it derives them from the code that enforces them.
+     */
+    const spelledCounts = Object.values(spelled).join('|');
     const page = source('app/page.tsx');
-    const claim = page.match(/(\w+) investigation areas/i);
-    expect(claim, 'the landing page no longer names a count').toBeTruthy();
-    expect(claim![1]!.toLowerCase()).toBe(expected);
-  });
+    expect(page).not.toMatch(
+      new RegExp(`(?:\\d+|${spelledCounts}) investigation areas`, 'i'),
+    );
+    expect(page).not.toContain('SEARCH_BUDGET');
+    expect(page).not.toMatch(/\bsearches\b/i);
 
-  it('names the right number of searches', () => {
-    // The same trap, on the numbers that cost money.
-    const page = source('app/page.tsx');
-    for (const field of ['advanced', 'basic', 'total'] as const) {
-      expect(page, `the page hard-codes the ${field} search cap`).toContain(
-        `SEARCH_BUDGET.${field}`,
-      );
-    }
-    // And the caps themselves are what the runner enforces.
+    // The caps themselves are still what the runner enforces.
     expect(SEARCH_BUDGET.advanced + SEARCH_BUDGET.basic).toBe(SEARCH_BUDGET.total);
+    expect(spelled[INVESTIGATION_AREAS.length], 'keep the spellings table').toBeTruthy();
   });
 });
