@@ -142,7 +142,7 @@ export function TaskList({ tasks, today }: { tasks: TaskView[]; today: string })
           void addTask();
         }}
       >
-        <div className="min-w-0 flex-1">
+        <div className="min-w-56 flex-1">
           <TextField
             label="What needs doing"
             name="taskTitle"

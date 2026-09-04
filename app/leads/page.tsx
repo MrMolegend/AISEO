@@ -98,7 +98,9 @@ export default async function LeadsPage({
       intro="Search, filter and work the accounts discovery has found, with evidence and freshness beside every claim. Merged duplicates are hidden; nothing here is ever invented."
     >
       <form method="get" className="mt-8 flex flex-wrap items-end gap-4">
-        <div className="min-w-0 flex-1 sm:max-w-xs">
+        {/* A real minimum, so the field wraps to its own row when the
+            filter row is tight instead of collapsing to a sliver. */}
+        <div className="min-w-56 flex-1 sm:max-w-xs">
           <label htmlFor="q" className="text-text mb-2 block text-[13px] font-medium">
             Search
           </label>

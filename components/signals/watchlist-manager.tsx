@@ -177,7 +177,9 @@ export function WatchlistManager({
           void createWatch();
         }}
       >
-        <div className="min-w-0 flex-1">
+        {/* A real minimum, so the field wraps under the wide selects
+            instead of collapsing to a sliver beside them. */}
+        <div className="min-w-56 flex-1">
           <TextField
             label="Name the watch"
             name="watchName"
