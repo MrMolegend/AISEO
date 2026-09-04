@@ -186,6 +186,42 @@ export type Database = {
         }
         Relationships: []
       }
+      activities: {
+        Row: {
+          account_id: string
+          author_id: string | null
+          body: string
+          contact_id: string | null
+          created_at: string
+          happened_at: string
+          id: string
+          kind: string
+          private: boolean
+        }
+        Insert: {
+          account_id: string
+          author_id?: string | null
+          body: string
+          contact_id?: string | null
+          created_at?: string
+          happened_at?: string
+          id?: string
+          kind?: string
+          private?: boolean
+        }
+        Update: {
+          account_id?: string
+          author_id?: string | null
+          body?: string
+          contact_id?: string | null
+          created_at?: string
+          happened_at?: string
+          id?: string
+          kind?: string
+          private?: boolean
+        }
+        Relationships: []
+      }
       alt_brands: {
         Row: {
           active: boolean
@@ -631,12 +667,16 @@ export type Database = {
           created_at: string
           discovered_at: string
           domain: string | null
+          due_on: string | null
           fit_rationale: string | null
           icp_id: string | null
           id: string
           merged_into: string | null
+          next_action: string | null
           normalized_name: string
           owner_id: string | null
+          pipeline_stage: string | null
+          priority: string | null
           segment_key: string | null
           status: string
           summary: string | null
@@ -651,12 +691,16 @@ export type Database = {
           created_at?: string
           discovered_at?: string
           domain?: string | null
+          due_on?: string | null
           fit_rationale?: string | null
           icp_id?: string | null
           id?: string
           merged_into?: string | null
+          next_action?: string | null
           normalized_name: string
           owner_id?: string | null
+          pipeline_stage?: string | null
+          priority?: string | null
           segment_key?: string | null
           status?: string
           summary?: string | null
@@ -671,12 +715,16 @@ export type Database = {
           created_at?: string
           discovered_at?: string
           domain?: string | null
+          due_on?: string | null
           fit_rationale?: string | null
           icp_id?: string | null
           id?: string
           merged_into?: string | null
+          next_action?: string | null
           normalized_name?: string
           owner_id?: string | null
+          pipeline_stage?: string | null
+          priority?: string | null
           segment_key?: string | null
           status?: string
           summary?: string | null
@@ -934,6 +982,36 @@ export type Database = {
           status?: string
           updated_at?: string
           version?: number
+        }
+        Relationships: []
+      }
+      pipeline_history: {
+        Row: {
+          account_id: string
+          changed_by: string | null
+          created_at: string
+          from_stage: string | null
+          id: number
+          note: string
+          to_stage: string
+        }
+        Insert: {
+          account_id: string
+          changed_by?: string | null
+          created_at?: string
+          from_stage?: string | null
+          id?: never
+          note?: string
+          to_stage: string
+        }
+        Update: {
+          account_id?: string
+          changed_by?: string | null
+          created_at?: string
+          from_stage?: string | null
+          id?: never
+          note?: string
+          to_stage?: string
         }
         Relationships: []
       }
@@ -1302,6 +1380,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sales_tasks: {
+        Row: {
+          account_id: string | null
+          assignee_id: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          detail: string | null
+          due_on: string | null
+          id: string
+          playbook_key: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string | null
+          assignee_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          detail?: string | null
+          due_on?: string | null
+          id?: string
+          playbook_key?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string | null
+          assignee_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          detail?: string | null
+          due_on?: string | null
+          id?: string
+          playbook_key?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      saved_views: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          path: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          path: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          path?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       share_events: {
         Row: {

@@ -7,6 +7,10 @@ import { AccountActions } from '@/components/leads/account-actions';
 import { MergePanel } from '@/components/leads/merge-panel';
 import { RelationshipConfirm } from '@/components/leads/relationship-confirm';
 import { DraftOutreachButton } from '@/components/leads/draft-outreach-button';
+import { PipelineControls } from '@/components/leads/pipeline-controls';
+import { ActivityLog } from '@/components/leads/activity-log';
+import { getPipelineStore } from '@/lib/pipeline/store';
+import { PIPELINE_STAGE_LABEL, type PipelineStage } from '@/schemas/pipeline';
 import { ScorePanel } from '@/components/leads/score-panel';
 import { getRelationshipStore } from '@/lib/relationships/store';
 import { getScoreStore } from '@/lib/scoring/store';
@@ -86,7 +90,14 @@ export default async function AccountPage({
   const memberName = new Map(members.map((m) => [m.userId, m.displayName]));
 
   const scoreStore = await getScoreStore();
-  const [score, brands] = await Promise.all([scoreStore.get(id), config.listBrands()]);
+  const pipeline = await getPipelineStore();
+  const [score, brands, playbooks, activities, stageHistory] = await Promise.all([
+    scoreStore.get(id),
+    config.listBrands(),
+    config.getConfig('playbooks'),
+    pipeline.activitiesForAccount(id, membership.user.id),
+    pipeline.historyForAccount(id),
+  ]);
   const matches = brands.length > 0 ? matchBrands(account, claims, brands) : [];
 
   const relationshipStore = await getRelationshipStore();
@@ -163,6 +174,25 @@ export default async function AccountPage({
         selfId={membership.user.id}
         canWork={canWork}
       />
+
+      {canWork && (
+        <PipelineControls
+          accountId={account.id}
+          currentStage={account.pipelineStage}
+          playbooks={playbooks.map((playbook) => ({
+            key: playbook.key,
+            name: playbook.name,
+          }))}
+        />
+      )}
+      {account.pipelineStage && (
+        <p className="text-text-muted mt-3 text-[13px]">
+          Currently:{' '}
+          {PIPELINE_STAGE_LABEL[account.pipelineStage as PipelineStage] ??
+            account.pipelineStage}
+          {stageHistory[0]?.note ? ` — ${stageHistory[0].note}` : ''}
+        </p>
+      )}
 
       {account.fitRationale && (
         <Panel className="mt-8 p-6">
@@ -290,6 +320,27 @@ export default async function AccountPage({
           </p>
         )}
       </div>
+
+      {canWork && (
+        <>
+          <Rule label="Activity" className="mt-12" />
+          <div className="mt-4">
+            <ActivityLog
+              accountId={account.id}
+              activities={activities.map((activity) => ({
+                id: activity.id,
+                kind: activity.kind,
+                body: activity.body,
+                private: activity.private,
+                authorName: activity.authorId
+                  ? (memberName.get(activity.authorId) ?? 'A colleague')
+                  : 'Unknown',
+                happenedAt: activity.happenedAt,
+              }))}
+            />
+          </div>
+        </>
+      )}
 
       {canMerge && (
         <MergePanel

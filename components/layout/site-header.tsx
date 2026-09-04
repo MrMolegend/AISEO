@@ -4,9 +4,11 @@ import { getCurrentUser } from '@/lib/auth/server';
 import { getMembership } from '@/lib/auth/membership';
 import { BRAND } from '@/config/brand';
 import { ROLE_LABEL } from '@/schemas/team';
+import { Suspense } from 'react';
 import { AccountMenu } from './account-menu';
 import { MobileNav } from './mobile-nav';
 import { ScrollShrink } from './scroll-shrink';
+import { CommandPalette } from './command-palette';
 
 /**
  * Site header.
@@ -80,6 +82,19 @@ export async function SiteHeader() {
         )}
 
         <div className="ml-auto flex items-center gap-2">
+          {membership && (
+            <>
+              <span
+                className="text-text-subtle hidden text-[11px] tracking-wide md:inline"
+                aria-hidden="true"
+              >
+                Ctrl K
+              </span>
+              <Suspense fallback={null}>
+                <CommandPalette />
+              </Suspense>
+            </>
+          )}
           {user ? (
             <AccountMenu
               email={user.email}

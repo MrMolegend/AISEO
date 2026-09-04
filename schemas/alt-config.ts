@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { playbooksSchema } from '@/schemas/pipeline';
 
 /**
  * The keyed commercial configuration, and the schema for each key.
@@ -127,6 +128,7 @@ export const CONFIG_SCHEMAS = {
   outreach_rules: outreachRulesSchema,
   scoring_weights: scoringWeightsSchema,
   budget_caps: budgetCapsSchema,
+  playbooks: playbooksSchema,
 } as const;
 
 export type ConfigKey = keyof typeof CONFIG_SCHEMAS;

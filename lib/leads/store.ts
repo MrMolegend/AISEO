@@ -33,6 +33,10 @@ export interface LeadAccountRecord {
   territoryKey: string | null;
   city: string | null;
   status: LeadStatus;
+  pipelineStage: string | null;
+  nextAction: string | null;
+  dueOn: string | null;
+  priority: 'high' | 'medium' | 'low' | null;
   summary: string | null;
   fitRationale: string | null;
   mergedInto: string | null;
@@ -122,7 +126,16 @@ export interface LeadStore {
     patch: Partial<
       Pick<
         LeadAccountRecord,
-        'status' | 'ownerId' | 'summary' | 'fitRationale' | 'segmentKey' | 'territoryKey'
+        | 'status'
+        | 'ownerId'
+        | 'summary'
+        | 'fitRationale'
+        | 'segmentKey'
+        | 'territoryKey'
+        | 'pipelineStage'
+        | 'nextAction'
+        | 'dueOn'
+        | 'priority'
       >
     >,
   ): Promise<LeadAccountRecord | null>;
@@ -169,6 +182,10 @@ function accountRowToRecord(row: AccountRow): LeadAccountRecord {
     territoryKey: row.territory_key,
     city: row.city,
     status: row.status as LeadStatus,
+    pipelineStage: row.pipeline_stage,
+    nextAction: row.next_action,
+    dueOn: row.due_on,
+    priority: row.priority as LeadAccountRecord['priority'],
     summary: row.summary,
     fitRationale: row.fit_rationale,
     mergedInto: row.merged_into,
@@ -344,7 +361,16 @@ export class SupabaseLeadStore implements LeadStore {
     patch: Partial<
       Pick<
         LeadAccountRecord,
-        'status' | 'ownerId' | 'summary' | 'fitRationale' | 'segmentKey' | 'territoryKey'
+        | 'status'
+        | 'ownerId'
+        | 'summary'
+        | 'fitRationale'
+        | 'segmentKey'
+        | 'territoryKey'
+        | 'pipelineStage'
+        | 'nextAction'
+        | 'dueOn'
+        | 'priority'
       >
     >,
   ): Promise<LeadAccountRecord | null> {
@@ -355,6 +381,10 @@ export class SupabaseLeadStore implements LeadStore {
     if (patch.fitRationale !== undefined) row.fit_rationale = patch.fitRationale;
     if (patch.segmentKey !== undefined) row.segment_key = patch.segmentKey;
     if (patch.territoryKey !== undefined) row.territory_key = patch.territoryKey;
+    if (patch.pipelineStage !== undefined) row.pipeline_stage = patch.pipelineStage;
+    if (patch.nextAction !== undefined) row.next_action = patch.nextAction;
+    if (patch.dueOn !== undefined) row.due_on = patch.dueOn;
+    if (patch.priority !== undefined) row.priority = patch.priority;
 
     const { data, error } = await this.client
       .from('lead_accounts')
@@ -597,6 +627,10 @@ export class MemoryLeadStore implements LeadStore {
       territoryKey: input.territoryKey,
       city: input.city ?? null,
       status: 'candidate',
+      pipelineStage: null,
+      nextAction: null,
+      dueOn: null,
+      priority: null,
       summary: null,
       fitRationale: null,
       mergedInto: null,
@@ -655,7 +689,16 @@ export class MemoryLeadStore implements LeadStore {
     patch: Partial<
       Pick<
         LeadAccountRecord,
-        'status' | 'ownerId' | 'summary' | 'fitRationale' | 'segmentKey' | 'territoryKey'
+        | 'status'
+        | 'ownerId'
+        | 'summary'
+        | 'fitRationale'
+        | 'segmentKey'
+        | 'territoryKey'
+        | 'pipelineStage'
+        | 'nextAction'
+        | 'dueOn'
+        | 'priority'
       >
     >,
   ): Promise<LeadAccountRecord | null> {
