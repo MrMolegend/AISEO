@@ -1,16 +1,13 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BRAND } from '@/config/brand';
 
 /**
  * The signed-in control.
  *
- * Carries the account's identity and its remaining report credits, so that on
- * any width — there is one obvious place that answers "am I signed in, as whom,
- * and with how many tokens". Previously the balance lived in a chip that
- * disappeared below `sm` and the navigation disappeared below `md`, which left
- * a phone user with a logo and an unlabelled circle.
+ * Carries the account's identity and role, plus the workspace surfaces that
+ * do not fit the header's primary row. On any width there is one obvious
+ * place that answers "am I signed in, as whom, and as what".
  *
  * Sign-out is a form posting to /auth/sign-out rather than a click handler. It
  * works before hydration, it cannot be triggered by a stray GET, and the
@@ -19,11 +16,14 @@ import { BRAND } from '@/config/brand';
 
 export function AccountMenu({
   email,
-  credits,
+  roleLabel,
+  workspaceLinks = [],
 }: {
   email: string | null;
-  /** Whole report credits. The token figure never leaves the server. */
-  credits: number;
+  /** The member's role, worded for people; null for a signed-in non-member. */
+  roleLabel: string | null;
+  /** Secondary workspace surfaces, already filtered by role on the server. */
+  workspaceLinks?: ReadonlyArray<{ href: string; label: string }>;
 }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -68,15 +68,15 @@ export function AccountMenu({
         >
           {initial}
         </span>
-        {/* The credit count sits in the trigger so it survives to the
-            narrowest viewport, where a separate chip would have been hidden. */}
-        <span className="text-[13px] font-medium" data-numeric>
-          {credits}
-        </span>
+        {roleLabel && (
+          <span aria-hidden="true" className="hidden text-[13px] font-medium sm:inline">
+            {roleLabel}
+          </span>
+        )}
         <span className="sr-only">
           Account menu
           {email ? ` for ${email}` : ''}
-          {`. ${credits} ${credits === 1 ? BRAND.credit.singular : BRAND.credit.plural} remaining`}
+          {roleLabel ? `. Signed in as ${roleLabel}` : ''}
         </span>
       </button>
 
@@ -90,19 +90,28 @@ export function AccountMenu({
             <p className="text-text truncate text-sm font-medium">
               {email ?? 'Signed in'}
             </p>
-            <p className="text-text-subtle mt-0.5 text-xs" data-numeric>
-              {credits} {credits === 1 ? BRAND.credit.singular : BRAND.credit.plural}
+            <p className="text-text-subtle mt-0.5 text-xs">
+              {roleLabel ?? 'No workspace access'}
             </p>
           </div>
 
+          {workspaceLinks.length > 0 && (
+            <>
+              <div role="none" className="border-rule my-1 border-t" />
+              {workspaceLinks.map((link) => (
+                <MenuLink
+                  key={link.href}
+                  href={link.href}
+                  onNavigate={() => setOpen(false)}
+                >
+                  {link.label}
+                </MenuLink>
+              ))}
+            </>
+          )}
+
           <div role="none" className="border-rule my-1 border-t" />
 
-          <MenuLink href="/dashboard" onNavigate={() => setOpen(false)}>
-            Intelligence Desk
-          </MenuLink>
-          <MenuLink href="/dashboard#dossiers" onNavigate={() => setOpen(false)}>
-            My dossiers
-          </MenuLink>
           <MenuLink href="/account" onNavigate={() => setOpen(false)}>
             Account
           </MenuLink>

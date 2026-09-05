@@ -4,77 +4,87 @@ import { BRAND } from '@/config/brand';
 
 export const metadata: Metadata = {
   title: `Privacy — ${BRAND.shortName}`,
-  description: `What data ${BRAND.name} collects when you run research, and what we do with it.`,
+  description: `What data ${BRAND.name} stores, where it comes from, and how it is removed.`,
   alternates: { canonical: '/privacy' },
 };
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy" updated="August 2026">
-      <LegalSection heading="Your account">
+    <LegalPage title="Privacy" updated="September 2026">
+      <LegalSection heading="What this system is">
         <p>
-          Creating an account stores your email address. We use it to sign you in, to
-          associate your research with you, and to contact you about the service. Sign-in
-          is by emailed link, so we do not store a password.
-        </p>
-        <p>
-          Your {BRAND.credit.plural} balance and every movement of it are recorded against
-          your account. That ledger is append-only: it is how we can show you exactly what
-          a report cost and when a refund was issued.
+          {BRAND.name} is a private, invitation-only workspace operated by{' '}
+          {BRAND.legalEntity} for its own sales team. There is no public sign-up and no
+          external customer data: the people with accounts are team members, and the
+          records inside are the team&rsquo;s working notes about prospective wholesale
+          customers.
         </p>
       </LegalSection>
 
-      <LegalSection heading="What we collect when you run research">
+      <LegalSection heading="Team member accounts">
         <p>
-          We store the brief you submit — the business name, website, market and any
-          context you provide — along with the public pages and search results we
-          retrieve, and the report we generate from them. Reports are private to your
-          account. A report is only reachable by someone else if you deliberately share
-          its link.
-        </p>
-        <p>
-          We record a one-way salted hash of your IP address. This is used only to apply
-          rate limits and to investigate abuse. We cannot recover the original address
-          from the hash.
+          An account stores your email address, your display name and your workspace role.
+          Sign-in is by emailed link, so no password is stored. Actions that change shared
+          records — imports, exports, stage changes, overrides, repairs — are recorded
+          with who performed them, because an audit trail is part of how the team trusts
+          its own data.
         </p>
       </LegalSection>
 
-      <LegalSection heading="Third-party businesses named in a report">
+      <LegalSection heading="Businesses and people in the lead records">
         <p>
-          Research reports describe real businesses and, where a package calls for it,
-          people who publish contact details in a professional capacity. Everything we
-          record comes from sources that are published publicly, and every factual claim
-          carries a link to where we found it. We do not buy data, and we do not attempt
-          to obtain anything a business has chosen not to publish.
+          Lead accounts describe real businesses, and contacts describe people only in
+          their published professional capacity. Everything recorded comes from publicly
+          published sources, from authorised imports of the company&rsquo;s own records,
+          or from a colleague&rsquo;s explicit attestation — and every factual claim
+          carries its source and retrieval date. Nothing is bought, scraped from behind a
+          login, or inferred and presented as fact; where something is not verified, the
+          record says so.
         </p>
         <p>
-          If you are named in a report and would like your details removed, contact us and
-          we will remove them.
+          The suppression list is absolute: an account, contact or channel placed on it is
+          excluded from outreach drafting everywhere, and the exclusion survives
+          re-discovery. Anyone asking not to be contacted is added on request.
         </p>
       </LegalSection>
 
-      <LegalSection heading="Sites we retrieve">
+      <LegalSection heading="LinkedIn">
         <p>
-          We retrieve only publicly accessible pages, identify ourselves honestly as an
-          automated tool, and respect a site&rsquo;s robots.txt directives. Each research
-          run is bounded to a small number of pages and we do not crawl beyond what a
-          report requires.
+          When enabled, LinkedIn is used only through official APIs with OAuth consent.
+          Signing in with LinkedIn associates your own verified identity; it does not
+          harvest connections, message anyone, or read anything the official scope does
+          not grant. Access tokens are used server-side for the exchange and are not
+          persisted. Public LinkedIn URLs that arrive through a search index are labelled
+          as exactly that. No scraping, browser automation or unofficial endpoint is used,
+          in any mode.
         </p>
       </LegalSection>
 
       <LegalSection heading="Third-party processing">
         <p>
-          The material we gather is sent to Anthropic&rsquo;s API to produce the analysis,
-          and to a web search provider to find sources. Accounts, wallets and reports are
-          stored with our database provider. All act as processors on our behalf.
+          Evidence gathering sends queries to a web search provider; analysis uses
+          Anthropic&rsquo;s API; records are stored with our database provider. All act as
+          processors. Nothing in this system sends outreach: messages are drafted,
+          reviewed and copied by a person, and delivery happens outside the system on
+          channels the team already uses.
         </p>
       </LegalSection>
 
-      <LegalSection heading="Deletion">
+      <LegalSection heading="Retention and deletion">
         <p>
-          You can ask us to delete your account at any time. Doing so removes your
-          profile, your reports and your wallet. Contact us with the email address on the
-          account.
+          Deleting a team member&rsquo;s account removes their profile, their personal
+          records (saved views, watchlists, provider connections, private notes and
+          relationship attestations) with it. Shared work records they touched — stage
+          history, activities, tasks, drafts — remain, with the personal reference
+          cleared, because they are the team&rsquo;s record of what happened, not the
+          individual&rsquo;s.
+        </p>
+        <p>
+          Records about a business or person can be corrected or removed on request to the
+          workspace administrator; suppression entries are kept so the &ldquo;do not
+          contact&rdquo; decision itself is never forgotten. Reports created under the
+          platform&rsquo;s earlier products remain reachable by their owners and are
+          covered by the same deletion path.
         </p>
       </LegalSection>
     </LegalPage>

@@ -31,9 +31,10 @@ import {
  *   · A private read requires the owner's id, and the query filters on it. Not
  *     "fetch then compare" — the row never leaves the database unless it
  *     belongs to the caller, so a forgotten comparison cannot leak it.
- *   · A public read matches on public_id alone, which is a 16-character
- *     capability. That is the sharing mechanism, and it is why public_id is
- *     high-entropy and the uuid primary key never leaves the server.
+ *   · There is no public read. The public id is an opaque address, not a
+ *     capability: a visitor without the owner's session or a live share
+ *     token reads nothing. Share resolution reads by internal id, after the
+ *     token has been validated against stored hashes.
  */
 
 /** ~95 bits. The only identifier that reaches a browser or a shared link. */
@@ -69,6 +70,12 @@ export interface ResearchJobRecord {
   sources: StoredSource[];
   meta: ReportMeta | null;
   cachedFromJobId: string | null;
+  /** The business profile that seeded this run, when one did. */
+  profileId: string | null;
+  /** How many runs have started for this row. */
+  attemptCount: number;
+  /** Touched at every stage transition; the stall sweep reads it. */
+  heartbeatAt: string | null;
   createdAt: string;
   startedAt: string | null;
   completedAt: string | null;
@@ -83,6 +90,7 @@ export interface CreateJobInput {
   subjectName: string;
   subjectDomain: string | null;
   cachedFromJobId?: string | null;
+  profileId?: string | null;
 }
 
 export interface CompleteJobInput {
@@ -108,8 +116,13 @@ export interface ResearchJobStore {
   fail(jobId: string, code: ErrorCode): Promise<void>;
   /** Owner-scoped read. Returns null for anyone else's job. */
   getForUser(publicId: string, userId: string): Promise<ResearchJobRecord | null>;
-  /** Capability read, by public id alone. Only ever returns a complete job. */
-  getPublic(publicId: string): Promise<ResearchJobRecord | null>;
+  /**
+   * Read by internal id, complete jobs only. For exactly one caller: share
+   * resolution, where a validated share token IS the authorisation and
+   * carries the job's internal id. Never expose this to anything that takes
+   * an id from a request.
+   */
+  getForShare(jobId: string): Promise<ResearchJobRecord | null>;
   listForUser(userId: string, limit?: number): Promise<ResearchJobRecord[]>;
   /** A recent completed job of this user's with identical inputs. */
   findCached(
@@ -117,6 +130,26 @@ export interface ResearchJobStore {
     inputHash: string,
     maxAgeMs: number,
   ): Promise<ResearchJobRecord | null>;
+  /**
+   * A non-terminal job of this user's with identical inputs — the duplicate-
+   * active guard reads it so a double submission joins the running job
+   * instead of starting (and reserving for) a second one.
+   */
+  findActive(userId: string, inputHash: string): Promise<ResearchJobRecord | null>;
+  /** Recorded at every stage transition; failure costs a pulse, not a report. */
+  touchHeartbeat(jobId: string): Promise<void>;
+  /** This profile's completed runs, oldest first — the version rail. */
+  listForProfile(userId: string, profileId: string): Promise<ResearchJobRecord[]>;
+  /**
+   * Non-terminal jobs whose last pulse (or creation, for jobs that never
+   * pulsed) is older than the cutoff. The repair path acts on these.
+   */
+  listStale(cutoffIso: string, limit?: number): Promise<ResearchJobRecord[]>;
+  /**
+   * Recent jobs across every user. The admin console's read and nothing
+   * else's; every caller must have passed requireAdmin() first.
+   */
+  listRecentAll(limit?: number): Promise<ResearchJobRecord[]>;
 }
 
 export function newPublicId(): string {
@@ -184,6 +217,9 @@ function rowToRecord(row: JobRow, sources: StoredSource[]): ResearchJobRecord {
     sources,
     meta: result?.meta ?? null,
     cachedFromJobId: row.cached_from_job_id,
+    profileId: row.profile_id,
+    attemptCount: row.attempt_count,
+    heartbeatAt: row.heartbeat_at ? toIsoUtc(row.heartbeat_at) : null,
     createdAt: toIsoUtc(row.created_at),
     startedAt: row.started_at ? toIsoUtc(row.started_at) : null,
     completedAt: row.completed_at ? toIsoUtc(row.completed_at) : null,
@@ -218,6 +254,7 @@ export class SupabaseResearchJobStore implements ResearchJobStore {
         stage: 'context',
         stage_index: 0,
         cached_from_job_id: input.cachedFromJobId ?? null,
+        profile_id: input.profileId ?? null,
       })
       .select('*')
       .single<JobRow>();
@@ -239,6 +276,8 @@ export class SupabaseResearchJobStore implements ResearchJobStore {
         stage,
         stage_index: stageIndex(stage),
         status: statusForStage(stage),
+        // Every stage transition is a pulse; the stall sweep reads nothing else.
+        heartbeat_at: new Date().toISOString(),
         ...(stage === 'mapping' ? { started_at: new Date().toISOString() } : {}),
       })
       .eq('id', jobId)
@@ -350,11 +389,11 @@ export class SupabaseResearchJobStore implements ResearchJobStore {
     return data ? rowToRecord(data, []) : null;
   }
 
-  async getPublic(publicId: string): Promise<ResearchJobRecord | null> {
+  async getForShare(jobId: string): Promise<ResearchJobRecord | null> {
     const { data, error } = await this.client
       .from('research_jobs')
       .select('*')
-      .eq('public_id', publicId)
+      .eq('id', jobId)
       .eq('status', 'complete')
       .maybeSingle<JobRow>();
 
@@ -407,6 +446,91 @@ export class SupabaseResearchJobStore implements ResearchJobStore {
     }
     return data ? rowToRecord(data, []) : null;
   }
+
+  async findActive(userId: string, inputHash: string): Promise<ResearchJobRecord | null> {
+    const { data, error } = await this.client
+      .from('research_jobs')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('input_hash', inputHash)
+      .not('status', 'in', '(complete,failed,cancelled)')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle<JobRow>();
+
+    if (error) {
+      // Same posture as the cache: assuming "no duplicate" costs at worst a
+      // duplicate the reservation idempotency already absorbs.
+      logger.warn('jobs.active_lookup_failed', { error: error.message });
+      return null;
+    }
+    return data ? rowToRecord(data, []) : null;
+  }
+
+  async touchHeartbeat(jobId: string): Promise<void> {
+    const { error } = await this.client
+      .from('research_jobs')
+      .update({ heartbeat_at: new Date().toISOString() })
+      .eq('id', jobId)
+      .not('status', 'in', '(complete,failed,cancelled)');
+
+    if (error) {
+      logger.warn('jobs.heartbeat_write_failed', { jobId, error: error.message });
+    }
+  }
+
+  async listForProfile(userId: string, profileId: string): Promise<ResearchJobRecord[]> {
+    const { data, error } = await this.client
+      .from('research_jobs')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('profile_id', profileId)
+      .order('created_at', { ascending: true })
+      .limit(100);
+
+    if (error) {
+      throw new PlatformError('STORAGE_ERROR', 'Could not list this profile’s reports', {
+        cause: error,
+      });
+    }
+    return (data ?? []).map((row) => rowToRecord(row as JobRow, []));
+  }
+
+  async listStale(cutoffIso: string, limit = 20): Promise<ResearchJobRecord[]> {
+    // A job that never pulsed is judged by its creation time; one that did is
+    // judged by its last pulse.
+    const { data, error } = await this.client
+      .from('research_jobs')
+      .select('*')
+      .not('status', 'in', '(complete,failed,cancelled)')
+      .or(
+        `heartbeat_at.lt.${cutoffIso},and(heartbeat_at.is.null,created_at.lt.${cutoffIso})`,
+      )
+      .order('created_at', { ascending: true })
+      .limit(Math.min(limit, 50));
+
+    if (error) {
+      throw new PlatformError('STORAGE_ERROR', 'Could not scan for stalled jobs', {
+        cause: error,
+      });
+    }
+    return (data ?? []).map((row) => rowToRecord(row as JobRow, []));
+  }
+
+  async listRecentAll(limit = 50): Promise<ResearchJobRecord[]> {
+    const { data, error } = await this.client
+      .from('research_jobs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(Math.min(limit, 100));
+
+    if (error) {
+      throw new PlatformError('STORAGE_ERROR', 'Could not list jobs', {
+        cause: error,
+      });
+    }
+    return (data ?? []).map((row) => rowToRecord(row as JobRow, []));
+  }
 }
 
 /* ─────────────────────────── In-memory driver ─────────────────────────────── */
@@ -450,6 +574,9 @@ export class MemoryResearchJobStore implements ResearchJobStore {
       sources: [],
       meta: null,
       cachedFromJobId: input.cachedFromJobId ?? null,
+      profileId: input.profileId ?? null,
+      attemptCount: 1,
+      heartbeatAt: null,
       createdAt: new Date().toISOString(),
       startedAt: null,
       completedAt: null,
@@ -472,6 +599,7 @@ export class MemoryResearchJobStore implements ResearchJobStore {
     job.stage = stage;
     job.stageIndex = stageIndex(stage);
     job.status = statusForStage(stage);
+    job.heartbeatAt = new Date().toISOString();
     if (stage === 'mapping' && !job.startedAt) {
       job.startedAt = new Date().toISOString();
     }
@@ -504,11 +632,9 @@ export class MemoryResearchJobStore implements ResearchJobStore {
     return null;
   }
 
-  async getPublic(publicId: string): Promise<ResearchJobRecord | null> {
-    for (const job of memory().jobs.values()) {
-      if (job.publicId === publicId && job.status === 'complete') return job;
-    }
-    return null;
+  async getForShare(jobId: string): Promise<ResearchJobRecord | null> {
+    const job = memory().jobs.get(jobId);
+    return job && job.status === 'complete' ? job : null;
   }
 
   async listForUser(userId: string, limit = 25): Promise<ResearchJobRecord[]> {
@@ -535,6 +661,52 @@ export class MemoryResearchJobStore implements ResearchJobStore {
         )
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0] ?? null
     );
+  }
+
+  async findActive(userId: string, inputHash: string): Promise<ResearchJobRecord | null> {
+    const { isTerminal } = await import('./stages');
+    return (
+      [...memory().jobs.values()]
+        .filter(
+          (job) =>
+            job.userId === userId &&
+            job.inputHash === inputHash &&
+            !isTerminal(job.status),
+        )
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0] ?? null
+    );
+  }
+
+  async touchHeartbeat(jobId: string): Promise<void> {
+    const { isTerminal } = await import('./stages');
+    const job = this.byId(jobId);
+    if (!job || isTerminal(job.status)) return;
+    job.heartbeatAt = new Date().toISOString();
+  }
+
+  async listForProfile(userId: string, profileId: string): Promise<ResearchJobRecord[]> {
+    return [...memory().jobs.values()]
+      .filter((job) => job.userId === userId && job.profileId === profileId)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+      .slice(0, 100);
+  }
+
+  async listStale(cutoffIso: string, limit = 20): Promise<ResearchJobRecord[]> {
+    const { isTerminal } = await import('./stages');
+    return [...memory().jobs.values()]
+      .filter((job) => {
+        if (isTerminal(job.status)) return false;
+        const pulse = job.heartbeatAt ?? job.createdAt;
+        return pulse < cutoffIso;
+      })
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+      .slice(0, Math.min(limit, 50));
+  }
+
+  async listRecentAll(limit = 50): Promise<ResearchJobRecord[]> {
+    return [...memory().jobs.values()]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, Math.min(limit, 100));
   }
 }
 

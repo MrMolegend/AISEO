@@ -3,202 +3,131 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
-import { Button } from '@/components/ui/button';
 import { Panel, Rule, Meta } from '@/components/ui/panel';
-import { DossierFilter } from '@/components/dashboard/dossier-filter';
-import { BRAND, pageTitle } from '@/config/brand';
-import { creditsFrom } from '@/config/report';
-import { VERDICT_LABEL, type Verdict } from '@/config/design';
+import { Button } from '@/components/ui/button';
+import { pageTitle } from '@/config/brand';
 import { getCurrentUser, signInPath } from '@/lib/auth/server';
-import { getTokenWallet } from '@/lib/tokens';
-import { getResearchJobStore, type ResearchJobRecord } from '@/lib/jobs/store';
-import { reportKindLabel, isLegacyReport, targetMarketLabel } from '@/lib/jobs/labels';
-import { stageLabel, isTerminal } from '@/lib/jobs/stages';
-import { renderErrorCopy } from '@/lib/errors';
-
-export const dynamic = 'force-dynamic';
+import { getMembership } from '@/lib/auth/membership';
+import { ROLE_LABEL } from '@/schemas/team';
+import { NetworkMotif } from '@/components/motion/network-motif';
 
 export const metadata: Metadata = {
-  title: pageTitle('Intelligence Desk'),
+  title: pageTitle('Command Center'),
   robots: { index: false, follow: false },
 };
 
 /**
- * The Intelligence Desk.
+ * The Command Center.
  *
- * A working surface rather than a list of purchases: what is running now, what
- * has been decided, and one way to start the next thing. Deliberately shows no
- * package cards and no token figure — the customer counts reports, and the
- * conversion happens here on the server so no token number reaches the browser.
+ * The member's operational front page. It grows with the workspace: as the
+ * lead, campaign, pipeline and task domains land, their needs-attention
+ * queues surface here in priority order. Sections render only when they have
+ * something true to say — an empty workspace gets first steps for the
+ * member's role, not a grid of zeroes.
  */
-export default async function DashboardPage() {
+export default async function CommandCenterPage() {
   const user = await getCurrentUser();
   if (!user) redirect(signInPath('/dashboard'));
 
-  const [wallet, store] = await Promise.all([getTokenWallet(), getResearchJobStore()]);
-  const [balance, jobs] = await Promise.all([
-    wallet.getBalance(user.id),
-    store.listForUser(user.id, 50),
-  ]);
+  const membership = await getMembership();
+  if (!membership) redirect('/request-access');
 
-  const credits = creditsFrom(balance.available);
-  const active = jobs.filter((job) => !isTerminal(job.status));
-  const finished = jobs.filter((job) => isTerminal(job.status));
+  const { member } = membership;
+  const isManager = member.role === 'super_admin' || member.role === 'sales_manager';
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <SiteHeader />
 
-      <main
-        id="main"
-        className="mx-auto max-w-[var(--container-page)] px-5 py-12 md:px-8"
-      >
-        <div className="flex flex-wrap items-end justify-between gap-6">
+      <main className="mx-auto w-full max-w-[var(--container-page)] flex-1 px-5 pt-10 pb-16 md:px-8">
+        <header className="flex flex-wrap items-end justify-between gap-6">
           <div>
-            <Meta>Intelligence Desk</Meta>
-            <h1 className="font-display text-text mt-3 text-[32px] leading-tight md:text-[40px]">
-              {jobs.length === 0 ? 'Welcome' : 'Your market assessments'}
+            <Meta>Command Center</Meta>
+            <h1 className="font-display text-text mt-2 text-3xl font-medium tracking-tight md:text-4xl">
+              {member.displayName}
             </h1>
+            <p className="text-text-muted mt-2 text-[14px]">
+              {ROLE_LABEL[member.role]}
+              {member.territories.length > 0 ? ` — ${member.territories.join(', ')}` : ''}
+            </p>
           </div>
-
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="text-right">
-              <Meta>Beta access</Meta>
-              <p className="text-text mt-1 text-[15px]" data-numeric>
-                {credits} {credits === 1 ? BRAND.credit.singular : BRAND.credit.plural}
-              </p>
+          <div className="flex flex-col items-end gap-4">
+            <NetworkMotif className="hidden h-16 w-48 opacity-80 md:block" />
+            <div className="flex flex-wrap gap-3">
+              <Button asChild>
+                <Link href="/campaigns">Campaigns</Link>
+              </Button>
+              <Button asChild variant="secondary">
+                <Link href="/leads">Lead explorer</Link>
+              </Button>
             </div>
-            <Button asChild>
-              <Link href="/assess">Assess a market</Link>
-            </Button>
           </div>
+        </header>
+
+        <Rule label="First steps" className="mt-12" />
+        <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {isManager && (
+            <StepCard
+              step="01"
+              title="Confirm the commercial profile"
+              body="Territories, segments, the brand catalogue and approved proof points drive discovery and outreach. Facts seeded from the build carry their source and date — review them before the first campaign."
+              href="/commercial"
+              cta="Commercial configuration"
+            />
+          )}
+          <StepCard
+            step={isManager ? '02' : '01'}
+            title="Define an ideal customer profile"
+            body="Territory, segment, category mix and evidence bar — a reusable description of the accounts worth finding."
+            href="/icps"
+            cta="Ideal customer profiles"
+          />
+          <StepCard
+            step={isManager ? '03' : '02'}
+            title="Run a discovery campaign"
+            body="Bounded, evidence-led research with a cost preview before anything spends. Candidates arrive with sources attached, never invented."
+            href="/campaigns"
+            cta="Campaigns"
+          />
         </div>
 
-        {credits === 0 && (
-          <Panel edge="copper" className="mt-8">
-            <div className="p-5">
-              <p className="text-text text-[14px] leading-relaxed">
-                You have no {BRAND.credit.plural} left. During the beta they are granted
-                manually — write to {BRAND.supportEmail} and we will sort it out.
-              </p>
-            </div>
-          </Panel>
-        )}
-
-        {jobs.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <>
-            {active.length > 0 && (
-              <section aria-labelledby="active-heading" className="mt-14">
-                <h2 id="active-heading" className="sr-only">
-                  Research in progress
-                </h2>
-                <Rule label="In progress" />
-                <ul className="mt-4 space-y-px">
-                  {active.map((job) => (
-                    <ActiveRow key={job.publicId} job={job} />
-                  ))}
-                </ul>
-              </section>
-            )}
-
-            <section aria-labelledby="dossiers-heading" id="dossiers" className="mt-14">
-              <h2 id="dossiers-heading" className="sr-only">
-                Completed dossiers
-              </h2>
-              <Rule label={`Dossiers (${finished.length})`} />
-              <div className="mt-4">
-                <DossierFilter
-                  count={finished.length}
-                  rows={finished.map((job) => ({
-                    publicId: job.publicId,
-                    subject: job.subjectName,
-                    market: targetMarketLabel(job) ?? '',
-                    kind: reportKindLabel(job.packageId),
-                    legacy: isLegacyReport(job.packageId),
-                    status: job.status,
-                    updatedAt: job.completedAt ?? job.createdAt,
-                    verdict: verdictOf(job),
-                    confidence: confidenceOf(job),
-                    errorTitle:
-                      job.status === 'failed'
-                        ? renderErrorCopy(job.errorCode ?? 'UNKNOWN', job.subjectName)
-                            .title
-                        : null,
-                  }))}
-                />
-              </div>
-            </section>
-          </>
-        )}
+        <Rule label="Needs attention" className="mt-14" />
+        <Panel className="mt-6 p-8">
+          <p className="text-text-muted text-[14px] leading-relaxed">
+            Nothing needs attention yet. As campaigns run, this section fills with
+            priority leads, warm paths awaiting confirmation, overdue next actions and
+            research that has finished or stalled.
+          </p>
+        </Panel>
       </main>
 
       <SiteFooter />
-    </>
+    </div>
   );
 }
 
-/** Reads the verdict off a stored market-entry report without parsing it whole. */
-function verdictOf(job: ResearchJobRecord): Verdict | null {
-  if (isLegacyReport(job.packageId) || job.status !== 'complete') return null;
-  const decision = (job.report as { decision?: { verdict?: string } } | null)?.decision;
-  const verdict = decision?.verdict;
-  return verdict && verdict in VERDICT_LABEL ? (verdict as Verdict) : null;
-}
-
-function confidenceOf(job: ResearchJobRecord): string | null {
-  if (isLegacyReport(job.packageId) || job.status !== 'complete') return null;
-  const decision = (job.report as { decision?: { confidence?: string } } | null)
-    ?.decision;
-  return decision?.confidence ?? null;
-}
-
-function ActiveRow({ job }: { job: ResearchJobRecord }) {
+function StepCard({
+  step,
+  title,
+  body,
+  href,
+  cta,
+}: {
+  step: string;
+  title: string;
+  body: string;
+  href: string;
+  cta: string;
+}) {
   return (
-    <li className="border-rule bg-ground-raised border p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className="bg-signal animate-node inline-block h-2 w-2"
-              aria-hidden="true"
-            />
-            <Meta>{stageLabel(job.stage)}</Meta>
-          </div>
-          <p className="text-text mt-1.5 truncate text-[15px] font-medium">
-            {job.subjectName}
-          </p>
-          {targetMarketLabel(job) && <Meta>{targetMarketLabel(job)}</Meta>}
-        </div>
+    <Panel className="flex flex-col p-6">
+      <Meta data-numeric>Step {step}</Meta>
+      <h2 className="font-display text-text mt-2 text-xl font-medium">{title}</h2>
+      <p className="text-text-muted mt-3 flex-1 text-[14px] leading-relaxed">{body}</p>
+      <div className="mt-5">
         <Button asChild variant="secondary" size="sm">
-          <Link href={`/research/${job.publicId}`}>Watch progress</Link>
+          <Link href={href}>{cta}</Link>
         </Button>
-      </div>
-    </li>
-  );
-}
-
-function EmptyState() {
-  return (
-    <Panel edge="signal" className="mt-14">
-      <div className="p-8 md:p-10">
-        <h2 className="font-display text-text text-[24px] leading-tight">
-          Nothing here yet
-        </h2>
-        <p className="text-text-muted measure mt-3 text-[15px] leading-relaxed">
-          An assessment takes about ten minutes to brief and three to eight to run. You
-          will need to know what you sell, where you want to take it, and what you are
-          trying to decide — there is no website address to find and nothing to upload.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Button asChild>
-            <Link href="/assess">Assess a market</Link>
-          </Button>
-          <Button asChild variant="secondary">
-            <Link href="/example">Read a worked example first</Link>
-          </Button>
-        </div>
       </div>
     </Panel>
   );

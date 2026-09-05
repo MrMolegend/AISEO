@@ -13,11 +13,20 @@ import { EXAMPLE_SUBMISSION } from '@/fixtures/market-entry/case';
 /**
  * The intake, and the promise it makes by omission.
  *
- * The first test in this file is the one that matters most. "We do not ask for
- * your website" is a product promise, and the only thing standing between it
- * and a future field called `siteUrl` is somebody remembering. So it is read
- * off the source file rather than asserted about behaviour: a website field
- * cannot be added back without this failing and someone having to argue for it.
+ * The first test in this file is the one that matters most. "The brief never
+ * asks for your website" is a product promise, and the only thing standing
+ * between it and a future field called `siteUrl` is somebody remembering. So
+ * it is read off the source file rather than asserted about behaviour: a
+ * website field cannot be added back without this failing and someone having
+ * to argue for it.
+ *
+ * The promise's precise shape, since business profiles arrived: a website is
+ * OPTIONAL, never required, and never part of the brief. The one place a URL
+ * may live is `business_profiles.website_url` — schemas/business-profile.ts —
+ * where it is nullable, clearly optional in the UI, and used only as one
+ * best-effort research seed whose absence or unreachability cannot fail a
+ * report (tests/integration/profile-lineage.test.ts holds that end). This
+ * file holds the other end: the brief itself stays URL-free.
  */
 
 const submit = (overrides: Record<string, unknown> = {}) =>

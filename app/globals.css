@@ -464,6 +464,44 @@
   }
 }
 
+/*
+ * A bar growing to its measured width. Transform only — the element is laid
+ * out at its final width and scales in from the left, so nothing reflows.
+ * Under reduced motion the global rule collapses the duration and the bar
+ * simply stands at its final, truthful length.
+ */
+@keyframes grow-bar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/*
+ * The territory scan: one sweep of light across the schematic map on
+ * arrival, then gone. A single iteration ending at opacity 0, so reduced
+ * motion lands it in its final state — invisible — with nothing to remove.
+ */
+@keyframes scan {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.35;
+  }
+  85% {
+    opacity: 0.35;
+  }
+  100% {
+    /* The band is an eighth of its canvas wide; 800% of itself crosses it. */
+    transform: translateX(800%);
+    opacity: 0;
+  }
+}
+
 @layer utilities {
   /*
    * Reveal on scroll.
@@ -498,6 +536,17 @@
 
   .animate-fade {
     animation: fade var(--duration-base) var(--ease-out-soft) both;
+    animation-delay: calc(var(--fade-index, 0) * 50ms);
+  }
+
+  .animate-bar {
+    transform-origin: left;
+    animation: grow-bar var(--duration-slow) var(--ease-out-soft) both;
+    animation-delay: calc(var(--bar-index, 0) * 70ms);
+  }
+
+  .animate-scan {
+    animation: scan 1.8s var(--ease-in-out-soft) 1 forwards;
   }
 }
 

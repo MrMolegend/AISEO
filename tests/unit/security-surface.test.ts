@@ -163,9 +163,10 @@ describe('operational cost data stays operational', () => {
      * person the machinery behind a number they paid a flat price for invites
      * exactly the wrong conversation.
      */
-    for (const file of walk(join(ROOT, 'components/dossier'), /\.tsx$/).concat(
-      walk(join(ROOT, 'app/example'), /\.tsx$/),
-    )) {
+    // app/example was removed with the public marketing surface in the
+    // internal-tool pivot; the dossier components remain the rendering path
+    // for legacy reports and still must not leak operational cost data.
+    for (const file of walk(join(ROOT, 'components/dossier'), /\.tsx$/)) {
       const contents = readFileSync(file, 'utf8');
       for (const field of [
         'searchCredits',

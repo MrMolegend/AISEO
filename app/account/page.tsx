@@ -4,7 +4,11 @@ import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { Panel, Rule, Meta } from '@/components/ui/panel';
 import { SignOutButton } from '@/components/auth/sign-out-button';
+import { DataControls } from '@/components/account/data-controls';
+import { LinkedInPanel } from '@/components/account/linkedin-panel';
 import { getCurrentUser, signInPath } from '@/lib/auth/server';
+import { linkedInMode, linkedInConfigured } from '@/lib/linkedin/provider';
+import { getConnectionStore } from '@/lib/linkedin/connections';
 import { getResearchJobStore } from '@/lib/jobs/store';
 import { getTokenWallet } from '@/lib/tokens';
 import { BRAND, pageTitle } from '@/config/brand';
@@ -28,6 +32,9 @@ export const metadata: Metadata = {
 export default async function AccountPage() {
   const user = await getCurrentUser();
   if (!user) redirect(signInPath('/account'));
+
+  const connectionStore = await getConnectionStore();
+  const linkedInConnection = await connectionStore.getLinkedIn(user.id);
 
   const [store, wallet] = await Promise.all([getResearchJobStore(), getTokenWallet()]);
   const [jobs, balance] = await Promise.all([
@@ -112,12 +119,37 @@ export default async function AccountPage() {
               by this application in any form.
             </p>
             <p>
-              Deleting your account removes your profile, your credit history and every
-              assessment. It cannot be undone, and shared report links stop working
-              immediately. Write to {BRAND.supportEmail} and we will do it.
+              Business profiles, saved drafts, scenarios, actions and feedback belong to
+              your account alone, and everything below travels with it: exportable in one
+              file, deleted with one deliberate act.
             </p>
           </div>
         </section>
+
+        <section aria-labelledby="linkedin-heading" className="mt-12">
+          <h2 id="linkedin-heading" className="sr-only">
+            LinkedIn identity
+          </h2>
+          <Rule label="LinkedIn identity" />
+          <div className="mt-4">
+            <LinkedInPanel
+              mode={linkedInMode()}
+              configured={linkedInConfigured()}
+              connection={
+                linkedInConnection
+                  ? {
+                      displayName: linkedInConnection.displayName,
+                      email: linkedInConnection.email,
+                      grantedScopes: linkedInConnection.grantedScopes,
+                      linkedAt: linkedInConnection.linkedAt,
+                    }
+                  : null
+              }
+            />
+          </div>
+        </section>
+
+        <DataControls />
 
         <div className="border-rule mt-12 border-t pt-8">
           <SignOutButton />

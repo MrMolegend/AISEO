@@ -70,27 +70,46 @@ function emptyValues(): Values {
   return { knownCompetitors: [], launchTimeframe: 'undecided' };
 }
 
+/** What the server knows about the draft this tab is editing. */
+export interface ServerDraft {
+  id: string;
+  revision: number;
+  payload: Record<string, unknown>;
+  profileId: string | null;
+}
+
+type SaveState = 'idle' | 'saving' | 'saved' | 'offline' | 'error' | 'conflict';
+
 export function AssessmentForm({
   userId,
   credits,
   initialValues = null,
+  profileId = null,
+  serverDraft = null,
 }: {
   userId: string;
   /** Whole report credits available. Never a token count. */
   credits: number;
-  /** Seeded from a previous assessment when retrying one that failed. */
+  /** Seeded from a previous assessment or a business profile. */
   initialValues?: Record<string, unknown> | null;
+  /** The business profile this brief is seeded from, for report lineage. */
+  profileId?: string | null;
+  /** The most recent active draft, resolved by the server at render time. */
+  serverDraft?: ServerDraft | null;
 }) {
   const router = useRouter();
 
-  const [values, setValues] = useState<Values>(() =>
-    initialValues ? { ...emptyValues(), ...initialValues } : emptyValues(),
-  );
+  const [values, setValues] = useState<Values>(() => {
+    if (initialValues) return { ...emptyValues(), ...initialValues };
+    if (serverDraft) return { ...emptyValues(), ...serverDraft.payload };
+    return emptyValues();
+  });
   const [stageIndex, setStageIndex] = useState(0);
   const [phase, setPhase] = useState<'stages' | 'review' | 'submitting'>('stages');
   const [errors, setErrors] = useState<FieldError[]>([]);
   const [failure, setFailure] = useState<{ title: string; message: string } | null>(null);
-  const [restored, setRestored] = useState(false);
+  const [restored, setRestored] = useState(() => Boolean(serverDraft));
+  const [saveState, setSaveState] = useState<SaveState>('idle');
 
   /*
    * Minted on the first submit attempt, not at mount, and reused for every
@@ -100,6 +119,26 @@ export function AssessmentForm({
    */
   const submissionId = useRef<string | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
+
+  /*
+   * The server draft this tab writes into.
+   *
+   * Held in a ref rather than state because saves race renders: the revision
+   * must advance the moment a save lands, not a render later, or the next
+   * autosave carries a stale revision and conflicts with our own write.
+   */
+  const draftRef = useRef<{ id: string; revision: number } | null>(
+    serverDraft ? { id: serverDraft.id, revision: serverDraft.revision } : null,
+  );
+  /** The profile this brief is tied to, for lineage on the finished report. */
+  const linkedProfileId = useRef<string | null>(
+    profileId ?? serverDraft?.profileId ?? null,
+  );
+  const saveInFlight = useRef(false);
+  const saveQueued = useRef(false);
+  const stopSaving = useRef(false);
+  /** The latest values, readable from inside the debounced save. */
+  const valuesRef = useRef(values);
 
   const stageKey: StageKey = STAGE_IDS[stageIndex]!;
   const affordable = credits >= 1;
@@ -118,9 +157,9 @@ export function AssessmentForm({
    * setState in the same effect with an extra render on top.
    */
   useEffect(() => {
-    // A seeded retry is the intended starting point; a saved draft from an
-    // abandoned assessment must not silently overwrite it.
-    if (initialValues) return;
+    // A seeded retry or a server draft is the intended starting point; the
+    // local buffer only speaks when the server had nothing.
+    if (initialValues || serverDraft) return;
 
     let saved: string | null = null;
     try {
@@ -142,17 +181,112 @@ export function AssessmentForm({
     } catch {
       // A corrupt draft is discarded rather than repaired.
     }
-  }, [userId, initialValues]);
+  }, [userId, initialValues, serverDraft]);
+
+  /* ── Server autosave ───────────────────────────────────────────────────── */
+
+  /**
+   * Pushes the current values to the draft this tab owns, creating one on the
+   * first save. Single-flight: a save requested while another runs is queued,
+   * not raced — two concurrent PUTs would guarantee one a conflict against
+   * the other and this tab a false "changed somewhere else".
+   */
+  const persistNow = useCallback(async (): Promise<boolean> => {
+    if (stopSaving.current) return false;
+    if (saveInFlight.current) {
+      // A save is already running; ask it to go once more with the values
+      // current at that point, and report success optimistically.
+      saveQueued.current = true;
+      return true;
+    }
+
+    async function attempt(): Promise<boolean> {
+      setSaveState('saving');
+      try {
+        const response = draftRef.current
+          ? await fetch(`/api/drafts/${draftRef.current.id}`, {
+              method: 'PUT',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({
+                payload: valuesRef.current,
+                revision: draftRef.current.revision,
+              }),
+            })
+          : await fetch('/api/drafts', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({
+                payload: valuesRef.current,
+                profileId: linkedProfileId.current,
+              }),
+            });
+
+        if (response.status === 409) {
+          /*
+           * Another tab or device saved a newer copy. This tab's writes stop
+           * here — continuing would flip-flop the draft between two tabs —
+           * and the banner says which copy won and how to pick it up.
+           */
+          stopSaving.current = true;
+          setSaveState('conflict');
+          return false;
+        }
+
+        if (!response.ok) {
+          setSaveState('error');
+          return false;
+        }
+
+        const payload = (await response.json().catch(() => null)) as {
+          draft?: { id: string; revision: number };
+        } | null;
+        if (payload?.draft) {
+          draftRef.current = { id: payload.draft.id, revision: payload.draft.revision };
+        }
+        setSaveState('saved');
+        return true;
+      } catch {
+        // No network. The browser buffer holds every keystroke, so this is a
+        // statement of delay, not of loss.
+        setSaveState('offline');
+        return false;
+      }
+    }
+
+    saveInFlight.current = true;
+    let ok = false;
+    try {
+      // Drain: a change that landed mid-save queues one more pass rather
+      // than racing a second request against the first.
+      do {
+        saveQueued.current = false;
+        ok = await attempt();
+      } while (saveQueued.current && !stopSaving.current);
+    } finally {
+      saveInFlight.current = false;
+    }
+    return ok;
+  }, []);
 
   useEffect(() => {
+    valuesRef.current = values;
+
+    // The browser buffer takes every change instantly, whatever the network
+    // is doing.
     try {
       window.localStorage.setItem(draftKey(userId), JSON.stringify(values));
     } catch {
-      // Storage full or blocked. The form still works; the draft does not
-      // survive a closed tab, which is worth nothing said and everything not
-      // crashed over.
+      // Storage full or blocked. The server save below still runs.
     }
-  }, [values, userId]);
+
+    // An untouched form must not create a draft row on mount.
+    if (!draftRef.current && JSON.stringify(values) === JSON.stringify(emptyValues())) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => void persistNow(), 1_600);
+    return () => window.clearTimeout(timer);
+  }, [values, userId, persistNow]);
 
   const set = useCallback(
     (key: string) => (value: unknown) => {
@@ -234,6 +368,10 @@ export function AssessmentForm({
           ...values,
           packageId: 'market-entry',
           submissionId: (submissionId.current ??= crypto.randomUUID()),
+          // Lineage, not input: both ride beside the brief and are stripped
+          // by the input schema before anything is stored or hashed.
+          profileId: linkedProfileId.current,
+          draftId: draftRef.current?.id ?? null,
         }),
       });
 
@@ -268,6 +406,9 @@ export function AssessmentForm({
       } catch {
         // Nothing to do; the draft is stale rather than harmful.
       }
+      // The server freezes the draft as submitted; this tab must not keep
+      // autosaving into it afterwards.
+      stopSaving.current = true;
       router.push(`/research/${payload.publicId}`);
     } catch {
       setFailure({
@@ -316,8 +457,29 @@ export function AssessmentForm({
 
       {restored && stageIndex === 0 && (
         <p role="status" className="text-text-subtle mt-4 text-[13px]">
-          Your previous answers have been restored.
+          {serverDraft
+            ? 'Picking up your saved draft — everything you entered before is here.'
+            : 'Your previous answers have been restored.'}
         </p>
+      )}
+
+      {saveState === 'conflict' && (
+        <div
+          role="alert"
+          className="border-copper-line bg-copper-surface mt-6 border-l-[3px] p-4"
+        >
+          <p className="text-copper text-[14px] font-medium">
+            This draft changed somewhere else
+          </p>
+          <p className="text-text-muted mt-1 text-[13px] leading-relaxed">
+            A newer copy was saved from another tab or device, so saving from this one has
+            stopped.{' '}
+            <a href="/assess" className="text-cobalt underline-offset-4 hover:underline">
+              Reload to continue from the newest copy
+            </a>
+            . What you typed here stays on this screen until you do.
+          </p>
+        </div>
       )}
 
       {errors.length > 0 && (
@@ -351,11 +513,63 @@ export function AssessmentForm({
         <Button onClick={next}>
           {stageIndex === STAGE_IDS.length - 1 ? 'Review' : 'Continue'}
         </Button>
-        <Meta className="ml-auto">
-          Stage {stageIndex + 1} of {STAGE_IDS.length}
-        </Meta>
+        <Button
+          variant="ghost"
+          onClick={() => {
+            void (async () => {
+              const flushed = await persistNow();
+              if (flushed || saveState === 'saved') router.push('/dashboard');
+            })();
+          }}
+        >
+          Save and exit
+        </Button>
+        <span className="ml-auto flex items-center gap-3">
+          <SaveIndicator state={saveState} />
+          <Meta>
+            Stage {stageIndex + 1} of {STAGE_IDS.length}
+          </Meta>
+        </span>
       </div>
     </div>
+  );
+}
+
+/* ─────────────────────────── The save indicator ──────────────────────────── */
+
+/**
+ * The autosave state, in words.
+ *
+ * A single live region whose text changes, rather than icons: "Saved" must be
+ * checkable at a glance and hearable in a screen reader, and the difference
+ * between "Offline changes" and "Could not save" is exactly the difference
+ * between "keep typing" and "copy your answers somewhere". The conflict state
+ * renders as a full banner above the form, not here.
+ */
+function SaveIndicator({ state }: { state: SaveState }) {
+  if (state === 'idle' || state === 'conflict') return null;
+
+  const copy: Record<Exclude<SaveState, 'idle' | 'conflict'>, string> = {
+    saving: 'Saving…',
+    saved: 'Saved',
+    offline: 'Offline changes — kept in this browser',
+    error: 'Could not save',
+  };
+
+  return (
+    <span
+      role="status"
+      data-save-state={state}
+      className={
+        state === 'saved'
+          ? 'text-text-subtle text-[12px]'
+          : state === 'saving'
+            ? 'text-text-faint text-[12px]'
+            : 'text-copper text-[12px]'
+      }
+    >
+      {copy[state]}
+    </span>
   );
 }
 

@@ -130,14 +130,18 @@ describe('a stored legacy job round-trips through the store', () => {
     expect(job.packageId).toBe('competitor-intelligence');
   });
 
-  it('is served on its existing public URL, unchanged', async () => {
+  it('is served on its existing URL, unchanged, to its owner', async () => {
     const job = await storeLegacyJob();
     const store = await getResearchJobStore();
 
-    // The same id, the same route, no redirect: whoever holds the link keeps it.
-    const shared = await store.getPublic(job.publicId);
-    expect(shared?.publicId).toBe(job.publicId);
-    expect(shared?.report).toBeTruthy();
+    /*
+     * The same id and the same route: the owner's old bookmarks keep working.
+     * What changed with deliberate sharing is who else gets in — a public id
+     * alone no longer opens anything; recipients go through /shared/[token].
+     */
+    const owned = await store.getForUser(job.publicId, USER);
+    expect(owned?.publicId).toBe(job.publicId);
+    expect(owned?.report).toBeTruthy();
   });
 
   it('appears in the dashboard listing beside new dossiers', async () => {

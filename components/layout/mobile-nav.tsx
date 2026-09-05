@@ -48,7 +48,7 @@ export function MobileNav({
   }, [open]);
 
   return (
-    <div ref={containerRef} className="relative md:hidden">
+    <div ref={containerRef} className="relative lg:hidden">
       <button
         ref={triggerRef}
         type="button"
@@ -101,12 +101,12 @@ export function MobileNav({
             <>
               <div role="none" className="border-rule my-1 border-t" />
               <Link
-                href="/assess"
+                href="/sign-in"
                 role="menuitem"
                 onClick={() => setOpen(false)}
                 className="text-cobalt hover:bg-ground-sunken focus-visible:ring-cobalt block rounded-[var(--radius-control)] px-3 py-2.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
               >
-                Start report
+                Sign in
               </Link>
             </>
           )}

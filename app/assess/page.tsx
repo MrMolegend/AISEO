@@ -31,13 +31,40 @@ export const metadata: Metadata = {
 export default async function AssessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string }>;
+  searchParams: Promise<{ from?: string; profile?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user) redirect(signInPath('/assess'));
 
   const wallet = await getTokenWallet();
   const balance = await wallet.getBalance(user.id);
+
+  /*
+   * A brief seeded from a business profile.
+   *
+   * The profile prefills ordinary editable fields and rides along as a
+   * reference so the finished report joins that profile's version history.
+   * Owner-filtered: someone else's profile id seeds nothing.
+   */
+  const profileParam = (await searchParams).profile;
+  let profileId: string | null = null;
+  let profileName: string | null = null;
+  let profileDefaults: Record<string, unknown> | null = null;
+
+  if (profileParam) {
+    const { getBusinessProfileStore } = await import('@/lib/profiles/store');
+    const { profileToBriefDefaults } = await import('@/lib/profiles/prefill');
+    const profile = await (
+      await getBusinessProfileStore()
+    )
+      .getForUser(profileParam, user.id)
+      .catch(() => null);
+    if (profile && !profile.archivedAt) {
+      profileId = profile.id;
+      profileName = profile.name;
+      profileDefaults = profileToBriefDefaults(profile);
+    }
+  }
 
   /*
    * "Edit and try again", after an assessment we could not complete.
@@ -71,6 +98,40 @@ export default async function AssessPage({
     }
   }
 
+  // A profile seed only applies to a fresh brief — a retry keeps its answers.
+  if (!initial && profileDefaults) {
+    initial = profileDefaults;
+  }
+
+  /*
+   * With no seed of either kind, offer the most recent saved draft. Resolved
+   * here rather than fetched from the browser so the form renders with the
+   * draft already in it — no flash of an empty form, no client round-trip.
+   */
+  let serverDraft: {
+    id: string;
+    revision: number;
+    payload: Record<string, unknown>;
+    profileId: string | null;
+  } | null = null;
+
+  if (!initial) {
+    const { getResearchDraftStore } = await import('@/lib/drafts/store');
+    const draft = await (
+      await getResearchDraftStore()
+    )
+      .latestActive(user.id)
+      .catch(() => null);
+    if (draft) {
+      serverDraft = {
+        id: draft.id,
+        revision: draft.revision,
+        payload: draft.payload,
+        profileId: draft.profileId,
+      };
+    }
+  }
+
   return (
     <>
       <SiteHeader />
@@ -93,6 +154,13 @@ export default async function AssessPage({
         <h1 className="font-display text-text mt-4 text-[34px] leading-[1.08] tracking-[var(--tracking-display)] md:text-[42px]">
           Tell us what you sell, and where you want to take it.
         </h1>
+        {profileName && (
+          <p role="status" className="text-text-subtle mt-3 text-[13px]">
+            Prefilled from your <strong className="text-text">{profileName}</strong>{' '}
+            profile. Everything is editable — changes here never write back to the
+            profile.
+          </p>
+        )}
         <p className="text-text-muted measure mt-4 text-[16px] leading-relaxed">
           Four short stages. We do not ask for a website — what you sell is something you
           can describe better than a homepage can.
@@ -103,6 +171,8 @@ export default async function AssessPage({
             userId={user.id}
             credits={creditsFrom(balance.available)}
             initialValues={initial}
+            profileId={profileId}
+            serverDraft={serverDraft}
           />
         </div>
 

@@ -44,6 +44,15 @@ export interface CreateJobRequest {
   ipHash: string | null;
 }
 
+const UUID_SHAPE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** A uuid-shaped optional field from the raw body, or null. */
+function optionalUuid(body: unknown, key: string): string | null {
+  if (!body || typeof body !== 'object') return null;
+  const value = (body as Record<string, unknown>)[key];
+  return typeof value === 'string' && UUID_SHAPE.test(value) ? value : null;
+}
+
 export interface CreateJobResult {
   job: ResearchJobRecord;
   /** True when an identical recent report was returned instead of running one. */
@@ -100,6 +109,31 @@ export async function createResearchJob(
   const subject = subjectOfMarketEntry(input);
 
   /*
+   * The profile and draft references ride beside the brief, not inside it —
+   * the input schema strips unknown keys, so neither can reach the stored
+   * snapshot or the input hash. A profile id is only honoured when the store's
+   * owner-filtered read confirms it is this user's; anyone else's id, or a
+   * stale one, is indistinguishable from none at all having been sent —
+   * except that naming one explicitly and not owning it is refused, because
+   * silently ignoring it would attach the report to nothing without saying so.
+   */
+  const profileId = optionalUuid(request.body, 'profileId');
+  const draftId = optionalUuid(request.body, 'draftId');
+
+  if (profileId) {
+    const { getBusinessProfileStore } = await import('@/lib/profiles/store');
+    const profileStore = await getBusinessProfileStore();
+    const profile = await profileStore.getForUser(profileId, request.userId);
+    if (!profile) {
+      throw new PlatformError('INVALID_INPUT', 'That business profile is not available', {
+        context: {
+          issues: [{ field: 'profileId', message: 'Choose one of your own profiles' }],
+        },
+      });
+    }
+  }
+
+  /*
    * There is one product and one price, and the browser names neither.
    *
    * The previous version looked a cost up in a catalogue by an id the client
@@ -146,6 +180,31 @@ export async function createResearchJob(
     };
   }
 
+  /* ── 4b. Duplicate-active guard ────────────────────────────────────────── */
+
+  /*
+   * The same brief, already running. A double-click that minted two submission
+   * ids, a second tab, an impatient refresh — all of them should join the job
+   * that is already doing the work, not open a second reservation for
+   * identical research. Returned as duplicate so the route knows there is
+   * nothing to start.
+   */
+  const active = await store.findActive(request.userId, inputHash);
+  if (active) {
+    logger.info('jobs.duplicate_active', {
+      userId: request.userId,
+      publicId: active.publicId,
+    });
+    const balance = await wallet.getBalance(request.userId);
+    return {
+      job: active,
+      cached: false,
+      duplicate: true,
+      tokensAvailable: balance.available,
+      tokensReserved: balance.reserved,
+    };
+  }
+
   /* ── 5. Create, then reserve ───────────────────────────────────────────── */
 
   // Balance is checked before creating a row so that an insufficient balance
@@ -178,6 +237,7 @@ export async function createResearchJob(
      * with; nothing reads the two as the same thing.
      */
     subjectDomain: input.targetCountry,
+    profileId,
   });
 
   const reservation = await wallet.reserve({
@@ -226,6 +286,17 @@ export async function createResearchJob(
     tokenCost,
     availableAfter: reservation.available,
   });
+
+  if (draftId) {
+    /*
+     * The draft this brief grew from is frozen as provenance. Best-effort and
+     * owner-filtered inside the store; a wrong or foreign draft id changes
+     * nothing and costs nothing.
+     */
+    const { getResearchDraftStore } = await import('@/lib/drafts/store');
+    const draftStore = await getResearchDraftStore();
+    await draftStore.markSubmitted(draftId, request.userId, job.id).catch(() => {});
+  }
 
   return {
     job,

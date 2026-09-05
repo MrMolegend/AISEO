@@ -36,7 +36,13 @@ const nextConfig: NextConfig = {
     return [
       { source: '/research/new', destination: '/assess', permanent: true },
       { source: '/research/new/:packageId', destination: '/assess', permanent: true },
-      { source: '/pricing', destination: '/methodology', permanent: true },
+      // Public marketing routes from the previous products. The application
+      // is now an internal tool: everything marketing-shaped lands on the
+      // sign-in gateway. Auth callbacks are untouched, and legacy report
+      // URLs still render for their owners.
+      { source: '/pricing', destination: '/', permanent: true },
+      { source: '/example', destination: '/', permanent: true },
+      { source: '/methodology', destination: '/', permanent: true },
     ];
   },
 
@@ -57,6 +63,16 @@ const nextConfig: NextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains; preload',
           },
+        ],
+      },
+      {
+        // Shared reports carry a real business's private brief. The page sets
+        // a robots meta too; the header covers responses a crawler reads
+        // without parsing HTML, and the tokened URL must never enter an index.
+        source: '/shared/:path*',
+        headers: [
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' },
+          { key: 'Cache-Control', value: 'private, no-store' },
         ],
       },
     ];
