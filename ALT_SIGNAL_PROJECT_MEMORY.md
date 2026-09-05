@@ -1,7 +1,7 @@
 # ALT SIGNAL — Project Memory
 
 Canonical, single-source project memory for the repository `MrMolegend/AISEO`.
-Last updated: **2026-09-05T18:58Z**.
+Last updated: **2026-09-05T19:20Z**.
 
 Labels used throughout:
 `Verified` (checked directly in this session against Git, GitHub, Supabase or
@@ -47,33 +47,36 @@ Standing rules — these apply to every future session:
 
 ## 2. Current status — read this first
 
-`Verified 2026-09-05T18:58Z` unless marked otherwise.
+`Verified 2026-09-05T19:15Z` unless marked otherwise.
 
-| Item                                                       | State                                                                                                     |
-| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Default branch `origin/main`                               | `3c17704` — PR #9 (CORRIDOR) merged. `Verified`                                                           |
-| Integration branch `claude/release-alt-signal-integration` | `87ad9be`, 31 commits ahead of `main`, 0 behind. `Verified`                                               |
-| Integration PR #12 → `main`                                | **Open, not merged.** All 3 checks green. `Verified`                                                      |
-| PR #10 (CORRIDOR depth), PR #11 (ALT SIGNAL)               | Open, kept for traceability. `Verified`                                                                   |
-| Production code                                            | Still CORRIDOR. ALT SIGNAL is **not** deployed. `Reported`                                                |
-| Supabase migrations applied in production                  | `0001`–`0010` **plus `0011`–`0023`**. `Verified`                                                          |
-| Supabase migrations still pending                          | **`0024` only.** `Verified`                                                                               |
-| Public tables in production                                | **37** (8 legacy + 29 new), all with RLS enabled. `Verified`                                              |
-| Legacy row counts                                          | Unchanged from the pre-migration baseline. `Verified`                                                     |
-| `supabase/database.types.ts`                               | Still hand-extended; **not yet regenerated** from the live schema. `Verified`                             |
-| Pre-migration data snapshot                                | Created in an earlier session's container; **not present in the current container**. `Reported` — see §9. |
+| Item                                                       | State                                                                                               |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Default branch `origin/main`                               | `3c17704` — PR #9 (CORRIDOR) merged. `Verified`                                                     |
+| Integration branch `claude/release-alt-signal-integration` | `87ad9be` plus this session's release commits. `Verified`                                           |
+| Integration PR #12 → `main`                                | **Open, not merged.** `Verified`                                                                    |
+| PR #10 (CORRIDOR depth), PR #11 (ALT SIGNAL)               | Open, kept for traceability. `Verified`                                                             |
+| Production code                                            | Still CORRIDOR. ALT SIGNAL is **not** deployed. `Reported`                                          |
+| Supabase migrations applied in production                  | `0001`–`0010` **plus `0011`–`0024`** — every one recorded **exactly once**. `Verified`              |
+| Supabase migrations still pending                          | **None.** The migration set for this release is complete. `Verified`                                |
+| Public tables in production                                | **39** (8 legacy + 31 new). **All 39 have RLS enabled**, 0 policies. `Verified`                     |
+| Legacy row counts and content                              | `8, 1, 0, 1, 1, 2, 5, 45` — unchanged, and byte-identical to the pre-migration snapshot. `Verified` |
+| Advisors after `0024`                                      | **Zero errors.** Security 39 INFO + 1 WARN; performance 71 INFO. `Verified` — see §8.               |
+| `supabase/database.types.ts`                               | Regenerated from the live schema in this session; hand-maintained note removed. `Verified`          |
+| Pre-migration data snapshot                                | Re-created and verified in this session, outside Git. `Verified` — see §9.                          |
 
-> **This supersedes the handoff statement that migrations `0011`–`0024` were
-> unapplied.** Between 2026-09-05T18:37Z and 2026-09-05T18:54Z, migrations
-> `0011` through `0023` were applied to the live project — `0023` landed while
-> this file was being written. **Migration work was actively in progress at
-> the time of writing**, so **always re-run `list_migrations` before doing
-> anything database-related**: `0024` may already have landed, and another
-> session may be operating on this project.
+> **This supersedes every earlier statement that migrations `0011`–`0024` are
+> unapplied or that `0024` is pending.** Between 2026-09-05T18:37Z and
+> 2026-09-05T19:03Z, `0011` through `0024` were applied to the live project,
+> one `apply_migration` operation per file, in numeric order, with verification
+> between each. A re-check at 19:15Z confirmed `0024_watchlists_and_signals` is
+> recorded exactly once (version `20260905190346`) and was **not** reapplied.
+>
+> Still **always re-run `list_migrations` before doing anything
+> database-related** — another session may be operating on this project.
 
-**Next safe action:** §13, step 1 — re-verify migration state, then apply
-`0024` (if still pending) through the authenticated Supabase MCP
-`apply_migration` operation. Do **not** run `supabase db push` (see §8).
+**Next safe action:** §13 — regenerate types (done in this session) and drive
+PR #12's CI to green. There is **no migration left to apply**. Do **not** run
+`supabase db push` (see §8).
 
 ---
 
@@ -277,22 +280,28 @@ order** through the authenticated Supabase MCP `apply_migration` operation, and
 **stop at the first error**. Never improvise a repair; never run a `-- down`
 block without a separate, reviewed plan.
 
-> Note the contradiction: `ARCHITECTURE.md` still instructs `supabase db push`
-> in two places. **This memory file wins.** Correcting `ARCHITECTURE.md` is
-> tracked in §12.
+> `ARCHITECTURE.md` was corrected in this session and no longer instructs
+> `supabase db push` for this project. If any document contradicts this
+> section, **this memory file wins.**
 
-### Applied in production (`Verified 2026-09-05T18:58Z`)
+### Applied in production (`Verified 2026-09-05T19:15Z`)
 
-`0001`–`0010` (recorded under legacy names such as `research_platform`,
-`market_entry_source_evidence`) **and** `0011_business_profiles` through
-`0023_pipeline_and_productivity`, applied 2026-09-05T18:37Z–18:54Z with
-ordinal-prefixed names but still 14-digit versions.
+**All of `0001`–`0024`. Nothing is pending.** `0001`–`0010` are recorded under
+legacy names (`research_platform`, `market_entry_source_evidence` and so on);
+`0011_business_profiles` through `0024_watchlists_and_signals` were applied
+2026-09-05T18:37Z–19:03Z under their exact file stems, one `apply_migration`
+call per file, in numeric order, each verified before the next began.
 
-### Pending (`Verified 2026-09-05T18:58Z`)
+Every one of `0011`–`0024` appears in `supabase_migrations.schema_migrations`
+**exactly once** — re-checked at 19:15Z, with `0024` at version
+`20260905190346`. History holds 24 rows: the 10 pre-existing plus these 14.
 
-| File                              | Adds                    |
-| --------------------------------- | ----------------------- |
-| `0024_watchlists_and_signals.sql` | `watchlists`, `signals` |
+### Pending (`Verified 2026-09-05T19:15Z`)
+
+**None.** There is no migration left to apply for this release. A future agent
+finding this section unchanged should still re-run `list_migrations` before
+acting, but should not "re-apply" anything on the strength of an older
+handoff note.
 
 ### Static review of `0011`–`0024` (`Verified` by reading the SQL)
 
@@ -310,27 +319,42 @@ ordinal-prefixed names but still 14-digit versions.
 - Personal data cascades from `auth.users`; shared work records use
   `ON DELETE SET NULL` so team history survives a member's deletion.
 
-### Verified production state after `0011`–`0023`
+### Verified production state after `0024` (`Verified 2026-09-05T19:15Z`)
 
-- 37 public tables, **all** with RLS enabled.
-- Security advisors (read at 2026-09-05T18:53Z, when 33 tables existed):
-  32 × `rls_enabled_no_policy` at level **INFO** — this is the intended
-  deny-all design, not a defect — plus one **WARN**,
-  `auth_leaked_password_protection` (see §12). Re-read the advisors after the
-  remaining migration.
-- Legacy row counts unchanged: `audits` 8, `leads` 1, `audit_events` 0,
-  `user_profiles` 1, `token_wallets` 1, `research_jobs` 2, `token_ledger` 5,
-  `research_sources` 45.
-- `alt_territories` holds 13 seeded GCC rows; every other new table is empty.
-- `0023`'s tables (`pipeline_history`, `activities`, `sales_tasks`,
-  `saved_views`) are present, empty and RLS-enabled.
+- **39 public tables** (8 legacy + 31 new). **All 39 have RLS enabled**; no
+  table anywhere in `public` is without it.
+- **0 RLS policies** in `public` — the deny-all posture is intact, and no
+  unintended policy exists.
+- **No grants to `anon`, `authenticated` or `PUBLIC`** on any public table. The
+  only grantees are the table owner (`postgres`, implicit) and `service_role`.
+  All 31 new tables carry their intended `service_role` grants.
+- **Advisors: zero errors.** Security — 39 × `rls_enabled_no_policy` at level
+  **INFO** (the intended deny-all design, and it fires on the 8 legacy tables
+  too, so this is not a regression) plus one **WARN**,
+  `auth_leaked_password_protection`, a pre-existing Auth setting unrelated to
+  the migrations (see §12). Performance — 71 **INFO** (31 unindexed FKs on
+  nullable attribution columns, 40 unused indexes on tables that hold no rows
+  yet). No ERROR in either category.
+- **Legacy row counts and content unchanged**: `audits` 8, `leads` 1,
+  `audit_events` 0, `user_profiles` 1, `token_wallets` 1, `research_jobs` 2,
+  `token_ledger` 5, `research_sources` 45 — and each table's content MD5 is
+  **byte-identical** to the pre-migration snapshot. `research_jobs` was checked
+  twice mid-run (after `0013` and after `0016`), comparing only its original
+  columns; it matched both times.
+- `alt_territories` holds exactly **13** seeded GCC rows; every other new table
+  is empty.
+- All required uniqueness/idempotency indexes exist, three of them partial and
+  unique as designed (`campaign_runs_one_active`, `sales_tasks_playbook_unique`,
+  `action_items_import_unique`) plus the total-unique `signals_dedup_unique`.
+- **0 triggers** with a missing or dangling function.
 
 ### Generated types
 
-`supabase/database.types.ts` still carries a hand-written header saying the
-`0011`+ tables were typed by hand because those migrations "have deliberately
-not been applied". That note is now **stale for `0011`–`0023`**. Regenerate the
-file from the live schema once `0024` is applied, and delete the note with it.
+`supabase/database.types.ts` was **regenerated from the live production schema**
+in this session and now covers all 39 public tables. The old hand-written header
+claiming the `0011`+ tables were typed by hand because those migrations "have
+deliberately not been applied" is **gone** — it was false. Do not reintroduce a
+hand-maintained table definition; regenerate from the live schema instead.
 
 ---
 
@@ -341,11 +365,18 @@ at `../AISEO-private-backups/2026-09-05-pre-alt-signal/`, containing separate
 JSON exports for the eight legacy public tables, migration history, schema
 metadata and SHA-256 checksums. `Reported`.
 
-**Verification result (`Verified 2026-09-05T18:56Z`): that directory does not
-exist in the current container.** Sessions run in ephemeral containers, and
-this one was provisioned after the snapshot was taken. Treat the snapshot as
-**unavailable to this session** unless an operator confirms it exists on a
-machine that persists. Do not assume a restore path is in reach.
+**Verification result (`Verified 2026-09-05T19:20Z`): the snapshot exists and
+is complete in this session's container.** It was re-created before the
+migration run: ten JSON files (the eight legacy tables, `schema_migrations`,
+and schema metadata covering columns, constraints, indexes, RLS state and
+grants), plus a `SHA256SUMS` manifest that verifies clean. Every table's row
+count matched production, and each file's content hash matched a hash computed
+inside Postgres over the same rows — so the export is provably complete, not
+merely plausible. Directory and files are mode `0700`/`0600`.
+
+Sessions run in ephemeral containers, so a **later** session may again find the
+directory missing. That is expected: re-verify before relying on it, and never
+assume a restore path is in reach without checking.
 
 Rules that stand regardless:
 
@@ -433,18 +464,10 @@ app's in-app browser). Exact HTML lives in `ARCHITECTURE.md`.
   wordmark and provisional colours defined centrally in `app/globals.css`.
 - **The migration-history naming mismatch remains unresolved** (ordinals vs.
   14-digit versions). `supabase db push` stays prohibited until a separate,
-  reviewed migration-history reconciliation project is completed.
-- **`ARCHITECTURE.md` contradicts the safe release procedure**: it instructs
-  `supabase db push` and states that `0011`–`0024` are unapplied. Both are now
-  wrong. Correcting it is deliberately out of scope for the documentation task
-  that created this file, and should be done in a follow-up change.
-- The `ARCHITECTURE.md` production smoke test is still written for CORRIDOR
-  (e.g. it expects the headline "Enter new markets with evidence"). ALT SIGNAL
-  has no public marketing page; use §13 instead.
-- `supabase/database.types.ts` header is stale — see §8.
+  reviewed migration-history reconciliation project is completed. Future
+  production migrations use individually reviewed `apply_migration` operations.
 - Supabase **leaked-password protection is disabled** (`Verified`, security
   advisor WARN). Handle separately from this release.
-- The pre-migration snapshot is not present in the current container (§9).
 - The production domain is not reachable from the agent sandbox, so production
   state cannot be verified from here — it must be checked by an operator or
   from an environment with egress to it.
@@ -455,22 +478,26 @@ app's in-app browser). Exact HTML lives in `ARCHITECTURE.md`.
 
 Do these in order. Stop at the first failure and record it here.
 
-1. **Re-verify migration state** with Supabase `list_migrations` and
-   `list_tables` before touching anything. As of 2026-09-05T18:58Z:
-   `0011`–`0023` applied, `0024` pending, 37 public tables. Another session may
-   have moved this on — trust the live answer, not this line.
-2. **Apply `0024`**, and anything else still pending, individually and in
-   numeric order through the authenticated Supabase MCP `apply_migration`.
-   Never `db push`. Stop immediately at the first error.
-3. **Verify** afterwards: migration history, table count (expect **39** public
-   tables once `0024` lands), RLS enabled with no policies on every new table, grants limited to
-   `service_role`, expected indexes and triggers, seeded rows, legacy row
-   counts unchanged (§8), and the security advisors.
-4. **Regenerate `supabase/database.types.ts`** from the live production schema.
-5. **Remove the obsolete hand-written pending-migration note** from the
-   generated types header.
-6. **Commit and push** the regenerated types to
-   `claude/release-alt-signal-integration`.
+**The database work is finished. The next action is type regeneration and
+PR #12 verification — not migration application.** Steps 1–5 below are done;
+they are kept so a future agent can see what was verified rather than repeat it.
+
+1. ~~**Re-verify migration state**~~ — done. `0001`–`0024` applied, each exactly
+   once, 39 public tables (`Verified 2026-09-05T19:15Z`). Still re-run
+   `list_migrations` before any database action: another session may move this
+   on, and the live answer always beats this line.
+2. ~~**Apply `0024`**~~ — done 2026-09-05T19:03Z. **Nothing is pending. Do not
+   re-apply `0011`–`0024`.**
+3. ~~**Verify**~~ — done: history, 39 tables, RLS on all 39 with 0 policies,
+   grants limited to `service_role`, indexes and triggers intact, 13 seeded
+   territories, legacy counts and content unchanged, advisors with zero errors
+   (§8).
+4. ~~**Regenerate `supabase/database.types.ts`**~~ — done in this session from
+   the live production schema; all 39 public tables present.
+5. ~~**Remove the obsolete pending-migration note**~~ — done; the stale header
+   is gone from the generated types.
+6. **Commit and push** the regenerated types, this memory file and the
+   documentation corrections to `claude/release-alt-signal-integration`.
 7. **Wait for PR #12 CI to pass again** on the new head.
 8. **Merge PR #12 into `main`.**
 9. **Allow or promote the correct Vercel production deployment.**
@@ -533,17 +560,35 @@ migrations.
 ### Superseded decisions
 
 - ~~"Migrations `0011`–`0024` are pending; production contains only
-  `0001`–`0010`."~~ **Superseded 2026-09-05T18:58Z** — `0011`–`0023` are
-  applied; only `0024` remains.
+  `0001`–`0010`."~~ **Superseded 2026-09-05T19:15Z** — all of `0011`–`0024`
+  are applied, each exactly once. Nothing is pending.
+- ~~"Only `0024` remains."~~ **Superseded 2026-09-05T19:15Z** — `0024` landed
+  at 19:03Z.
 - ~~"Apply the pending migrations with `supabase db push`" (`README.md`,
-  `ARCHITECTURE.md`).~~ **Superseded 2026-09-05** — prohibited; see §8.
-- ~~"Production has eight public tables."~~ **Superseded 2026-09-05T18:58Z** —
-  37 public tables.
+  `ARCHITECTURE.md`).~~ **Superseded 2026-09-05** — prohibited; see §8. Both
+  documents were corrected in this session.
+- ~~"Production has eight public tables."~~ **Superseded 2026-09-05T19:15Z** —
+  39 public tables.
+- ~~"Production has 37 public tables."~~ **Superseded 2026-09-05T19:15Z** —
+  39, after `0024`.
+- ~~"The pre-migration snapshot is absent from this container."~~
+  **Superseded 2026-09-05T19:20Z** — re-created and verified; see §9.
 
 ---
 
 ## 15. Change log
 
+- **2026-09-05T19:20Z** — Release session. Applied migrations `0011`–`0024` to
+  production, one `apply_migration` per file in numeric order, verifying after
+  each; `0024` landed at 19:03Z and a re-check at 19:15Z confirmed it is
+  recorded exactly once, so it was not reapplied. Final state: 39 public
+  tables, RLS on all 39, 0 policies, no `anon`/`authenticated`/`PUBLIC` grants,
+  13 seeded territories, legacy row counts and content byte-identical to the
+  snapshot, advisors with **zero errors**. Re-created and verified the private
+  pre-migration snapshot outside Git. Regenerated `supabase/database.types.ts`
+  from the live schema and removed the false "pending migrations" header.
+  Corrected `ARCHITECTURE.md` and `README.md` where they contradicted reality.
+  No merge, no deploy, no environment-variable change, no role assignment.
 - **2026-09-05T18:58Z** — Re-verified live migration state immediately before
   finishing: `0023_pipeline_and_productivity` had been applied at
   2026-09-05T18:54Z by another session, taking production to 37 public tables

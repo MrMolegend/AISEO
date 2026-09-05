@@ -4,18 +4,13 @@
  * Regenerate after any migration:
  *   npx supabase gen types typescript --project-id <ref> > supabase/database.types.ts
  *
- * EXCEPT, currently, for the product-depth tables added by migrations
- * 0011–0016 (business_profiles, research_drafts, report_scenarios,
- * report_feedback, action_items, share_links, share_events, and the
- * profile_id / attempt_count / heartbeat_at columns on research_jobs) and
- * the ALT SIGNAL tables added by migrations 0017 onwards (team_members,
- * ops_audit_events, and the rest of the ALT SIGNAL schema — see each
- * migration's header). Those migrations have deliberately not been applied
- * to the live project yet — applying schema for unmerged code puts the
- * database ahead of the application for no benefit — so their types below
- * were written by hand from the migration files. Regenerate this file from
- * the live database immediately after they are applied, and this note goes
- * with it.
+ * Every table below was generated from production project euyhkmtxdigdnvmboebf
+ * on 2026-09-05, after migrations 0011–0024 were applied. Nothing here is
+ * hand-written: an earlier revision of this file carried hand-typed
+ * definitions for the 0011+ tables because those migrations had not been
+ * applied yet, and that note is gone because the situation is. If a table
+ * looks wrong, fix the migration and regenerate — never edit a definition
+ * here to match what the code expects.
  *
  * These are wired into lib/storage/supabase-store.ts via createClient<Database>,
  * which is what makes them worth having: a column renamed in a migration but not
@@ -42,6 +37,95 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_merges: {
+        Row: {
+          created_at: string
+          id: string
+          loser_id: string
+          merged_by: string | null
+          reason: string
+          undone_at: string | null
+          winner_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          loser_id: string
+          merged_by?: string | null
+          reason?: string
+          undone_at?: string | null
+          winner_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          loser_id?: string
+          merged_by?: string | null
+          reason?: string
+          undone_at?: string | null
+          winner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_merges_loser_id_fkey"
+            columns: ["loser_id"]
+            isOneToOne: false
+            referencedRelation: "lead_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_merges_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "lead_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      account_scores: {
+        Row: {
+          account_id: string
+          components: Json
+          computed_at: string
+          overridden_at: string | null
+          overridden_by: string | null
+          override_reason: string | null
+          override_total: number | null
+          total: number
+          weights_used: Json
+        }
+        Insert: {
+          account_id: string
+          components?: Json
+          computed_at?: string
+          overridden_at?: string | null
+          overridden_by?: string | null
+          override_reason?: string | null
+          override_total?: number | null
+          total: number
+          weights_used?: Json
+        }
+        Update: {
+          account_id?: string
+          components?: Json
+          computed_at?: string
+          overridden_at?: string | null
+          overridden_by?: string | null
+          override_reason?: string | null
+          override_total?: number | null
+          total?: number
+          weights_used?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_scores_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "lead_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       action_items: {
         Row: {
           completed_at: string | null
@@ -120,72 +204,6 @@ export type Database = {
           },
         ]
       }
-      account_scores: {
-        Row: {
-          account_id: string
-          components: Json
-          computed_at: string
-          overridden_at: string | null
-          overridden_by: string | null
-          override_reason: string | null
-          override_total: number | null
-          total: number
-          weights_used: Json
-        }
-        Insert: {
-          account_id: string
-          components?: Json
-          computed_at?: string
-          overridden_at?: string | null
-          overridden_by?: string | null
-          override_reason?: string | null
-          override_total?: number | null
-          total: number
-          weights_used?: Json
-        }
-        Update: {
-          account_id?: string
-          components?: Json
-          computed_at?: string
-          overridden_at?: string | null
-          overridden_by?: string | null
-          override_reason?: string | null
-          override_total?: number | null
-          total?: number
-          weights_used?: Json
-        }
-        Relationships: []
-      }
-      account_merges: {
-        Row: {
-          created_at: string
-          id: string
-          loser_id: string
-          merged_by: string | null
-          reason: string
-          undone_at: string | null
-          winner_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          loser_id: string
-          merged_by?: string | null
-          reason?: string
-          undone_at?: string | null
-          winner_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          loser_id?: string
-          merged_by?: string | null
-          reason?: string
-          undone_at?: string | null
-          winner_id?: string
-        }
-        Relationships: []
-      }
       activities: {
         Row: {
           account_id: string
@@ -220,7 +238,22 @@ export type Database = {
           kind?: string
           private?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "activities_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "lead_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "lead_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       alt_brands: {
         Row: {
@@ -313,7 +346,15 @@ export type Database = {
           name?: string
           parent_key?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "alt_territories_parent_key_fkey"
+            columns: ["parent_key"]
+            isOneToOne: false
+            referencedRelation: "alt_territories"
+            referencedColumns: ["key"]
+          },
+        ]
       }
       audit_events: {
         Row: {
@@ -552,7 +593,15 @@ export type Database = {
           units_spent?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "campaign_runs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       campaigns: {
         Row: {
@@ -609,7 +658,15 @@ export type Database = {
           territory_keys?: string[]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_icp_id_fkey"
+            columns: ["icp_id"]
+            isOneToOne: false
+            referencedRelation: "icps"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       icps: {
         Row: {
@@ -732,7 +789,29 @@ export type Database = {
           updated_at?: string
           website_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lead_accounts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_accounts_icp_id_fkey"
+            columns: ["icp_id"]
+            isOneToOne: false
+            referencedRelation: "icps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_accounts_merged_into_fkey"
+            columns: ["merged_into"]
+            isOneToOne: false
+            referencedRelation: "lead_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lead_claims: {
         Row: {
@@ -758,7 +837,7 @@ export type Database = {
           kind: string
           retrieval_mode?: string
           retrieved_at?: string
-          source_category?: string
+          source_category: string
           source_title?: string | null
           source_url: string
           text: string
@@ -777,7 +856,15 @@ export type Database = {
           source_url?: string
           text?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lead_claims_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "lead_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lead_contacts: {
         Row: {
@@ -828,7 +915,15 @@ export type Database = {
           source_url?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lead_contacts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "lead_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leads: {
         Row: {
@@ -929,7 +1024,15 @@ export type Database = {
           id?: string
           version?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "outreach_draft_versions_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       outreach_drafts: {
         Row: {
@@ -983,7 +1086,22 @@ export type Database = {
           updated_at?: string
           version?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "outreach_drafts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "lead_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outreach_drafts_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "lead_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pipeline_history: {
         Row: {
@@ -1013,7 +1131,15 @@ export type Database = {
           note?: string
           to_stage?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pipeline_history_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "lead_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       provider_connections: {
         Row: {
@@ -1094,7 +1220,15 @@ export type Database = {
           updated_at?: string
           visibility?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "relationships_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "lead_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       report_feedback: {
         Row: {
@@ -1424,7 +1558,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sales_tasks_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "lead_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       saved_views: {
         Row: {
@@ -1447,87 +1589,6 @@ export type Database = {
           name?: string
           path?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      signals: {
-        Row: {
-          account_id: string | null
-          created_at: string
-          dismissed: boolean
-          excerpt: string | null
-          id: string
-          kind: string
-          source_host: string
-          title: string
-          url: string
-          watchlist_id: string
-        }
-        Insert: {
-          account_id?: string | null
-          created_at?: string
-          dismissed?: boolean
-          excerpt?: string | null
-          id?: string
-          kind: string
-          source_host: string
-          title: string
-          url: string
-          watchlist_id: string
-        }
-        Update: {
-          account_id?: string | null
-          created_at?: string
-          dismissed?: boolean
-          excerpt?: string | null
-          id?: string
-          kind?: string
-          source_host?: string
-          title?: string
-          url?: string
-          watchlist_id?: string
-        }
-        Relationships: []
-      }
-      watchlists: {
-        Row: {
-          account_id: string | null
-          active: boolean
-          checks_today: number
-          created_at: string
-          id: string
-          kind: string
-          last_checked_on: string | null
-          name: string
-          owner_id: string
-          segment_key: string | null
-          territory_key: string | null
-        }
-        Insert: {
-          account_id?: string | null
-          active?: boolean
-          checks_today?: number
-          created_at?: string
-          id?: string
-          kind: string
-          last_checked_on?: string | null
-          name: string
-          owner_id: string
-          segment_key?: string | null
-          territory_key?: string | null
-        }
-        Update: {
-          account_id?: string | null
-          active?: boolean
-          checks_today?: number
-          created_at?: string
-          id?: string
-          kind?: string
-          last_checked_on?: string | null
-          name?: string
-          owner_id?: string
-          segment_key?: string | null
-          territory_key?: string | null
         }
         Relationships: []
       }
@@ -1609,6 +1670,60 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "research_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signals: {
+        Row: {
+          account_id: string | null
+          created_at: string
+          dismissed: boolean
+          excerpt: string | null
+          id: string
+          kind: string
+          source_host: string
+          title: string
+          url: string
+          watchlist_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string
+          dismissed?: boolean
+          excerpt?: string | null
+          id?: string
+          kind: string
+          source_host: string
+          title: string
+          url: string
+          watchlist_id: string
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string
+          dismissed?: boolean
+          excerpt?: string | null
+          id?: string
+          kind?: string
+          source_host?: string
+          title?: string
+          url?: string
+          watchlist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signals_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "lead_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signals_watchlist_id_fkey"
+            columns: ["watchlist_id"]
+            isOneToOne: false
+            referencedRelation: "watchlists"
             referencedColumns: ["id"]
           },
         ]
@@ -1765,6 +1880,56 @@ export type Database = {
         }
         Relationships: []
       }
+      watchlists: {
+        Row: {
+          account_id: string | null
+          active: boolean
+          checks_today: number
+          created_at: string
+          id: string
+          kind: string
+          last_checked_on: string | null
+          name: string
+          owner_id: string
+          segment_key: string | null
+          territory_key: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          active?: boolean
+          checks_today?: number
+          created_at?: string
+          id?: string
+          kind: string
+          last_checked_on?: string | null
+          name: string
+          owner_id: string
+          segment_key?: string | null
+          territory_key?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          active?: boolean
+          checks_today?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          last_checked_on?: string | null
+          name?: string
+          owner_id?: string
+          segment_key?: string | null
+          territory_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watchlists_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "lead_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1876,12 +2041,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1905,11 +2070,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1930,11 +2095,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1955,11 +2120,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1972,11 +2137,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

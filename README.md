@@ -117,13 +117,17 @@ npx playwright test --project=desktop
 
 ## Database
 
-Migrations `0001`–`0010` are applied to the live project. Migrations
-**`0011`–`0024` exist in this repository and are NOT applied** — they ship
-with this work and are applied at deploy time, in order. Each file carries
-that warning in its header, RLS enabled with no policies (service-role only),
-revoke-then-grant least privilege, and a commented `-- down` block.
-`supabase/database.types.ts` is hand-extended for the pending tables and
-should be regenerated (`supabase gen types typescript`) once they are applied.
+Migrations **`0001`–`0024` are all applied to the live project** (2026-09-05),
+each recorded exactly once. Every file is additive, with RLS enabled and no
+policies (service-role only), revoke-then-grant least privilege, and a
+commented `-- down` block. `supabase/database.types.ts` is generated from that
+live schema.
+
+Production migrations are applied **one reviewed `apply_migration` operation
+per file, in numeric order** — never with `supabase db push`, because the live
+history uses timestamp versions while these files use ordinals and the two do
+not overlap. `ARCHITECTURE.md` → **Applying migrations to production** has the
+detail.
 
 ## Legacy
 

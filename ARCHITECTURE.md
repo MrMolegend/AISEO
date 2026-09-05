@@ -102,8 +102,9 @@ profile URLs arrive only as labelled `public_search_index` references.
 
 ### The lead-intelligence migrations (`0017`–`0024`)
 
-**Not applied to the live project.** They ship with this change and are
-applied at deploy time after `0016`, in numeric order:
+**Applied to the live project on 2026-09-05**, in numeric order after `0016`,
+one reviewed `apply_migration` operation per file — see **Applying migrations
+to production** below:
 
 | File   | Adds                                                                                                            |
 | ------ | --------------------------------------------------------------------------------------------------------------- |
@@ -120,9 +121,9 @@ All follow the `0011`–`0016` conventions: additive only, RLS enabled with no
 policies, revoke-then-grant service-role privileges, length/state CHECKs,
 partial unique indexes where idempotency depends on them (one active run per
 campaign; one task per playbook step per account; one signal per watch+URL),
-and a commented `-- down` block. Apply with `supabase db push`, then
-regenerate `supabase/database.types.ts` — its hand-written pending-tables
-section says exactly this.
+and a commented `-- down` block. `supabase/database.types.ts` was regenerated
+from the live schema once these landed; it is fully generated output and
+carries no hand-written table definitions.
 
 Personal data hangs off `auth.users` with `ON DELETE CASCADE`
 (`team_members`, `relationships.employee_id`, `provider_connections`,
@@ -627,23 +628,17 @@ original. Run it only after the application has been rolled back, and regenerate
 
 ### The product-depth migrations (`0011`–`0016`)
 
-**They are not applied to the live project.** They ship with the product-depth
-change and are applied at deploy time, after `0010`, in numeric order. All six
-are additive: no existing row, column or constraint is dropped or rewritten,
-every new table hangs off `auth.users` with `ON DELETE CASCADE`, RLS is enabled
-with no policies (deny-all; access is the server's least-privileged
-service_role, ownership enforced inside every store query), and each file
-carries a commented `down` block.
+**Applied to the live project on 2026-09-05**, after `0010`, in numeric order —
+see **Applying migrations to production** below. All six are additive: no
+existing row, column or constraint is dropped or rewritten, every new table
+hangs off `auth.users` with `ON DELETE CASCADE`, RLS is enabled with no
+policies (deny-all; access is the server's least-privileged service_role,
+ownership enforced inside every store query), and each file carries a
+commented `down` block.
 
-Apply, from the repo root with the project linked:
-
-    supabase db push
-
-Then regenerate `supabase/database.types.ts` from the live schema — its header
-currently says the 0011–0016 types were written by hand from the migration
-files, and instructs exactly this.
-
-Verification queries, after applying:
+The verification queries below are the ones that were run at the time. They
+are kept because they are the right checks to repeat if this schema is ever
+rebuilt elsewhere — a staging project, a local stack, a restored copy:
 
     -- Six new relations, all with RLS enabled and zero policies.
     select relname, relrowsecurity from pg_class
@@ -814,12 +809,10 @@ Environment variables — names only, values never printed anywhere:
 
 Steps:
 
-1. Apply `supabase/migrations/0011`–`0024` in order (`0001`–`0010` are already
-   on the live project; nothing after them is), then regenerate
-   `supabase/database.types.ts` from the live schema and run the verification
-   queries under **The product-depth migrations** above. The lead-intelligence
-   tables are listed under **The lead-intelligence migrations** near the top of
-   this document.
+1. **The schema is already live.** `0001`–`0024` are all applied to the
+   production project and `supabase/database.types.ts` is generated from it —
+   see **Applying migrations to production** below. There is nothing to apply
+   for this release; do not re-run these migrations.
    1a. Bootstrap the first administrator: set `app_metadata.role = 'super_admin'`
    on your operator account (see **Admin authorisation**), sign in, then create
    your own `team_members` row from `/team` — after which the table, not the
@@ -847,26 +840,65 @@ There is no Google configuration to do. `GOOGLE_PLACES_API_KEY` is not read and
 must not be set; `/api/health` reporting `places: "disabled"` is the correct,
 healthy result.
 
+### Applying migrations to production
+
+**Do not run `supabase db push`, with or without `--include-all`, against this
+project.** The live migration history records `0001`–`0010` under 14-digit
+timestamp versions (`20260823192240`, and legacy names like
+`research_platform`), while this repository's files carry four-digit ordinals
+(`0001`…`0024`). The two version spaces do not overlap literally, so `db push`
+cannot recognise the applied migrations as applied — it would attempt to
+replay them against live data.
+
+Until that history is deliberately reconciled under its own reviewed change,
+**every production migration goes through one individually reviewed
+`apply_migration` operation per file**, in numeric order, with verification
+between each and a full stop at the first error. That is exactly how
+`0011`–`0024` were applied on 2026-09-05, each recorded exactly once.
+
+State as of 2026-09-05: **`0001`–`0024` applied**, nothing pending, 39 public
+tables, RLS enabled on all 39 with no policies, grants limited to
+`service_role`, legacy row counts and content unchanged, and database advisors
+reporting **zero errors**. `supabase/database.types.ts` is generated from that
+schema.
+
+Note that `0011`–`0024` still open with a `NOT YET APPLIED` comment. That text
+is stale, and deliberately left alone: an applied migration is never edited
+here, not even its comments, so that the file on disk stays byte-identical to
+the SQL recorded in migration history. **This section is the authority on what
+is applied — not the file headers.**
+
 ### Production smoke test
 
+ALT SIGNAL is an invitation-only internal tool with no public marketing page,
+so the smoke test exercises the gateway and the workspace, not a landing page.
 After a deploy, in this order:
 
-1. `GET /api/health` — expect **200**, `status: "ok"`, and
-   `providers: { research: "tavily", ai: "anthropic", storage: "supabase", auth:
-"supabase", rateLimit: "upstash", places: "disabled" }`. A 503 names what is
-   wrong in `problems`. Confirm no value in the response looks like a key.
-2. Load `/` signed out. The headline reads "Enter new markets with evidence."
-3. Load `/example`. The dossier renders, the source drawers open, and the page
-   is labelled as illustrative.
-4. Sign in. The header shows a credit count, not a token count.
-5. Grant yourself 100 tokens and run one assessment through `/assess` to
-   completion. Watch the processing page move through the eight stages.
-6. Check the wallet: one reservation and one debit for that job, nothing
-   reserved.
-7. Open a previously existing report at its original `/research/<publicId>` URL
-   and confirm it still renders with the legacy banner.
-8. Print-preview the new dossier and confirm the navigation drops away and the
-   source drawers are open.
+1. `GET /api/health` — expect **200**, `status: "ok"`, storage `supabase`, auth
+   `supabase`, and `linkedin` reporting its configured mode (`disabled` is
+   healthy and is the default). A 503 names what is wrong in `problems`.
+   Confirm no value in the response looks like a key.
+2. Load `/` signed out. Expect the gateway: the wordmark, one sentence naming
+   the tool as invitation-only, and a single **Sign in** link. There must be no
+   pricing, feature tour or sign-up pitch.
+3. Sign in as a member. `/dashboard` loads with the workspace navigation for
+   your role.
+4. Sign in as an account with no `team_members` row. Expect a redirect to
+   `/request-access` showing that account's email and **no** workspace
+   navigation.
+5. `/admin` loads for a `super_admin` and 404s — never 403 — for everyone else.
+   The LinkedIn panel states the live capability, and budgets and stalled runs
+   render.
+6. Create an ICP, then a campaign. The cost preview states a ceiling in units
+   and nothing spends until **Confirm and spend up to** is pressed.
+7. Open a discovered account. Evidence claims carry their source, retrieval
+   mode and date; the score shows its decomposition; "Verified direct
+   connection" appears only for an attested direct relationship.
+8. Draft outreach. Approval requires the reviewed checkbox, the approved draft
+   says nothing sends automatically, and the only way out is **Copy to send by
+   hand**.
+9. Open a legacy report at its original `/research/<publicId>` URL and confirm
+   it still renders for its owner with the legacy banner.
 
 Rollback is a Vercel instant rollback. The migrations are additive, so a rollback
 never orphans data.
