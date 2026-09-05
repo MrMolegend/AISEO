@@ -1,91 +1,124 @@
 import Link from 'next/link';
 import { Logo } from '@/components/ui/logo';
-import { Button } from '@/components/ui/button';
 import { getCurrentUser } from '@/lib/auth/server';
-import { getTokenWallet } from '@/lib/tokens';
+import { getMembership } from '@/lib/auth/membership';
 import { BRAND } from '@/config/brand';
-import { creditsFrom } from '@/config/report';
+import { ROLE_LABEL } from '@/schemas/team';
+import { Suspense } from 'react';
 import { AccountMenu } from './account-menu';
 import { MobileNav } from './mobile-nav';
 import { ScrollShrink } from './scroll-shrink';
+import { CommandPalette } from './command-palette';
 
 /**
  * Site header.
  *
  * A Server Component, so the signed-in state is resolved on the server and the
  * page never flashes a signed-out header before correcting itself. Identity
- * comes from a verified JWT, never from anything the browser volunteered.
+ * comes from a verified JWT; the role comes from the membership table on this
+ * request — see lib/auth/membership.ts.
  *
- * What it shows a signed-in visitor is a count of report credits, not a token
- * balance. The conversion happens here, on the server, so no token figure is
- * ever sent to the browser — there is nothing in the markup for a later change
- * to accidentally reveal.
+ * Three states, deliberately distinct:
+ *   · a member sees the workspace navigation for their role;
+ *   · a signed-in non-member sees only the account control — every path
+ *     leads to the request-access holding page;
+ *   · a signed-out visitor sees the wordmark and Sign in. This is an
+ *     internal tool: there is nothing to market.
  */
 export async function SiteHeader() {
   const user = await getCurrentUser();
+  const membership = user ? await getMembership() : null;
 
-  let credits: number | null = null;
-  if (user) {
-    const wallet = await getTokenWallet();
-    const balance = await wallet.getBalance(user.id);
-    credits = creditsFrom(balance.available);
-  }
+  const role = membership?.member.role ?? null;
 
-  const links = user
+  /** The row that must survive at md+: the surfaces used hourly. */
+  const primaryLinks = role
     ? [
-        { href: '/dashboard', label: 'Intelligence Desk' },
-        { href: '/assess', label: 'Assess a market' },
-        { href: '/methodology', label: 'Methodology' },
+        { href: '/dashboard', label: 'Command Center' },
+        { href: '/leads', label: 'Leads' },
+        { href: '/campaigns', label: 'Campaigns' },
+        { href: '/pipeline', label: 'Pipeline' },
+        { href: '/outreach', label: 'Outreach' },
+        { href: '/tasks', label: 'Tasks' },
       ]
-    : [
-        { href: '/#how-it-works', label: 'How it works' },
-        { href: '/example', label: 'Example report' },
-        { href: '/methodology', label: 'Methodology' },
-      ];
+    : [];
+
+  /** The rest of the workspace, reached through the menus. */
+  const secondaryLinks = role
+    ? [
+        { href: '/relationships', label: 'Relationships' },
+        { href: '/watchlists', label: 'Watchlists' },
+        { href: '/territories', label: 'Territories' },
+        { href: '/intelligence', label: 'Intelligence' },
+        { href: '/icps', label: 'Ideal customer profiles' },
+        ...(role === 'super_admin' || role === 'sales_manager'
+          ? [
+              { href: '/commercial', label: 'Commercial configuration' },
+              { href: '/team', label: 'Team' },
+            ]
+          : []),
+        ...(role === 'super_admin' ? [{ href: '/admin', label: 'Admin' }] : []),
+      ]
+    : [];
 
   return (
     <ScrollShrink>
       <div className="mx-auto flex h-[var(--header-height)] max-w-[var(--container-page)] items-center gap-4 px-5 transition-[height] duration-[var(--duration-base)] ease-[var(--ease-out-soft)] md:px-8">
         <Link
-          href={user ? '/dashboard' : '/'}
+          href={membership ? '/dashboard' : '/'}
           className="text-text rounded-[var(--radius-control)] focus-visible:outline-none"
           aria-label={`${BRAND.name} home`}
         >
           <Logo />
         </Link>
 
-        <nav aria-label="Main" className="ml-4 hidden items-center gap-1 md:flex">
-          {links.map((link) => (
-            <HeaderLink key={link.href} href={link.href}>
-              {link.label}
-            </HeaderLink>
-          ))}
-        </nav>
+        {primaryLinks.length > 0 && (
+          <nav aria-label="Main" className="ml-4 hidden items-center gap-1 lg:flex">
+            {primaryLinks.map((link) => (
+              <HeaderLink key={link.href} href={link.href}>
+                {link.label}
+              </HeaderLink>
+            ))}
+          </nav>
+        )}
 
         <div className="ml-auto flex items-center gap-2">
-          {user ? (
-            <AccountMenu email={user.email} credits={credits ?? 0} />
-          ) : (
+          {membership && (
             <>
-              <Link
-                href="/sign-in"
-                className="text-text-muted hover:text-text inline-flex h-9 items-center rounded-[var(--radius-control)] px-3 text-[13px] font-medium transition-colors"
+              <span
+                className="text-text-subtle hidden text-[11px] tracking-wide md:inline"
+                aria-hidden="true"
               >
-                Sign in
-              </Link>
-              {/* Both controls plus the menu trigger overflow a 320px viewport,
-                  so below `sm` this one lives in the menu instead. Sign in
-                  stays visible: someone who already has an account should never
-                  have to open a menu to use it. */}
-              <Button asChild size="sm" className="hidden sm:inline-flex">
-                <Link href="/assess">Start report</Link>
-              </Button>
+                Ctrl K
+              </span>
+              <Suspense fallback={null}>
+                <CommandPalette />
+              </Suspense>
             </>
           )}
+          {user ? (
+            <AccountMenu
+              email={user.email}
+              roleLabel={role ? ROLE_LABEL[role] : null}
+              workspaceLinks={secondaryLinks}
+            />
+          ) : (
+            <Link
+              href="/sign-in"
+              className="text-text-muted hover:text-text inline-flex h-9 items-center rounded-[var(--radius-control)] px-3 text-[13px] font-medium transition-colors"
+            >
+              Sign in
+            </Link>
+          )}
 
-          {/* Below md this is the only route to the navigation, so it exists in
-              both states rather than only when signed in. */}
-          <MobileNav links={links} signedIn={Boolean(user)} />
+          {/* Below lg this is the only route to the navigation. It carries the
+              complete workspace map, not just the primary row. */}
+          {membership && (
+            <MobileNav
+              links={[...primaryLinks, ...secondaryLinks]}
+              signedIn={Boolean(user)}
+            />
+          )}
         </div>
       </div>
     </ScrollShrink>

@@ -27,6 +27,15 @@ export interface RateLimiter {
   readonly name: string;
   /** Per-identifier sliding window. */
   check(identifier: string): Promise<RateLimitVerdict>;
+  /**
+   * Generic fixed-window counter, for endpoints whose sensible ceiling has
+   * nothing to do with the research limits — autosaves, share views, exports.
+   */
+  checkWindow(
+    identifier: string,
+    max: number,
+    windowSeconds: number,
+  ): Promise<RateLimitVerdict>;
   /** Global daily circuit breaker; the backstop against a runaway bill. */
   checkGlobalCap(): Promise<boolean>;
   /** Returns true when the lock was acquired. */
@@ -119,6 +128,32 @@ class MemoryRateLimiter implements RateLimiter {
     };
   }
 
+  async checkWindow(
+    identifier: string,
+    max: number,
+    windowSeconds: number,
+  ): Promise<RateLimitVerdict> {
+    const now = Date.now();
+    const windowMs = windowSeconds * 1000;
+    const key = `w:${identifier}:${Math.floor(now / windowMs)}`;
+
+    const window = this.windows.get(key) ?? { timestamps: [] };
+    if (window.timestamps.length >= max) {
+      return {
+        allowed: false,
+        retryAfterSeconds: Math.max(1, Math.ceil((windowMs - (now % windowMs)) / 1000)),
+        remaining: 0,
+      };
+    }
+    window.timestamps.push(now);
+    this.windows.set(key, window);
+    return {
+      allowed: true,
+      retryAfterSeconds: 0,
+      remaining: max - window.timestamps.length,
+    };
+  }
+
   async checkGlobalCap(): Promise<boolean> {
     const env = getEnv();
     const now = Date.now();
@@ -206,6 +241,24 @@ class UpstashRateLimiter implements RateLimiter {
       retryAfterSeconds: 0,
       remaining: Math.max(0, env.RESEARCH_RATE_LIMIT_PER_HOUR - hourCount),
     };
+  }
+
+  async checkWindow(
+    identifier: string,
+    max: number,
+    windowSeconds: number,
+  ): Promise<RateLimitVerdict> {
+    const windowMs = windowSeconds * 1000;
+    const key = `rl:w:${identifier}:${Math.floor(Date.now() / windowMs)}`;
+
+    const count = await this.redis.incr(key);
+    if (count === 1) await this.redis.expire(key, windowSeconds);
+
+    if (count > max) {
+      const ttl = await this.redis.ttl(key);
+      return { allowed: false, retryAfterSeconds: Math.max(ttl, 1), remaining: 0 };
+    }
+    return { allowed: true, retryAfterSeconds: 0, remaining: Math.max(0, max - count) };
   }
 
   async checkGlobalCap(): Promise<boolean> {

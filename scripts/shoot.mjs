@@ -33,12 +33,26 @@ const EXECUTABLE =
   process.env.PLAYWRIGHT_CHROMIUM_PATH ??
   '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
 
+/** A workspace member (super_admin, so every surface including /admin renders). */
 const SESSION = {
   name: 'e2e-test-session',
   value: encodeURIComponent(
     JSON.stringify({
       id: '11111111-1111-4111-8111-111111111111',
       email: 'sam@example.com',
+      role: 'super_admin',
+    }),
+  ),
+  url: BASE,
+};
+
+/** A signed-in stranger, for the request-access holding page. */
+const OUTSIDER_SESSION = {
+  name: 'e2e-test-session',
+  value: encodeURIComponent(
+    JSON.stringify({
+      id: '22222222-2222-4222-8222-222222222222',
+      email: 'stranger@example.com',
     }),
   ),
   url: BASE,
@@ -51,31 +65,81 @@ const MOBILE = { width: 390, height: 844 };
 const NARROW = { width: 320, height: 800 };
 
 const VIEWS = [
-  { id: 'home-desktop', path: '/', viewport: DESKTOP, full: true },
-  { id: 'home-mobile', path: '/', viewport: MOBILE, full: true },
-  { id: 'sign-up', path: '/sign-up', viewport: DESKTOP },
-  { id: 'dashboard', path: '/dashboard', viewport: DESKTOP, auth: true, full: true },
-  { id: 'assess-stage-1', path: '/assess', viewport: DESKTOP, auth: true, full: true },
-  { id: 'assess-mobile', path: '/assess', viewport: MOBILE, auth: true, full: true },
-  { id: 'example-desktop', path: '/example', viewport: DESKTOP, full: true },
-  { id: 'example-mobile', path: '/example', viewport: MOBILE, full: true },
-  { id: 'methodology', path: '/methodology', viewport: DESKTOP, full: true },
-  { id: 'account', path: '/account', viewport: DESKTOP, auth: true, full: true },
-  { id: 'wallet', path: '/wallet', viewport: DESKTOP, auth: true, full: true },
+  // The gateway and its edges.
+  { id: 'gateway-desktop', path: '/', viewport: DESKTOP, full: true },
+  { id: 'gateway-mobile', path: '/', viewport: MOBILE, full: true },
+  { id: 'gateway-320', path: '/', viewport: NARROW, full: true },
   { id: 'sign-in', path: '/sign-in', viewport: DESKTOP },
-  { id: 'home-320', path: '/', viewport: NARROW, full: true },
-  { id: 'example-320', path: '/example', viewport: NARROW, full: true },
   {
-    id: 'example-print',
-    path: '/example',
+    id: 'request-access',
+    path: '/request-access',
     viewport: DESKTOP,
+    outsider: true,
     full: true,
-    media: 'print',
+  },
+
+  // The member workspace, desktop.
+  { id: 'dashboard', path: '/dashboard', viewport: DESKTOP, auth: true, full: true },
+  { id: 'commercial', path: '/commercial', viewport: DESKTOP, auth: true, full: true },
+  { id: 'icps', path: '/icps', viewport: DESKTOP, auth: true, full: true },
+  { id: 'icp-new', path: '/icps/new', viewport: DESKTOP, auth: true, full: true },
+  { id: 'campaigns', path: '/campaigns', viewport: DESKTOP, auth: true, full: true },
+  { id: 'leads', path: '/leads', viewport: DESKTOP, auth: true, full: true },
+  { id: 'pipeline', path: '/pipeline', viewport: DESKTOP, auth: true, full: true },
+  { id: 'tasks', path: '/tasks', viewport: DESKTOP, auth: true, full: true },
+  { id: 'outreach', path: '/outreach', viewport: DESKTOP, auth: true, full: true },
+  {
+    id: 'relationships',
+    path: '/relationships',
+    viewport: DESKTOP,
+    auth: true,
+    full: true,
+  },
+  { id: 'watchlists', path: '/watchlists', viewport: DESKTOP, auth: true, full: true },
+  {
+    id: 'territories',
+    path: '/territories',
+    viewport: DESKTOP,
+    auth: true,
+    full: true,
   },
   {
-    id: 'example-reduced-motion',
-    path: '/example',
+    id: 'intelligence',
+    path: '/intelligence',
     viewport: DESKTOP,
+    auth: true,
+    full: true,
+  },
+  { id: 'imports', path: '/imports', viewport: DESKTOP, auth: true, full: true },
+  { id: 'account', path: '/account', viewport: DESKTOP, auth: true, full: true },
+  { id: 'admin', path: '/admin', viewport: DESKTOP, auth: true, full: true },
+
+  // The same workspace on a phone and at the narrowest supported width.
+  {
+    id: 'dashboard-mobile',
+    path: '/dashboard',
+    viewport: MOBILE,
+    auth: true,
+    full: true,
+  },
+  { id: 'leads-mobile', path: '/leads', viewport: MOBILE, auth: true, full: true },
+  { id: 'pipeline-mobile', path: '/pipeline', viewport: MOBILE, auth: true, full: true },
+  {
+    id: 'territories-mobile',
+    path: '/territories',
+    viewport: MOBILE,
+    auth: true,
+    full: true,
+  },
+  { id: 'leads-320', path: '/leads', viewport: NARROW, auth: true, full: true },
+  { id: 'dashboard-320', path: '/dashboard', viewport: NARROW, auth: true, full: true },
+
+  // Motion honesty: the busiest animated page, with the preference set.
+  {
+    id: 'territories-reduced-motion',
+    path: '/territories',
+    viewport: DESKTOP,
+    auth: true,
     full: true,
     reducedMotion: 'reduce',
   },
@@ -109,6 +173,7 @@ for (const scheme of ['dark', 'light']) {
       reducedMotion: view.reducedMotion ?? 'no-preference',
     });
     if (view.auth) await context.addCookies([SESSION]);
+    if (view.outsider) await context.addCookies([OUTSIDER_SESSION]);
 
     const page = await context.newPage();
     const errors = [];

@@ -1,5 +1,6 @@
 import { getCurrentUser } from '@/lib/auth/server';
-import { getResearchJobStore } from '@/lib/jobs/store';
+import { authoriseExport } from '@/lib/share/authorize';
+import { hashIp, clientIpFrom } from '@/lib/security/rate-limit';
 import { renderExport, isExportKind } from '@/lib/export/reports';
 import { csvFilename, contentDispositionFor } from '@/lib/export/csv';
 import { toPlatformError, PlatformError } from '@/lib/errors';
@@ -8,13 +9,10 @@ import type { StoredSource } from '@/schemas/research/shared';
 /**
  * CSV download for one section of a report.
  *
- * Authorisation mirrors the report page exactly: the owner may download their
- * own, and anyone holding the capability link may download the shared one. The
- * owner lookup is tried first so an owner viewing an incomplete job gets the
- * right answer rather than a 404 from the public path.
- *
- * A share link that renders a lead list but refuses to export it would be a
- * distinction without a difference — the data is already on the page.
+ * Authorisation mirrors the report pages exactly: the owner may download
+ * their own; a visitor may download only through a live share link minted
+ * with download permission, presented as ?share=<token>. There is no
+ * capability path any more — the public id alone opens nothing.
  */
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -25,20 +23,21 @@ export async function GET(
 ) {
   try {
     const { publicId } = await params;
-    const kind = new URL(request.url).searchParams.get('kind');
+    const url = new URL(request.url);
+    const kind = url.searchParams.get('kind');
 
     if (!isExportKind(kind)) {
       throw new PlatformError('INVALID_INPUT', 'Unknown export type');
     }
 
-    const store = await getResearchJobStore();
     const user = await getCurrentUser();
+    const job = await authoriseExport({
+      publicId,
+      userId: user?.id ?? null,
+      shareToken: url.searchParams.get('share'),
+      ipHash: hashIp(clientIpFrom(request.headers)),
+    });
 
-    const job =
-      (user ? await store.getForUser(publicId, user.id) : null) ??
-      (await store.getPublic(publicId));
-
-    if (!job) throw new PlatformError('NOT_FOUND', 'No such report');
     if (job.status !== 'complete' || !job.report) {
       throw new PlatformError('NOT_FOUND', 'That report is not finished');
     }

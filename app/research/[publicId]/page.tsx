@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { DossierView } from '@/components/dossier/dossier-view';
+import { VersionRail, type VersionEntry } from '@/components/dossier/version-rail';
+import { OwnerToolbar } from '@/components/dossier/owner-toolbar';
+import { FeedbackControl } from '@/components/dossier/feedback-control';
 import { ProcessingScreen } from '@/components/research/processing-screen';
 import { ReportView } from '@/components/research/report/report-view';
 import { Button } from '@/components/ui/button';
@@ -11,7 +14,7 @@ import { Panel, Meta } from '@/components/ui/panel';
 import { BRAND, pageTitle } from '@/config/brand';
 import { isResearchPackageId } from '@/config/packages';
 import { renderErrorCopy } from '@/lib/errors';
-import { getCurrentUser } from '@/lib/auth/server';
+import { getCurrentUser, signInPath } from '@/lib/auth/server';
 import { getResearchJobStore } from '@/lib/jobs/store';
 import { reportKindLabel, isLegacyReport } from '@/lib/jobs/labels';
 import { isTerminal } from '@/lib/jobs/stages';
@@ -23,18 +26,19 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: pageTitle('Report'),
   // Reports concern real businesses and carry the customer's own brief. They
-  // are shared by capability link, not published.
+  // are private to their owner; sharing goes through /shared/[token].
   robots: { index: false, follow: false },
 };
 
 /**
  * One URL, two eras of report.
  *
- * Reports produced by the previous product are still readable at the addresses
- * they were shared with — that is what "legacy reports remain readable" has to
- * mean in practice, and it is why this page dispatches on the stored package id
- * rather than the new product having its own route. Nothing anyone has already
- * sent to a colleague stops working.
+ * Reports produced by the previous product are still readable at the
+ * addresses they were written with, for their owner — this page dispatches on
+ * the stored package id rather than the new product having its own route, so
+ * an owner's old bookmarks keep working. Third parties holding an old
+ * capability URL no longer get in; the owner shares deliberately now, via
+ * revocable links.
  */
 export default async function ReportPage({
   params,
@@ -45,12 +49,22 @@ export default async function ReportPage({
   const user = await getCurrentUser();
   const store = await getResearchJobStore();
 
-  const ownedJob = user ? await store.getForUser(publicId, user.id) : null;
-  const job = ownedJob ?? (await store.getPublic(publicId));
+  /*
+   * Owner-only, deliberately.
+   *
+   * The public id used to be a capability: sixteen characters of entropy,
+   * and holding them was access. That made sharing free and un-sharing
+   * impossible — a link once sent could never expire or be revoked. Reports
+   * are now private to their owner, and sharing goes through minted links at
+   * /shared/[token], which the owner can time-limit and withdraw. A visitor
+   * holding an old capability URL sees the same 404 as a guesser.
+   */
+  if (!user) redirect(signInPath(`/research/${publicId}`));
 
+  const job = await store.getForUser(publicId, user.id);
   if (!job) notFound();
 
-  const isOwner = Boolean(ownedJob);
+  const isOwner = true;
   const kindLabel = reportKindLabel(job.packageId);
 
   /* ── Failed ──────────────────────────────────────────────────────────── */
@@ -142,6 +156,23 @@ export default async function ReportPage({
     // one into someone's account activity.
     if (!isOwner) notFound();
 
+    /*
+     * Repair on sight.
+     *
+     * A run whose heartbeat is older than the stall threshold is dead — the
+     * process running it is gone, and polling it forever is the worst thing
+     * this page could show. The owner opening their own stalled job is the
+     * natural repair trigger: settle it as failed with the refundable
+     * JOB_STALLED code (the ledger's idempotent refund makes double repair
+     * harmless) and re-read, so what renders is the honest failure page with
+     * the credit confirmation on it.
+     */
+    const { isStalled, repairStalledJob } = await import('@/lib/jobs/recovery');
+    if (isStalled(job)) {
+      await repairStalledJob(job);
+      redirect(`/research/${job.publicId}`);
+    }
+
     return (
       <>
         <SiteHeader />
@@ -163,11 +194,58 @@ export default async function ReportPage({
     const parsed = marketEntryReportSchema.safeParse(job.report);
     if (!parsed.success) notFound();
 
+    /*
+     * The version rail: this profile's other runs, owner-only.
+     *
+     * Loaded here rather than inside the dossier so the document component
+     * stays a pure renderer of one report. A report with no profile, or a
+     * profile with one run, renders no rail at all.
+     */
+    let versions: VersionEntry[] = [];
+    let profileName: string | null = null;
+
+    if (isOwner && user && job.profileId) {
+      const { versionsFrom } = await import('@/lib/lineage/versions');
+      const siblings = await store.listForProfile(user.id, job.profileId);
+      versions = versionsFrom(siblings, job.publicId);
+
+      const { getBusinessProfileStore } = await import('@/lib/profiles/store');
+      profileName = await (
+        await getBusinessProfileStore()
+      )
+        .getForUser(job.profileId, user.id)
+        .then((profile) => profile?.name ?? null)
+        .catch(() => null);
+    }
+
+    const { getReportFeedbackStore } = await import('@/lib/feedback/store');
+    const feedback = await (
+      await getReportFeedbackStore()
+    )
+      .getForUser(user.id, job.id)
+      .catch(() => null);
+
     return (
       <>
         <SiteHeader />
         <main id="main">
+          {isOwner && <OwnerToolbar publicId={job.publicId} active="" />}
+          <VersionRail versions={versions} profileName={profileName} />
           <DossierView report={parsed.data} publicId={job.publicId} isOwner={isOwner} />
+          <div className="mx-auto max-w-[var(--container-page)] px-5 pb-12 md:px-8">
+            <FeedbackControl
+              publicId={job.publicId}
+              initial={
+                feedback
+                  ? {
+                      useful: feedback.useful,
+                      category: feedback.category,
+                      comment: feedback.comment,
+                    }
+                  : null
+              }
+            />
+          </div>
         </main>
         <SiteFooter />
       </>

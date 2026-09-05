@@ -60,6 +60,34 @@ const serverEnvSchema = z.object({
   RESEARCH_DAILY_GLOBAL_CAP: z.coerce.number().int().positive().default(200),
   /** How long a completed report satisfies an identical request, in hours. */
   RESEARCH_CACHE_TTL_HOURS: z.coerce.number().int().positive().default(24),
+  /**
+   * Minutes without a stage-transition heartbeat before a running job counts
+   * as stalled and eligible for repair (fail + idempotent refund). Well above
+   * the longest legitimate gap between stages.
+   */
+  JOB_STALL_MINUTES: z.coerce.number().int().min(5).default(15),
+
+  // ── LinkedIn (optional, honest by construction) ─────────────────────────
+  /**
+   * What the deployment is actually approved for. 'disabled' is the default
+   * and a perfectly healthy state: the product must deliver discovery,
+   * research and relationship mapping without any LinkedIn access at all.
+   * 'openid_only' enables identity linking for ALT employees (OpenID
+   * Connect: the member's own name/email, nothing more). The partner mode
+   * exists as a named state so partner-only code paths can be gated on it,
+   * but no partner capability ships enabled — see lib/linkedin/provider.ts.
+   *
+   * Setting a mode does NOT manufacture capability: capabilities come from
+   * scopes actually granted at link time, and the credentials below are
+   * required only when the mode needs them.
+   */
+  LINKEDIN_MODE: z
+    .enum(['disabled', 'openid_only', 'partner_sales_access'])
+    .default('disabled'),
+  LINKEDIN_CLIENT_ID: z.string().min(1).optional(),
+  /** Server secret. Never NEXT_PUBLIC_, never logged, never sent to a browser. */
+  LINKEDIN_CLIENT_SECRET: z.string().min(1).optional(),
+  LINKEDIN_REDIRECT_URI: z.url().optional(),
 
   // ── Tokens ──────────────────────────────────────────────────────────────
   /**
